@@ -152,7 +152,8 @@ def index():
     if user.update == True and history_playlist_data['name']:
         updateChecked = "checked"
         if not scheduler.state:
-            scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify, db], trigger = 'interval', minutes=5)
+            scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', seconds=15)
+            #scheduler.add_job(id = 'update_history_job', func = db_test, trigger = 'interval', seconds=10)
             scheduler.start()
     else:
         updateChecked = None
@@ -235,7 +236,7 @@ def make_history():
     spotify = spotipy.Spotify(auth_manager=auth_manager)
     user = get_user_by_id(spotify.current_user()['id'])
 
-    update_history(user, spotify, db)
+    update_history(user, spotify)
     return "updated"
 
 
@@ -264,7 +265,7 @@ def get_playlist_tracks(playlist_id, sp):
 def test_task():
     print("working...")
 
-def update_history(user, spotify, db):
+def update_history(user, spotify):
      #создаётся плейлист из го
     history_playlist = get_current_history_list(user.history_id, spotify)
     #вытаскиваются последние прослушанные песни и сравниваются с текущей историей
@@ -286,11 +287,11 @@ def update_history(user, spotify, db):
     except spotipy.SpotifyException:
         print("Nothing to add for now")
     finally:
-        print(user.last_update)
-        print(datetime.strftime(datetime.now(), "%H:%M:%S"))
-        user.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
-        print(user.last_update)
-        db.session.commit()
+        with db.app.app_context():
+            query = User.query.filter_by(spotify_id=spotify.current_user()['id']).first()
+            query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
+            db.session.commit()
+            print(query.last_update)
 
 
 def get_user_by_id(session_user_id):
@@ -300,6 +301,13 @@ def get_user_by_id(session_user_id):
         db.session.commit()
         user_id = User.query.filter_by(spotify_id=session_user_id).first()
     return user_id
+
+def db_test():
+    with db.app.app_context():
+        user = User.query.filter_by(spotify_id='21ymkhpptvowil6ku5ljhvbua').first()
+        user.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
+        db.session.commit()
+        print(user.last_update)
 
 if __name__ == '__main__':
 	app.run(threaded=True, debug=True)
