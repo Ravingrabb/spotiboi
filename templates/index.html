@@ -39,9 +39,9 @@
                   <div class="btn-group">
                     <button type="button" onclick="location.href='https://open.spotify.com/playlist/{{ history_playlist_data.id }}';" class="btn btn-sm btn-outline-secondary">View</button>
                   </div>
-                  {% if time_difference == 0 %}
+                  {% if time_difference != None %}
                     <small class="text-muted">Updated {{ time_difference }} min ago</small>
-                  {% else %}
+                  {% else if time_difference == None %}
                     <small class="text-muted">Not updated yet</small>
                   {% endif %}
                 </div>
