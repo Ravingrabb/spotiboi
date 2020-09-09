@@ -30,8 +30,7 @@ import dotenv
 import os
 import time
 from datetime import datetime
-import schedule
-from pprint import pprint
+import psycopg2
 
 
 UPDATE_JOB = None
