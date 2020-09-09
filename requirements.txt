@@ -6,3 +6,4 @@ Flask==1.1.2
 schedule==0.6.0
 Flask_APScheduler==1.11.0
 python-dotenv==0.14.0
+gunicorn
