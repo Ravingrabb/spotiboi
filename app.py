@@ -66,7 +66,7 @@ caches_folder = './.spotify_caches/'
 if not os.path.exists(caches_folder):
     os.makedirs(caches_folder)
 
-#специальный скрипт для того, чтобы вытаскивать логины и пасс из файла env
+#специальный скрипт для того, чтобы вытаскивать логины и пасс из файла envgit rm --cached <file-name> 
 from dotenv import load_dotenv
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 if os.path.exists(dotenv_path):
@@ -285,7 +285,7 @@ def update_history(user, spotify):
             print("List is empty")
     except spotipy.SpotifyException:
         print("Nothing to add for now")
-
+    print(user.last_update)
     user.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
     db.session.commit()
 
