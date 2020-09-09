@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Главная
+{% endblock %}
+
+{% block body %}
+
+    {% if bodytext %}
+        <h2>Last 10 track</h2>
+        {% for m in bodytext %}
+        <p>{{ m }}</p>
+        {% endfor %}
+    {% endif %}
+
+{% endblock %}

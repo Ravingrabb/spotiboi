@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="row">
+    <h2>Hi {{ username }} <small><a href="/sign_out">[sign out]</a></small></h2>
+</div>
+<div class="row">
+    {% for m in menu %}
+        <button type="button" onclick="location.href='{{ m.url }}';" class="btn btn-success btn-lg">{{ m.title }}</button>
+    {% endfor %}
+</div>
+<div class="row">
+    
+</div>
+
+
+<div class="album py-5 bg-light">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card mb-4 shadow-sm">
+            {% if history_playlist_data.images != None %}
+              <img src="{{ history_playlist_data.images }}" alt="cover" class="img-fluid" >
+            {% else %}
+              <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false" role="img" aria-label="Placeholder: Thumbnail"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"></rect><text x="35%" y="50%" fill="#eceeef" dy=".3em">No artwork :(</text></svg>
+            {% endif%}
+            <div class="card-body">
+              {% if history_playlist_data.name != None %}
+                <h3 class="card-text">{{ history_playlist_data.name }} </h3>
+                <p class="card-text">This is your History playlist</p>
+                <div class="custom-control custom-switch">
+                  <form action="/" method="post">
+                      <input type="checkbox" class="custom-control-input" name='updateSwitch' id="customSwitch1" {{ updateChecked }}>
+                      <label class="custom-control-label" for="customSwitch1">Auto-update History</label>
+                      <input type="submit" value="Save" class="btn btn-sm btn-outline-primary">
+                  </form>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="btn-group">
+                    <button type="button" onclick="location.href='https://open.spotify.com/playlist/{{ history_playlist_data.id }}';" class="btn btn-sm btn-outline-secondary">View</button>
+                  </div>
+                  {% if time_difference %}
+                    <small class="text-muted">Updated {{time_difference}} min ago</small>
+                  {% else %}
+                    <small class="text-muted">Not updated yet</small>
+                  {% endif %}
+                </div>
+              {% else %}
+                <p class="card-text">You don't have History playlist</p>
+                <form action="/" method="post">
+                  <input type="hidden" name="create_playlist">
+                  <input type="submit" value="Create now" class="btn btn-sm btn-outline-primary">
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
