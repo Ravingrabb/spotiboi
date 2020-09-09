@@ -285,9 +285,11 @@ def update_history(user, spotify):
             print("List is empty")
     except spotipy.SpotifyException:
         print("Nothing to add for now")
-    print(user.last_update)
-    user.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
-    db.session.commit()
+    finally:
+        print(user.last_update)
+        user.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
+        db.session.commit()
+
 
 def get_user_by_id(session_user_id):
     user_id = User.query.filter_by(spotify_id=session_user_id).first()
