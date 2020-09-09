@@ -40,7 +40,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = './.flask_session/'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+if os.environ.get('DATABASE_URL') is None:
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
+else:
+    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
 scheduler = APScheduler()
 Session(app)  
@@ -295,4 +299,4 @@ def get_user_by_id(session_user_id):
     return user_id
 
 if __name__ == '__main__':
-	app.run(threaded=True, debug=True, host = '0.0.0.0', port = 5000)
+	app.run(threaded=True, debug=True)
