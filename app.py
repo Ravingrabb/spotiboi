@@ -152,7 +152,7 @@ def index():
     if user.update == True and history_playlist_data['name']:
         updateChecked = "checked"
         if not scheduler.state:
-            scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=5)
+            scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify, db], trigger = 'interval', minutes=5)
             scheduler.start()
     else:
         updateChecked = None
@@ -235,7 +235,7 @@ def make_history():
     spotify = spotipy.Spotify(auth_manager=auth_manager)
     user = get_user_by_id(spotify.current_user()['id'])
 
-    update_history(user, spotify)
+    update_history(user, spotify, db)
     return "updated"
 
 
@@ -264,7 +264,7 @@ def get_playlist_tracks(playlist_id, sp):
 def test_task():
     print("working...")
 
-def update_history(user, spotify):
+def update_history(user, spotify, db):
      #создаётся плейлист из го
     history_playlist = get_current_history_list(user.history_id, spotify)
     #вытаскиваются последние прослушанные песни и сравниваются с текущей историей
