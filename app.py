@@ -287,7 +287,9 @@ def update_history(user, spotify):
         print("Nothing to add for now")
     finally:
         print(user.last_update)
+        print(datetime.strftime(datetime.now(), "%H:%M:%S"))
         user.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
+        print(user.last_update)
         db.session.commit()
 
 
