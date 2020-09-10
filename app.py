@@ -30,7 +30,6 @@ import dotenv
 import os
 import time
 from datetime import datetime
-import psycopg2
 
 
 UPDATE_JOB = None
