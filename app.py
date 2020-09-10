@@ -42,7 +42,7 @@ if os.environ.get('DATABASE_URL') is None:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
 else:
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
-application.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+application.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://u1148379_default:_3h2NUKG@localhost/u1148379_default'
 db = SQLAlchemy(application)
 scheduler = APScheduler()
 Session(application)  
