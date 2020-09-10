@@ -75,7 +75,7 @@ if os.path.exists(dotenv_path):
 def session_cache_path():
     return caches_folder + session.get('uuid')
 
-@app.route('/', methods=['POST', 'GET'])
+@application.route('/', methods=['POST', 'GET'])
 def index():
     menu = [
     {'url' : url_for('playlists'),'title' :'my playlists'},
@@ -181,7 +181,7 @@ def time_worker(user):
         return None
 
 
-@app.route('/sign_out')
+@application.route('/sign_out')
 def sign_out():
     os.remove(session_cache_path())
     session.clear()
@@ -193,7 +193,7 @@ def sign_out():
     return redirect('/')
 
 
-@app.route('/playlists')
+@application.route('/playlists')
 def playlists():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
     if not auth_manager.get_cached_token():
@@ -203,7 +203,7 @@ def playlists():
     return spotify.current_user_playlists()
 
 
-@app.route('/currently_playing')
+@application.route('/currently_playing')
 def currently_playing():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
     if not auth_manager.get_cached_token():
@@ -218,7 +218,7 @@ def currently_playing():
             currently_played.append(track['name'])
     return render_template('recent.html', bodytext=currently_played)
 
-@app.route('/current_user')
+@application.route('/current_user')
 def current_user():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
     if not auth_manager.get_cached_token():
@@ -227,7 +227,7 @@ def current_user():
     spotify = spotipy.Spotify(auth_manager=auth_manager)
     return spotify.current_user()
 
-@app.route('/make_history')
+@application.route('/make_history')
 def make_history():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
     if not auth_manager.get_cached_token():
