@@ -1,3 +1,2 @@
 .env
-/.flask_session
-/.spotify_caches
+database.db

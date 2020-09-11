@@ -35,18 +35,18 @@ import psycopg2
 
 UPDATE_JOB = None
 
-application = Flask(__name__)
-application.config['SECRET_KEY'] = os.urandom(64)
-application.config['SESSION_TYPE'] = 'filesystem'
-application.config['SESSION_FILE_DIR'] = './.flask_session/'
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.urandom(64)
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = './.flask_session/'
 if os.environ.get('DATABASE_URL') is None:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
 else:
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
-application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-db = SQLAlchemy(application)
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+db = SQLAlchemy(app)
 scheduler = APScheduler()
-Session(application)  
+Session(app)  
 
 #иниц. БД
 class User(db.Model):
@@ -76,7 +76,7 @@ if os.path.exists(dotenv_path):
 def session_cache_path():
     return caches_folder + session.get('uuid')
 
-@application.route('/', methods=['POST', 'GET'])
+@app.route('/', methods=['POST', 'GET'])
 def index():
     menu = [
     {'url' : url_for('playlists'),'title' :'my playlists'},
@@ -182,7 +182,7 @@ def time_worker(user):
         return None
 
 
-@application.route('/sign_out')
+@app.route('/sign_out')
 def sign_out():
     os.remove(session_cache_path())
     session.clear()
@@ -194,7 +194,7 @@ def sign_out():
     return redirect('/')
 
 
-@application.route('/playlists')
+@app.route('/playlists')
 def playlists():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
     if not auth_manager.get_cached_token():
@@ -204,7 +204,7 @@ def playlists():
     return spotify.current_user_playlists()
 
 
-@application.route('/currently_playing')
+@app.route('/currently_playing')
 def currently_playing():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
     if not auth_manager.get_cached_token():
@@ -219,7 +219,7 @@ def currently_playing():
             currently_played.append(track['name'])
     return render_template('recent.html', bodytext=currently_played)
 
-@application.route('/current_user')
+@app.route('/current_user')
 def current_user():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
     if not auth_manager.get_cached_token():
@@ -228,7 +228,7 @@ def current_user():
     spotify = spotipy.Spotify(auth_manager=auth_manager)
     return spotify.current_user()
 
-@application.route('/make_history')
+@app.route('/make_history')
 def make_history():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
     if not auth_manager.get_cached_token():
@@ -310,4 +310,4 @@ def db_test():
         print(user.last_update)
 
 if __name__ == '__main__':
-	application.run(threaded=True, debug=True, host="0.0.0.0")
+	app.run(threaded=True, debug=True)
