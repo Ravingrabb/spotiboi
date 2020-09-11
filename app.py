@@ -30,6 +30,7 @@ import dotenv
 import os
 import time
 from datetime import datetime
+import logging
 
 
 UPDATE_JOB = None
@@ -75,7 +76,7 @@ if os.path.exists(dotenv_path):
 def session_cache_path():
     return caches_folder + session.get('uuid')
 
-@app.route('/', methods=['POST', 'GET'])
+@app.route('/', methods=['POST'])
 def index():
     menu = [
     {'url' : url_for('playlists'),'title' :'my playlists'},
@@ -151,8 +152,7 @@ def index():
     if user.update == True and history_playlist_data['name']:
         updateChecked = "checked"
         if not scheduler.state:
-            scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
-            #scheduler.add_job(id = 'update_history_job', func = db_test, trigger = 'interval', seconds=10)
+            scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=10)
             scheduler.start()
     else:
         updateChecked = None
@@ -264,7 +264,7 @@ def get_playlist_tracks(playlist_id, sp):
 def test_task():
     print("working...")
 
-def update_history(user, spotify):
+def update_history(user, spotify, returnable=False):
      #создаётся плейлист из го
     history_playlist = get_current_history_list(user.history_id, spotify)
     #вытаскиваются последние прослушанные песни и сравниваются с текущей историей
@@ -279,9 +279,11 @@ def update_history(user, spotify):
         if recently_played_uris:
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
             spotify.playlist_add_items(user.history_id, recently_played_uris)
+            logging.debug("History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
             print("History updated ")
         #иначе пропускаем
         else:
+            logging.debug("List is empty. Nothing to update.")
             print("List is empty")
     except spotipy.SpotifyException:
         print("Nothing to add for now")
@@ -290,6 +292,7 @@ def update_history(user, spotify):
             query = User.query.filter_by(spotify_id=spotify.current_user()['id']).first()
             query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
             db.session.commit()
+            logging.debug("Time will be updated in database")
             print(query.last_update)
 
 
