@@ -47,7 +47,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
 scheduler = APScheduler()
 Session(app)  
-
+logging.basicConfig(filename='logs.log')
 #иниц. БД
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
