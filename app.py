@@ -152,7 +152,7 @@ def index():
     if user.update == True and history_playlist_data['name']:
         updateChecked = "checked"
         if not scheduler.state:
-            scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=10)
+            scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
             scheduler.start()
     else:
         updateChecked = None
