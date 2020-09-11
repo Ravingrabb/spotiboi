@@ -1,0 +1,17 @@
+h1,h2,h3,h4,h5, a, p {
+    font-family: 'Montserrat', sans-serif;
+}
+
+img {
+    position: absolute;
+    z-index:-1;
+}
+
+.start {
+    margin-top: 30%;
+}
+
+.center {
+    margin-top: 30px;
+    margin-left: 40%;
+}
