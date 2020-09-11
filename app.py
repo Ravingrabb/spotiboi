@@ -76,7 +76,7 @@ if os.path.exists(dotenv_path):
 def session_cache_path():
     return caches_folder + session.get('uuid')
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['POST', 'GET'])
 def index():
     menu = [
     {'url' : url_for('playlists'),'title' :'my playlists'},
