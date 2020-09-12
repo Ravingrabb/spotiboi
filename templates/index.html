@@ -4,14 +4,12 @@
 <div class="row">
     <h2>Hi {{ username }} <small><a href="/sign_out">[sign out]</a></small></h2>
 </div>
-<div class="row">
+<div class="row" style='padding-bottom: 30px;'>
     {% for m in menu %}
         <button type="button" onclick="location.href='{{ m.url }}';" class="btn btn-success btn-lg">{{ m.title }}</button>
     {% endfor %}
 </div>
-<div class="row">
-    
-</div>
+
 
 
 <div class="album py-5 bg-light">
@@ -37,7 +35,10 @@
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                   <div class="btn-group">
-                    <button type="button" onclick="location.href='https://open.spotify.com/playlist/{{ history_playlist_data.id }}';" class="btn btn-sm btn-outline-secondary">View</button>
+                    <button type="button" onclick="window.open('https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
+                    '_blank')" class="btn btn-sm btn-outline-secondary">View</button>
+                    <button type="button" onclick="window.open('/make_history',
+                    '_blank')" class="btn btn-sm btn-outline-secondary">Update</button>
                   </div>
                   {% if time_difference != None %}
                     <small class="text-muted">Updated {{ time_difference }} min ago</small>
@@ -57,3 +58,10 @@
     </div>
   </div>
 {% endblock %}
+
+<script>
+  window.open(
+  'https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
+  '_blank' // <- This is what makes it open in a new window.
+);
+</script>

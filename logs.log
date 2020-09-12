@@ -226,3 +226,165 @@ INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 02:57:08] "[37mGET / HTTP/1.1[0m"
 INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 02:57:08] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
 INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 02:57:08] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
 INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 02:57:08] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 339-465-176
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:24:13] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:24:14] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:24:14] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:24:14] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug: * Detected change in 'D:\\Development\\spotiboi-app\\app.py', reloading
+INFO:werkzeug: * Restarting with stat
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:26:54] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:26:58] "[32mGET /?code=AQA_276nCcW_zPT8XudSg6kz7SjPxcLje3ECIM8T21-_cREF66Fy5y0TOshYm4DO8IReyUiycIX4uqDXhOELkhCTN79izlILM9EVUi-NW1Oic5k0O7IMgBzzUO_XxQ7z5o3_hc799MksWq45t0lSv1W8j8eZs-1kjZo_npyJJoYqckK-UM3_-Kw6ooTs-s2_KMCC60K-la5dAdavAYrF0QFxS5YDilMjy1n-QsnnNh-FLMgXB-F_UQAK9PiGGDW3PxEYO-36V3o_ HTTP/1.1[0m" 302 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:26:58] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:27:09] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:27:09] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:27:09] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:02] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:02] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:03] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+ERROR:app:Exception on /sign_out [GET]
+Traceback (most recent call last):
+  File "C:\Users\ravin\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 2447, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\ravin\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 1952, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\ravin\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 1821, in handle_user_exception
+    reraise(exc_type, exc_value, tb)
+  File "C:\Users\ravin\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\_compat.py", line 39, in reraise
+    raise value
+  File "C:\Users\ravin\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 1950, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\ravin\AppData\Local\Programs\Python\Python38\lib\site-packages\flask\app.py", line 1936, in dispatch_request
+    return self.view_functions[rule.endpoint](**req.view_args)
+  File ".\app.py", line 174, in sign_out
+    os.remove(session_cache_path())
+  File ".\app.py", line 61, in session_cache_path
+    return caches_folder + session.get('uuid')
+TypeError: can only concatenate str (not "NoneType") to str
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:04] "[35m[1mGET /sign_out HTTP/1.1[0m" 500 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:05] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:16] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:16] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:16] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:17] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:39] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:39] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:39] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:40] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:41] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:41] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:41] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:41] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:47] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:47] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:47] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:28:47] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:12] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:12] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:12] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:12] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:40] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:40] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:40] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:41] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:53] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:53] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:53] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:53] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:54] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:54] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:54] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:29:54] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:12] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:14] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:16] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:16] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:16] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:17] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:17] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:17] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:17] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:17] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:18] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:18] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:19] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:19] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:42] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:42] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:42] "[37mGET /static/img/circle1.svg HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:30:42] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:31:00] "[32mGET /?code=AQBOYkkU4NDRY85EqlA43TeWPhpflXsSBJqxMn0eBJcnF6pZOXJHNei2Md0h7GFDbt6i92z8GzgWiGKXgBdx6J-wMXHCvqga43czcHk5YuV8djXNFAgxyWLWQGaM6W-uvPyPpNSiQfLS7WN-J3nQ_JBid53sUGILpBxHp-MWl_5dqOZdqdsjvbny6wx7wABNu-lhaFDd_cnT1e8YguQL7VVIgGsXjCGjvQ2viz6L_e6HWseSmVasaNqsOJQUanfZRklXEWEbpU7N HTTP/1.1[0m" 302 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:31:01] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:31:43] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:31:43] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:31:43] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 339-465-176
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:32:02] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:32:02] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:32:02] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:32:09] "[37mPOST / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:32:44] "[37mPOST / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:32:44] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:32:45] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:35:02] "[37mPOST / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:35:02] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:35:02] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:35:24] "[37mPOST / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:35:24] "[37mGET /static/css/style.css HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:35:24] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:38:10] "[37mPOST / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:38:18] "[37mGET /make_history HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:38:20] "[37mPOST / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:38:32] "[37mGET /make_history HTTP/1.1[0m" 200 -
+INFO:werkzeug: * Detected change in 'D:\\Development\\spotiboi-app\\app.py', reloading
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 339-465-176
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug: * Detected change in 'D:\\Development\\spotiboi-app\\app.py', reloading
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 339-465-176
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug: * Detected change in 'D:\\Development\\spotiboi-app\\app.py', reloading
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 339-465-176
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug: * Detected change in 'D:\\Development\\spotiboi-app\\app.py', reloading
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 339-465-176
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug: * Detected change in 'D:\\Development\\spotiboi-app\\app.py', reloading
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 339-465-176
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug: * Detected change in 'D:\\Development\\spotiboi-app\\app.py', reloading
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 339-465-176
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:44:42] "[37mPOST / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:44:44] "[37mGET /make_history HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:48:54] "[37mPOST / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:48:57] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug: * Detected change in 'D:\\Development\\spotiboi-app\\app.py', reloading
+INFO:werkzeug: * Restarting with stat
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 339-465-176
+INFO:werkzeug: * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:51:02] "[37mGET / HTTP/1.1[0m" 200 -
+INFO:werkzeug:192.168.0.102 - - [12/Sep/2020 23:51:05] "[37mGET /make_history HTTP/1.1[0m" 200 -
+INFO:werkzeug: * Detected change in 'D:\\Development\\spotiboi-app\\app.py', reloading

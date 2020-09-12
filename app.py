@@ -3,6 +3,7 @@
     NOTE: If receiving "port already in use" error, try other ports: 5000, 8090, 8888, etc...
         (will need to be updated in your Spotify app and SPOTIPY_REDIRECT_URI variable)
 """
+DEBUG = True
 
 from flask import Flask, session, request, redirect, render_template, url_for
 from flask_session import Session
@@ -62,10 +63,7 @@ def session_cache_path():
 @app.route('/', methods=['POST', 'GET'])
 def index():
     menu = [
-    {'url' : url_for('playlists'),'title' :'my playlists'},
-    {'url' : url_for('currently_playing'),'title' : 'currently playing'},
-    {'url' : url_for('current_user'),'title' : 'me'},
-    {'url' : url_for('make_history'),'title' : 'make history'},
+    {'url' : url_for('currently_playing'),'title' : 'recently played'},
     ]
 
     if not session.get('uuid'):
@@ -219,7 +217,7 @@ def make_history():
     user = get_user_by_id(spotify.current_user()['id'])
 
     update_history(user, spotify)
-    return "updated"
+    return "Updated"
 
 
 ''' Временные скрипты '''
@@ -244,10 +242,7 @@ def get_playlist_tracks(playlist_id, sp):
         tracks.extend(results['items'])
     return tracks
 
-def test_task():
-    print("working...")
-
-def update_history(user, spotify, returnable=False):
+def update_history(user, spotify):
      #создаётся плейлист из го
     history_playlist = get_current_history_list(user.history_id, spotify)
     #вытаскиваются последние прослушанные песни и сравниваются с текущей историей
@@ -263,11 +258,9 @@ def update_history(user, spotify, returnable=False):
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
             spotify.playlist_add_items(user.history_id, recently_played_uris)
             logging.debug("History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
-            print("History updated ")
         #иначе пропускаем
         else:
             logging.debug("List is empty. Nothing to update.")
-            print("List is empty")
     except spotipy.SpotifyException:
         print("Nothing to add for now")
     finally:
@@ -276,7 +269,6 @@ def update_history(user, spotify, returnable=False):
             query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
             db.session.commit()
             logging.debug("Time will be updated in database")
-            print(query.last_update)
 
 
 def get_user_by_id(session_user_id):
@@ -287,12 +279,5 @@ def get_user_by_id(session_user_id):
         user_id = User.query.filter_by(spotify_id=session_user_id).first()
     return user_id
 
-def db_test():
-    with db.app.app_context():
-        user = User.query.filter_by(spotify_id='21ymkhpptvowil6ku5ljhvbua').first()
-        user.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
-        db.session.commit()
-        print(user.last_update)
-
 if __name__ == '__main__':
-	app.run(threaded=True, debug=True, host='0.0.0.0')
+	app.run(threaded=True, debug=DEBUG, host='0.0.0.0')
