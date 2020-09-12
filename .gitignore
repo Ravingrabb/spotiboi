@@ -3,3 +3,4 @@
 .flask_session/
 __pycache__/
 logs.log
+database.db
