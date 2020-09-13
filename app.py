@@ -143,7 +143,7 @@ def index():
         updateChecked = "checked"
         if not scheduler.state:
             scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
-            scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger = 'interval', seconds=10)
+            #scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger = 'interval', seconds=10)
             scheduler.start()
     else:
         updateChecked = None
