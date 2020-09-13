@@ -37,6 +37,7 @@ Session(app)
 #логи
 logging.basicConfig(filename='logs.log')
 gunicorn_logger = logging.getLogger('gunicorn.error')
+app.logger.handlers = gunicorn_logger.handlers
 #иниц. БД
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -99,6 +100,7 @@ def index():
 
     time_difference = time_worker(user)
 
+    app.logger.info('сосать хочу')
     #POST запросы
     if request.method == "POST":
         if 'updateSwitch' in request.form:
