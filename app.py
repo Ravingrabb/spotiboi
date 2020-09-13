@@ -36,8 +36,10 @@ scheduler = APScheduler()
 Session(app)  
 #логи
 logging.basicConfig(filename='logs.log')
-gunicorn_logger = logging.getLogger('gunicorn.error')
-app.logger.handlers = gunicorn_logger.handlers
+if __name__ != '__main__':
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
 #иниц. БД
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
