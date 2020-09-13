@@ -257,10 +257,10 @@ def update_history(user, spotify):
         if recently_played_uris:
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
             spotify.playlist_add_items(user.history_id, recently_played_uris)
-            logging.debug("History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
+            app.logger.info("History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
         #иначе пропускаем
         else:
-            logging.debug("List is empty. Nothing to update.")
+            app.logger.info("List is empty. Nothing to update.")
     except spotipy.SpotifyException:
         print("Nothing to add for now")
     finally:
@@ -268,7 +268,7 @@ def update_history(user, spotify):
             query = User.query.filter_by(spotify_id=spotify.current_user()['id']).first()
             query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
             db.session.commit()
-            logging.debug("Time will be updated in database")
+            app.logger.info("Time will be updated in database")
 
 
 def get_user_by_id(session_user_id):
