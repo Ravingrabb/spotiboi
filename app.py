@@ -18,8 +18,9 @@ import time
 from datetime import datetime
 import logging
 
-
+#создаём приложуху
 app = Flask(__name__)
+#SQLalchemy
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = './.flask_session/'
@@ -29,8 +30,11 @@ else:
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
+#расписания
 scheduler = APScheduler()
+#сессии
 Session(app)  
+#логи
 logging.basicConfig(filename='logs.log')
 #иниц. БД
 class User(db.Model):
@@ -134,12 +138,13 @@ def index():
         updateChecked = "checked"
         if not scheduler.state:
             scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
+            scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger = 'interval', seconds=10)
             scheduler.start()
     else:
         updateChecked = None
-        if scheduler.get_job('update_history_job'):
-            scheduler.remove_job('update_history_job')
-
+        if scheduler.get_job(session_user_id):
+            scheduler.remove_job(session_user_id)
+            
     return render_template(
         'index.html', 
         username=spotify.me()["display_name"], 
@@ -219,6 +224,24 @@ def make_history():
     update_history(user, spotify)
     return "Updated"
 
+@app.route('/logs')
+def open_logs():
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
+    if not auth_manager.get_cached_token():
+        return redirect('/')
+    spotify = spotipy.Spotify(auth_manager=auth_manager)
+    user = get_user_by_id(spotify.current_user()['id'])
+    if spotify.current_user()['id'] == "21ymkhpptvowil6ku5ljhvbua":
+        output = []
+        output.append(scheduler.state)
+        file = open('logs.log', encoding='utf-8')
+        for row in file:
+            output.append(row)
+    else:
+        output = ["no data"]
+    
+    return render_template('logs.html', bodytext=output)
+
 
 ''' Временные скрипты '''
 def get_current_history_list(playlist_id, sp):
@@ -257,10 +280,10 @@ def update_history(user, spotify):
         if recently_played_uris:
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
             spotify.playlist_add_items(user.history_id, recently_played_uris)
-            app.logger.info("History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
+            app.logger.info(user.spotify_id + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
         #иначе пропускаем
         else:
-            app.logger.info("List is empty. Nothing to update.")
+            app.logger.info(user.spotify_id + ": List is empty. Nothing to update.")
     except spotipy.SpotifyException:
         print("Nothing to add for now")
     finally:
@@ -268,7 +291,6 @@ def update_history(user, spotify):
             query = User.query.filter_by(spotify_id=spotify.current_user()['id']).first()
             query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
             db.session.commit()
-            app.logger.info("Time will be updated in database")
 
 
 def get_user_by_id(session_user_id):
@@ -279,5 +301,7 @@ def get_user_by_id(session_user_id):
         user_id = User.query.filter_by(spotify_id=session_user_id).first()
     return user_id
 
+def test_shit(user):
+    app.logger.info(user.spotify_id + ": still working")
 if __name__ == '__main__':
 	app.run(threaded=True, debug=DEBUG, host='0.0.0.0')

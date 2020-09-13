@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Логи
+{% endblock %}
+
+{% block body %}
+
+    {% for row in bodytext %}
+        <b><p style="margin-bottom: 2px; font-size: 14px;">{{ row }}</p></b>
+    {% endfor %}
+
+
+{% endblock %}
