@@ -36,6 +36,7 @@ scheduler = APScheduler()
 Session(app)  
 #логи
 logging.basicConfig(filename='logs.log')
+gunicorn_logger = logging.getLogger('gunicorn.error')
 #иниц. БД
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -303,5 +304,6 @@ def get_user_by_id(session_user_id):
 
 def test_shit(user):
     app.logger.info(user.spotify_id + ": still working")
+
 if __name__ == '__main__':
 	app.run(threaded=True, debug=DEBUG, host='0.0.0.0')

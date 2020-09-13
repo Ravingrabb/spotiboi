@@ -1,5 +1,6 @@
 #!flask/bin/python
-from app import app
+from app import app, logging, gunicorn_logger
 
 if __name__ == "__main__":
+    gunicorn_logger.info('sosi pizdu')
     app.run()
