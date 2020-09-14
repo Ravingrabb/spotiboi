@@ -11,7 +11,6 @@ from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
 from rq import Queue
 from rq_scheduler import Scheduler
-from datetime import timedelta
 
 
 import spotipy
@@ -20,8 +19,9 @@ import dotenv
 import os
 import time
 from datetime import datetime
+from datetime import timedelta
 import logging
-from tasks import test_task
+import tasks
 
 
 #создаём приложуху
@@ -154,7 +154,7 @@ def index():
         updateChecked = "checked"
         #scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
         #scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger='cron', second='*/20')
-        job2 = scheduler.schedule(datetime.utcnow(), test_task, interval=10, repeat=5)
+        job2 = scheduler.schedule(datetime.utcnow(), tasks.test_task, interval=10, repeat=5)
         scheduler.enqueue_job(job2)
     else:
         updateChecked = None
