@@ -11,6 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
 from rq import Queue
 from rq_scheduler import Scheduler
+from db import User
 
 
 import spotipy
@@ -31,6 +32,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = './.flask_session/'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 if os.environ.get('DATABASE_URL') is None:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
 else:
@@ -54,16 +56,7 @@ if __name__ != '__main__':
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
 #иниц. БД
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    spotify_id = db.Column(db.String(80), unique=True, nullable=False)
-    update = db.Column(db.Boolean,unique=False, nullable=False)
-    history_id = db.Column(db.String(80), unique=True, nullable=True)
-    update_time = db.Column(db.Integer, nullable=True)
-    last_update = db.Column(db.String(80), nullable=True)
 
-    def __repr__(self):
-        return '<User %r>' % self.id
 
 
 #создание кэша для авторизации
