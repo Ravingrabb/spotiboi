@@ -162,7 +162,7 @@ def index():
         #scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger='cron', second='*/20')
         query = User.query.filter_by(spotify_id=spotify.current_user()['id']).first()
         print(user)
-        job2 = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[user, spotify], interval=10, repeat=1)
+        job2 = scheduler.schedule(datetime.utcnow(), tasks.get_playlist_tracks, args=[user.playlist_id, spotify], interval=10, repeat=1)
         scheduler.enqueue_job(job2)
     else:
         updateChecked = None

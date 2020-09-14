@@ -50,4 +50,5 @@ def get_playlist_tracks(playlist_id, sp):
     while results['next']:
         results = sp.next(results)
         tracks.extend(results['items'])
+    print(tracks)
     return tracks
