@@ -21,10 +21,12 @@ import os
 import time
 from datetime import datetime
 import logging
+from jobs import test_shit
 
 
 #создаём приложуху
 app = Flask(__name__)
+
 #SQLalchemy
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -36,7 +38,7 @@ else:
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
 #расписания
-scheduler = Scheduler(connection=Redis(host="0.0.0.0")) # Get a scheduler for the "default" queue
+scheduler = Scheduler(connection=Redis(host="192.168.0.101")) # Get a scheduler for the "default" queue
 
 
 
@@ -151,7 +153,7 @@ def index():
         updateChecked = "checked"
         #scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
         #scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger='cron', second='*/20')
-        job2 = scheduler.schedule(datetime.utcnow(),test_shit, interval=10, repeat=5)
+        job2 = scheduler.schedule(datetime.utcnow(), test_shit, interval=10, repeat=5)
         scheduler.enqueue_job(job2)
     else:
         updateChecked = None
@@ -316,9 +318,7 @@ def get_user_by_id(session_user_id):
         user_id = User.query.filter_by(spotify_id=session_user_id).first()
     return user_id
 
-def test_shit():
-    if __name__ == '__main__':
-	    app.logger.info(": still working")
+
 
 
 if __name__ == '__main__':
