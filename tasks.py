@@ -1,2 +1,2 @@
-def test_shit(app):
+def test_shit():
     print('test work')

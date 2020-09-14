@@ -21,7 +21,7 @@ import os
 import time
 from datetime import datetime
 import logging
-from jobs import test_shit
+import jobs
 
 
 #создаём приложуху
@@ -39,6 +39,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
 #расписания
 scheduler = Scheduler(connection=Redis(host="192.168.0.101")) # Get a scheduler for the "default" queue
+queue = Queue(connection=Redis(host="192.168.0.101"))
+job = queue.enqueue(jobs.test_shit)
 
 
 
@@ -318,7 +320,8 @@ def get_user_by_id(session_user_id):
         user_id = User.query.filter_by(spotify_id=session_user_id).first()
     return user_id
 
-
+def test_shit():
+    print('test work')
 
 
 if __name__ == '__main__':
