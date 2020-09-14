@@ -38,7 +38,18 @@ else:
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
-from db import User
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    spotify_id = db.Column(db.String(80), unique=True, nullable=False)
+    update = db.Column(db.Boolean,unique=False, nullable=False)
+    history_id = db.Column(db.String(80), unique=True, nullable=True)
+    update_time = db.Column(db.Integer, nullable=True)
+    last_update = db.Column(db.String(80), nullable=True)
+
+    def __repr__(self):
+        return '<User %r>' % self.id
+        
 import tasks
 #расписания
 #scheduler = Scheduler(connection=Redis(host="192.168.0.101")) # Get a scheduler for the "default" queue

@@ -1,5 +1,4 @@
-from app import db
-from db import User
+from app import db, User
 from datetime import datetime
 import spotipy
 
