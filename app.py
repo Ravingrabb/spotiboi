@@ -36,7 +36,7 @@ else:
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
 #расписания
-scheduler = Scheduler(connection=Redis()) # Get a scheduler for the "default" queue
+scheduler = Scheduler(connection=Redis(host="0.0.0.0")) # Get a scheduler for the "default" queue
 
 
 
@@ -151,8 +151,7 @@ def index():
         updateChecked = "checked"
         #scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
         #scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger='cron', second='*/20')
-        job2 = scheduler.schedule(datetime.utcnow(),test_shit, interval=10,repeat=10)
-
+        job2 = scheduler.schedule(datetime.utcnow(),test_shit, interval=10, repeat=5)
         scheduler.enqueue_job(job2)
     else:
         updateChecked = None
