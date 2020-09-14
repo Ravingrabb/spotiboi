@@ -1,2 +1,2 @@
 def test_shit():
-    print('test work')
+    return 'test work'
