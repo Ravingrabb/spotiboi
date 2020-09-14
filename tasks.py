@@ -1,4 +1,4 @@
-from app import app, db
+from app import db, User
 from datetime import datetime
 import spotipy
 
@@ -20,10 +20,10 @@ def update_history(user, spotify):
         if recently_played_uris:
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
             spotify.playlist_add_items(user.history_id, recently_played_uris)
-            app.logger.info(user.spotify_id + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
+            print(user.spotify_id + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
         #иначе пропускаем
         else:
-            app.logger.info(user.spotify_id + ": List is empty. Nothing to update.")
+            print(user.spotify_id + ": List is empty. Nothing to update.")
     except spotipy.SpotifyException:
         print("Nothing to add for now")
     finally:
