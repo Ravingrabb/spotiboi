@@ -1,11 +1,11 @@
-import app
+from app import db
 from datetime import datetime
 import spotipy
 
 def test_task():
     print('test work')
 
-def update_history(user, spotify):
+def update_history(query, user, spotify):
      #создаётся плейлист из г
     history_playlist = get_current_history_list(user.history_id, spotify)
     #вытаскиваются последние прослушанные песни и сравниваются с текущей историей
@@ -27,10 +27,10 @@ def update_history(user, spotify):
     except spotipy.SpotifyException:
         print("Nothing to add for now")
     finally:
-        with app.db.app.app_context():
-            query = app.User.query.filter_by(spotify_id=spotify.current_user()['id']).first()
+        with db.app.app_context():
+            #query = User.query.filter_by(spotify_id=spotify.current_user()['id']).first()
             query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
-            app.db.session.commit()
+            db.session.commit()
 
 def get_current_history_list(playlist_id, sp):
     results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")

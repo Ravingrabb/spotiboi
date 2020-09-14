@@ -49,7 +49,7 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.id
-        
+
 import tasks
 #расписания
 #scheduler = Scheduler(connection=Redis(host="192.168.0.101")) # Get a scheduler for the "default" queue
@@ -160,7 +160,8 @@ def index():
         updateChecked = "checked"
         #scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
         #scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger='cron', second='*/20')
-        job2 = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[user, spotify], interval=10, repeat=5)
+        query = User.query.filter_by(spotify_id=spotify.current_user()['id']).first()
+        job2 = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[query, user, spotify], interval=10, repeat=5)
         scheduler.enqueue_job(job2)
     else:
         updateChecked = None
