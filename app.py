@@ -142,8 +142,8 @@ def index():
     if user.update == True and history_playlist_data['name']:
         updateChecked = "checked"
         if not scheduler.state:
-            scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
-            #scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger = 'interval', seconds=10)
+            #scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
+            scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger = 'interval', seconds=10)
             scheduler.start()
     else:
         updateChecked = None
@@ -239,6 +239,7 @@ def open_logs():
     if spotify.current_user()['id'] == "21ymkhpptvowil6ku5ljhvbua":
         output = []
         output.append(scheduler.state)
+        output.append(scheduler.get_jobs())
         file = open('logs.log', encoding='utf-8')
         for row in file:
             output.append(row)
@@ -246,6 +247,7 @@ def open_logs():
         output = ["no data"]
     
     return render_template('logs.html', bodytext=output)
+
 
 
 ''' Временные скрипты '''
