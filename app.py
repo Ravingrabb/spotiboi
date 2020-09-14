@@ -317,7 +317,9 @@ def get_user_by_id(session_user_id):
     return user_id
 
 def test_shit():
-    app.logger.info(": still working")
+    if __name__ == '__main__':
+	    app.logger.info(": still working")
+
 
 if __name__ == '__main__':
 	app.run(threaded=True, debug=DEBUG, host='0.0.0.0')
