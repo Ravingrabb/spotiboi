@@ -1,2 +1,2 @@
 def test_task():
-    return 'test work'
+    print('test work')
