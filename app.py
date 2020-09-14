@@ -244,7 +244,7 @@ def make_history():
     spotify = spotipy.Spotify(auth_manager=auth_manager)
     user = get_user_by_id(spotify.current_user()['id'])
 
-    update_history(user, spotify)
+    tasks.update_history(user, spotify)
     return "Updated"
 
 @app.route('/logs')
