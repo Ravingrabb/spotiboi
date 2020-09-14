@@ -1,4 +1,4 @@
-from app import db
+
 from datetime import datetime
 import spotipy
 
@@ -26,10 +26,10 @@ def update_history(user, spotify):
             print(user.spotify_id + ": List is empty. Nothing to update.")
     except spotipy.SpotifyException:
         print("Nothing to add for now")
-    finally:
-        with db.app.app_context():
-            user.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
-            db.session.commit()
+    #finally:
+    #    with db.app.app_context():
+    #        user.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
+    #        db.session.commit()
 
 def get_current_history_list(playlist_id, sp):
     results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
