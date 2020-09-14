@@ -20,9 +20,8 @@ import dotenv
 import os
 import time
 from datetime import datetime
-from datetime import timedelta
 import logging
-import tasks
+
 
 
 #создаём приложуху
@@ -40,6 +39,7 @@ else:
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
 from db import User
+import tasks
 #расписания
 #scheduler = Scheduler(connection=Redis(host="192.168.0.101")) # Get a scheduler for the "default" queue
 scheduler = Scheduler(connection=Redis()) # Get a scheduler for the "default" queue
