@@ -21,7 +21,6 @@ import os
 import time
 from datetime import datetime
 import logging
-import jobs
 
 
 #создаём приложуху
