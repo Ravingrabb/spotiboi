@@ -36,7 +36,7 @@ else:
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
 #расписания
-scheduler = Scheduler(connection=Redis()) # Get a scheduler for the "default" queue
+#scheduler = Scheduler(connection=Redis()) # Get a scheduler for the "default" queue
 queue = Queue('bar', connection=Redis())
 scheduler = Scheduler(queue=queue)
 
