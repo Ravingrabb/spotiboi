@@ -1,4 +1,3 @@
-
 from datetime import datetime
 import spotipy
 
@@ -6,7 +5,7 @@ def test_task():
     print('test work')
 
 def update_history(user, spotify):
-     #создаётся плейлист из го
+     #создаётся плейлист из г
     history_playlist = get_current_history_list(user.history_id, spotify)
     #вытаскиваются последние прослушанные песни и сравниваются с текущей историей
     results = spotify.current_user_recently_played(limit=30)
