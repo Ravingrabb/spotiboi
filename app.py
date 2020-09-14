@@ -11,7 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
 from rq import Queue
 from rq_scheduler import Scheduler
-from db import User
+
 
 
 import spotipy
@@ -39,6 +39,7 @@ else:
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
+from db import User
 #расписания
 #scheduler = Scheduler(connection=Redis(host="192.168.0.101")) # Get a scheduler for the "default" queue
 scheduler = Scheduler(connection=Redis()) # Get a scheduler for the "default" queue
