@@ -8,7 +8,11 @@ DEBUG = True
 from flask import Flask, session, request, redirect, render_template, url_for
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
-from flask_apscheduler import APScheduler
+from redis import Redis
+from rq import Queue
+from rq_scheduler import Scheduler
+from datetime import timedelta
+
 
 import spotipy
 import uuid
@@ -17,6 +21,7 @@ import os
 import time
 from datetime import datetime
 import logging
+
 
 #создаём приложуху
 app = Flask(__name__)
@@ -31,7 +36,10 @@ else:
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 db = SQLAlchemy(app)
 #расписания
-scheduler = APScheduler()
+scheduler = Scheduler(connection=Redis()) # Get a scheduler for the "default" queue
+
+
+
 #сессии
 Session(app)  
 #логи
@@ -102,7 +110,6 @@ def index():
 
     time_difference = time_worker(user)
 
-    app.logger.info('сосать хочу')
     #POST запросы
     if request.method == "POST":
         if 'updateSwitch' in request.form:
@@ -141,14 +148,15 @@ def index():
     #CRON
     if user.update == True and history_playlist_data['name']:
         updateChecked = "checked"
-        if not scheduler.state:
-            #scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
-            scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger = 'interval', seconds=10)
-            scheduler.start()
+        #scheduler.add_job(id = 'update_history_job', func = update_history, args=[user, spotify], trigger = 'interval', minutes=30)
+        #scheduler.add_job(id = session_user_id, func = test_shit, args=[user], trigger='cron', second='*/20')
+        job2 = scheduler.schedule(datetime.utcnow(),test_shit, interval=10,repeat=10)
+
+        scheduler.enqueue_job(job2)
     else:
         updateChecked = None
-        if scheduler.get_job(session_user_id):
-            scheduler.remove_job(session_user_id)
+        #if scheduler.get_job(session_user_id):
+        #    scheduler.remove_job(session_user_id)
             
     return render_template(
         'index.html', 
@@ -238,8 +246,8 @@ def open_logs():
     user = get_user_by_id(spotify.current_user()['id'])
     if spotify.current_user()['id'] == "21ymkhpptvowil6ku5ljhvbua":
         output = []
-        output.append(scheduler.state)
-        output.append(scheduler.get_jobs())
+        jobs_and_times = scheduler.get_jobs(with_times=True)
+        output.append(jobs_and_times)
         file = open('logs.log', encoding='utf-8')
         for row in file:
             output.append(row)
@@ -308,8 +316,8 @@ def get_user_by_id(session_user_id):
         user_id = User.query.filter_by(spotify_id=session_user_id).first()
     return user_id
 
-def test_shit(user):
-    app.logger.info(user.spotify_id + ": still working")
+def test_shit():
+    app.logger.info(": still working")
 
 if __name__ == '__main__':
 	app.run(threaded=True, debug=DEBUG, host='0.0.0.0')
