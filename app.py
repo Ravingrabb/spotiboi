@@ -11,7 +11,7 @@ from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
 from rq import Queue
 from rq_scheduler import Scheduler
-
+import rq_scheduler_dashboard
 
 
 import spotipy
@@ -32,6 +32,10 @@ app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = './.flask_session/'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.from_object(rq_scheduler_dashboard.default_settings)
+app.register_blueprint(rq_scheduler_dashboard.blueprint, url_prefix="/rq")
+basedir = os.path.abspath(os.path.dirname(__file__))
+SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 if os.environ.get('DATABASE_URL') is None:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
 else:
@@ -46,6 +50,7 @@ class User(db.Model):
     history_id = db.Column(db.String(80), unique=True, nullable=True)
     update_time = db.Column(db.Integer, nullable=True)
     last_update = db.Column(db.String(80), nullable=True)
+    job_id = db.Column(db.String(80), nullable=True)
 
     def __repr__(self):
         return '<User %r>' % self.id
@@ -161,6 +166,8 @@ def index():
 
         job = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[user.history_id, spotify], interval=1800, repeat=None)
         scheduler.enqueue_job(job)
+        user.job_id = job.id
+        db.session.commit()
     else:
         updateChecked = None
         #if scheduler.get_job(session_user_id):
@@ -242,7 +249,7 @@ def make_history():
     spotify = spotipy.Spotify(auth_manager=auth_manager)
     user = get_user_by_id(spotify.current_user()['id'])
 
-    tasks.update_history(user, spotify)
+    tasks.update_history(user.history_id, spotify)
     return "Updated"
 
 @app.route('/logs')
@@ -324,8 +331,6 @@ def get_user_by_id(session_user_id):
         user_id = User.query.filter_by(spotify_id=session_user_id).first()
     return user_id
 
-def test_shit():
-    print('test work')
 
 
 if __name__ == '__main__':
