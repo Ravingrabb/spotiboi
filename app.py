@@ -163,15 +163,15 @@ def index():
     #CRON
     if user.update == True and history_playlist_data['name']:
         updateChecked = "checked"
-
-        job = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[user.history_id, spotify], interval=1800, repeat=None)
-        scheduler.enqueue_job(job)
-        user.job_id = job.id
-        db.session.commit()
+        if not user.job_id or user.job_id not in scheduler:
+            job = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[user.history_id, spotify], interval=1800, repeat=None)
+            scheduler.enqueue_job(job)
+            user.job_id = job.id
+            db.session.commit()
     else:
         updateChecked = None
-        #if scheduler.get_job(session_user_id):
-        #    scheduler.remove_job(session_user_id)
+        if user.job_id in scheduler:
+            scheduler.cancel(user.job_id)
             
     return render_template(
         'index.html', 
