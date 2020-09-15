@@ -27,20 +27,25 @@ import logging
 #создаём приложуху
 app = Flask(__name__)
 
-#SQLalchemy
+#Конфиги
 app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = './.flask_session/'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+os.environ["RQ_SCHEDULER_DASHBOARD_USERNAME"] = "Raving"
+os.environ['RQ_SCHEDULER_DASHBOARD_PASSWORD'] = "357391"
+
 app.config.from_object(rq_scheduler_dashboard.default_settings)
 app.register_blueprint(rq_scheduler_dashboard.blueprint, url_prefix="/rq")
 basedir = os.path.abspath(os.path.dirname(__file__))
+
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 if os.environ.get('DATABASE_URL') is None:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
 else:
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+
 db = SQLAlchemy(app)
 
 class User(db.Model):
@@ -60,21 +65,11 @@ import tasks
 #scheduler = Scheduler(connection=Redis(host="192.168.0.101")) # Get a scheduler for the "default" queue
 scheduler = Scheduler(connection=Redis()) # Get a scheduler for the "default" queue
 
-
-
-
-
 #сессии
 Session(app)  
 #логи
-logging.basicConfig(filename='logs.log')
-if __name__ != '__main__':
-    gunicorn_logger = logging.getLogger('gunicorn.error')
-    app.logger.handlers = gunicorn_logger.handlers
-    app.logger.setLevel(gunicorn_logger.level)
+logging.basicConfig(filename='logs.log', level=logging.DEBUG)
 #иниц. БД
-
-
 
 #создание кэша для авторизации
 caches_folder = './.spotify_caches/'
@@ -109,6 +104,7 @@ def index():
     # Step 3. Being redirected from Spotify auth page
         auth_manager.get_access_token(request.args.get("code"))
         return redirect('/')
+
 
     if not auth_manager.get_cached_token():
     # Step 2. Display sign in link when no token
@@ -145,7 +141,7 @@ def index():
             'images': None
         }
 
-    
+    #просматриваем плейлисты и находим нужный
     playlists = spotify.current_user_playlists()
     for idx, item in enumerate(playlists['items']):
         if "History" in item['name']:
@@ -207,16 +203,6 @@ def sign_out():
     return redirect('/')
 
 
-@app.route('/playlists')
-def playlists():
-    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
-    if not auth_manager.get_cached_token():
-        return redirect('/')
-
-    spotify = spotipy.Spotify(auth_manager=auth_manager)
-    return spotify.current_user_playlists()
-
-
 @app.route('/currently_playing')
 def currently_playing():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
@@ -232,15 +218,6 @@ def currently_playing():
             currently_played.append(track['name'])
     return render_template('recent.html', bodytext=currently_played)
 
-@app.route('/current_user')
-def current_user():
-    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
-    if not auth_manager.get_cached_token():
-        return redirect('/')
-
-    spotify = spotipy.Spotify(auth_manager=auth_manager)
-    return spotify.current_user()
-
 @app.route('/make_history')
 def make_history():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
@@ -251,6 +228,18 @@ def make_history():
 
     tasks.update_history(user.history_id, spotify)
     return "Updated"
+
+@app.route('/test')
+def make_history():
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
+    if not auth_manager.get_cached_token():
+        return redirect('/')
+    spotify = spotipy.Spotify(auth_manager=auth_manager)
+    user = get_user_by_id(spotify.current_user()['id'])
+
+    test_job = scheduler.schedule(datetime.utcnow(), update_history, args=[user.history_id, spotify], interval=10, repeat=1)
+    scheduler.enqueue_job(test_job)
+    return "sex"
 
 @app.route('/logs')
 def open_logs():
@@ -271,33 +260,17 @@ def open_logs():
     
     return render_template('logs.html', bodytext=output)
 
+def get_user_by_id(session_user_id):
+    user_id = User.query.filter_by(spotify_id=session_user_id).first()
+    if not user_id:
+        db.session.add(User(spotify_id=session_user_id, update=False))
+        db.session.commit()
+        user_id = User.query.filter_by(spotify_id=session_user_id).first()
+    return user_id
 
-
-''' Временные скрипты '''
-def get_current_history_list(playlist_id, sp):
-    results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
-    tracks = results['items']
-    while results['next']:
-        results = sp.next(results)
-        tracks.extend(results['items'])
-
-    currentPlaylist = []
-    for item in enumerate(tracks):
-        track = item[1]['track']
-        currentPlaylist.append(track['uri'])
-    return currentPlaylist
-
-def get_playlist_tracks(playlist_id, sp):
-    results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
-    tracks = results['items']
-    while results['next']:
-        results = sp.next(results)
-        tracks.extend(results['items'])
-    return tracks
-
-def update_history(user, spotify):
-     #создаётся плейлист из го
-    history_playlist = get_current_history_list(user.history_id, spotify)
+def update_history(history_id, spotify):
+     #создаётся плейлист из г
+    history_playlist = tasks.get_current_history_list(history_id, spotify)
     #вытаскиваются последние прослушанные песни и сравниваются с текущей историей
     results = spotify.current_user_recently_played(limit=30)
     recently_played_uris = []
@@ -309,29 +282,17 @@ def update_history(user, spotify):
         #если есть новые треки для добавления - они добавляются
         if recently_played_uris:
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
-            spotify.playlist_add_items(user.history_id, recently_played_uris)
-            app.logger.info(user.spotify_id + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
+            spotify.playlist_add_items(history_id, recently_played_uris)
+            print(spotify.current_user()['id'] + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
         #иначе пропускаем
         else:
-            app.logger.info(user.spotify_id + ": List is empty. Nothing to update.")
+            print(spotify.current_user()['id'] + ": List is empty. Nothing to update.")
     except spotipy.SpotifyException:
         print("Nothing to add for now")
-    finally:
-        with db.app.app_context():
-            query = User.query.filter_by(spotify_id=spotify.current_user()['id']).first()
-            query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
-            db.session.commit()
+    #finally:
+    #    session['update_time'] = datetime.strftime(datetime.now(), "%H:%M:%S")
 
-
-def get_user_by_id(session_user_id):
-    user_id = User.query.filter_by(spotify_id=session_user_id).first()
-    if not user_id:
-        db.session.add(User(spotify_id=session_user_id, update=False))
-        db.session.commit()
-        user_id = User.query.filter_by(spotify_id=session_user_id).first()
-    return user_id
-
-
-
+def test_my_ass():
+    return "gay"
 if __name__ == '__main__':
 	app.run(threaded=True, debug=DEBUG, host='0.0.0.0')

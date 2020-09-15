@@ -1,4 +1,5 @@
 from datetime import datetime
+from flask import session
 import spotipy
 
 def test_task():
@@ -6,6 +7,7 @@ def test_task():
 
 def update_history(history_id, spotify):
      #создаётся плейлист из г
+    
     history_playlist = get_current_history_list(history_id, spotify)
     #вытаскиваются последние прослушанные песни и сравниваются с текущей историей
     results = spotify.current_user_recently_played(limit=30)
@@ -26,9 +28,7 @@ def update_history(history_id, spotify):
     except spotipy.SpotifyException:
         print("Nothing to add for now")
     #finally:
-    #    with db.app.app_context():
-    #        user.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
-    #        db.session.commit()
+    #    session['update_time'] = datetime.strftime(datetime.now(), "%H:%M:%S")
 
 def get_current_history_list(playlist_id, sp):
     results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
