@@ -81,7 +81,6 @@ from dotenv import load_dotenv
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
-    print("Loaded")
 
 def session_cache_path():
     return caches_folder + session.get('uuid')
@@ -160,14 +159,17 @@ def index():
     if user.update == True and history_playlist_data['name']:
         updateChecked = "checked"
         if not user.job_id or user.job_id not in scheduler:
-            job = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[user.history_id, spotify], interval=1800, repeat=None)
+            job = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[user.spotify_id, user.history_id, spotify], interval=1800, repeat=None)
             scheduler.enqueue_job(job)
             user.job_id = job.id
             db.session.commit()
     else:
         updateChecked = None
-        if user.job_id in scheduler:
-            scheduler.cancel(user.job_id)
+        try:
+            if user.job_id in scheduler:
+                scheduler.cancel(user.job_id)
+        except:
+            pass
             
     return render_template(
         'index.html', 
@@ -226,20 +228,20 @@ def make_history():
     spotify = spotipy.Spotify(auth_manager=auth_manager)
     user = get_user_by_id(spotify.current_user()['id'])
 
-    tasks.update_history(user.history_id, spotify)
+    tasks.update_history(user.spotify_id, user.history_id, spotify)
     return "Updated"
 
 @app.route('/test')
-def make_history():
+def test_my_ass():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
     if not auth_manager.get_cached_token():
         return redirect('/')
     spotify = spotipy.Spotify(auth_manager=auth_manager)
     user = get_user_by_id(spotify.current_user()['id'])
 
-    test_job = scheduler.schedule(datetime.utcnow(), update_history, args=[user.history_id, spotify], interval=10, repeat=1)
+    test_job = scheduler.schedule(datetime.utcnow(), tasks.test_task, args=[spotify.current_user()['id']], interval=10, repeat=1)
     scheduler.enqueue_job(test_job)
-    return "sex"
+    return "slolok"
 
 @app.route('/logs')
 def open_logs():
@@ -292,7 +294,5 @@ def update_history(history_id, spotify):
     #finally:
     #    session['update_time'] = datetime.strftime(datetime.now(), "%H:%M:%S")
 
-def test_my_ass():
-    return "gay"
 if __name__ == '__main__':
 	app.run(threaded=True, debug=DEBUG, host='0.0.0.0')

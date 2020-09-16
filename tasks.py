@@ -1,11 +1,13 @@
 from datetime import datetime
 from flask import session
 import spotipy
+from app import db, User
 
-def test_task():
-    print('test work')
 
-def update_history(history_id, spotify):
+def test_task(user_id):
+    pass
+
+def update_history(user_id, history_id, spotify):
      #создаётся плейлист из г
     
     history_playlist = get_current_history_list(history_id, spotify)
@@ -27,8 +29,10 @@ def update_history(history_id, spotify):
             print(spotify.current_user()['id'] + ": List is empty. Nothing to update.")
     except spotipy.SpotifyException:
         print("Nothing to add for now")
-    #finally:
-    #    session['update_time'] = datetime.strftime(datetime.now(), "%H:%M:%S")
+    finally:
+        query = User.query.filter_by(spotify_id=user_id).first()
+        query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
+        db.session.commit()
 
 def get_current_history_list(playlist_id, sp):
     results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
