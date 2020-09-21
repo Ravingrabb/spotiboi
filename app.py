@@ -207,23 +207,62 @@ def attach_playlist(spotify, user):
     try:
         #сморим все плейлисты
         playlists = spotify.current_user_playlists()
-        #если привязан ID плейлиста и юзер подписан на него
+        #если привязан ID плейлиста и юзер подписан на него, то выводим инфу
         if user.history_id and spotify.playlist_is_following(user.history_id, [user.spotify_id])[0]:
-            current_playlist = spotify.playlist(user.history_id)
-            app.logger.info(current_playlist)
+            current_playlist = spotify.playlist(user.history_id, fields="name, id, images")
             history_playlist_data['name'] = current_playlist['name']
             history_playlist_data['id'] = current_playlist['id']
             history_playlist_data['images'] = current_playlist['images'][0]['url']
-        #если плейлиста нет или другой ID, то назначаем новый
-        if not user.history_id or user.history_id != history_playlist_data['id']:    
-            user.history_id = history_playlist_data['id']
+        # если ID плейлиста привязан, но юзер не подписан на плейлист
+        elif user.history_id and not spotify.playlist_is_following(user.history_id, [user.spotify_id])[0]:
+            user.history_id = None
             db.session.commit()
-        return history_playlist_data
+        # если ID плейлиста не привязан, например если только что создали плейлист History через спотибой
+        elif not user.history_id:
+            for idx, item in enumerate(playlists['items']):
+                if item['name'] == "History":
+                    history_playlist_data['name'] = item['name']
+                    history_playlist_data['id'] = item['id']
+                    image_item = item['images']
+                if image_item:
+                    history_playlist_data['images'] = image_item[0]['url']
     except:
-        playlists = None
+        app.logger.info(user.spotify_id + ': Плейлист не прикреплён, нечего показывать')
+    finally:
         return history_playlist_data
         
+@app.route('/test')
+def test_drive():
+    menu = [
+    {'url' : url_for('currently_playing'),'title' : 'recently played'},
+    ]
+    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
+    if not auth_manager.get_cached_token():
+        return redirect('/')
 
+    #ЗАПУСК
+    spotify = spotipy.Spotify(auth_manager=auth_manager)
+    addictional_info=None
+    session_user_id = spotify.current_user()['id']
+    user = get_user_query_by_id(session_user_id)
+
+    time_difference = time_worker(user)
+
+    #поиск плейлиста
+
+    #просматриваем плейлисты и находим нужный
+    #is_following = spotify.playlist_is_following(user.history_id, [session_user_id])[0]
+    history_playlist_data = attach_playlist(spotify, user)
+            
+    return render_template(
+        'index.html', 
+        username=spotify.me()["display_name"], 
+        menu = menu,
+        updateChecked = True,
+        addictional_info = user,
+        history_playlist_data = history_playlist_data,
+        time_difference = time_difference
+        )
 
 
 @app.route('/sign_out')
