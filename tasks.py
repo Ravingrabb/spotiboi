@@ -22,7 +22,7 @@ def update_history(user_id, history_id, spotify):
         #если есть новые треки для добавления - они добавляются
         if recently_played_uris:
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
-            spotify.playlist_add_items(history_id, recently_played_uris)
+            spotify.playlist_add_items(history_id, recently_played_uris, position=0)
             print(spotify.current_user()['id'] + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
         #иначе пропускаем
         else:
@@ -46,12 +46,3 @@ def get_current_history_list(playlist_id, sp):
         track = item[1]['track']
         currentPlaylist.append(track['uri'])
     return currentPlaylist
-
-def get_playlist_tracks(playlist_id, sp):
-    results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
-    tracks = results['items']
-    while results['next']:
-        results = sp.next(results)
-        tracks.extend(results['items'])
-    print(tracks)
-    return tracks
