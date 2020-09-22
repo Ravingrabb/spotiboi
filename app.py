@@ -5,7 +5,7 @@
 """
 DEBUG = True
 
-from flask import Flask, session, request, redirect, render_template, url_for
+from flask import Flask, session, request, redirect, render_template, url_for, flash
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
@@ -52,9 +52,11 @@ class User(db.Model):
     update_time = db.Column(db.Integer, nullable=True)
     last_update = db.Column(db.String(80), nullable=True)
     job_id = db.Column(db.String(80), nullable=True)
+    last_uuid = db.Column(db.String(80), nullable=True)
 
     def __repr__(self):
         return '<User %r>' % self.id
+
 
 import tasks
 #расписания
@@ -116,7 +118,7 @@ def index():
     user = get_user_query_by_id(session_user_id)
 
     time_difference = time_worker(user)
-
+    
     #POST запросы
     if request.method == "POST":
         if 'updateSwitch' in request.form:
@@ -127,33 +129,49 @@ def index():
             db.session.commit()
 
         if 'create_playlist' in request.form:
-            spotify.user_playlist_create(user = session_user_id, name='History', description='Listening history. Created by SpotiBoi')
+            spotify.user_playlist_create(user = session_user_id, name='History (fresh!)', description='Listening history. Created by SpotiBoi')
 
-        if 'de-attach_playlist' in request.form:
+        if 'detach_playlist' in request.form:
             user.history_id = None
+            user.update = False
             db.session.commit()
+
+        if 'uriInput' in request.form:
+            data = request.form.get('uriInput')
+            #если рандом текст какой-то
+            if "spotify:playlist:" not in data:
+                flash('Wrong URI', category='alert-danger')
+            else:
+                data = data.replace('spotify:playlist:', '')
+                if ' ' in data:
+                    data = data.replace(' ', '')
+                if spotify.playlist_is_following(data, [user.spotify_id])[0]:
+                    user.history_id = data
+                    db.session.commit()
+                    flash('Success!', category='alert-success')
+                else:
+                    flash('You are not playlist creator or you are not following it', category='alert-danger')
+                    app.logger.info('Пытаешься не свой плейлист прикрепить далбаёб.....')
 
 
     #поиск плейлиста
-    history_playlist_data = {
-            'name' : None,
-            'id' : None,
-            'images': None
-        }
-
-    #просматриваем плейлисты и находим нужный
-    #is_following = spotify.playlist_is_following(user.history_id, [session_user_id])[0]
-    find_playlist(spotify, user, history_playlist_data)
-
+    history_playlist_data = attach_playlist(spotify, user)
  
-    #CRON
-    if user.update == True and history_playlist_data['name'] and user.history_id:
+    #CRON 
+    
+    # если autoupdate = ON
+    if user.update == True and user.history_id:
         updateChecked = "checked"
+        #если работа не задана или она не в расписании
         if not user.job_id or user.job_id not in scheduler:
-            job = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[user.spotify_id, user.history_id, spotify], interval=1800, repeat=None)
-            scheduler.enqueue_job(job)
-            user.job_id = job.id
+            create_job(user, spotify)
+        #если работа работается, но uuid не совпадает
+        if user.job_id in scheduler and user.last_uuid != session.get('uuid'):
+            scheduler.cancel(user.job_id)
+            create_job(user, spotify)
+            user.last_uuid = session.get('uuid')
             db.session.commit()
+    # если autoupdate = OFF
     else:
         updateChecked = None
         try:
@@ -220,17 +238,29 @@ def attach_playlist(spotify, user):
         # если ID плейлиста не привязан, например если только что создали плейлист History через спотибой
         elif not user.history_id:
             for idx, item in enumerate(playlists['items']):
-                if item['name'] == "History":
-                    history_playlist_data['name'] = item['name']
+                if item['name'] == "History (fresh!)":
+                    history_playlist_data['name'] = "History"
                     history_playlist_data['id'] = item['id']
                     image_item = item['images']
                 if image_item:
                     history_playlist_data['images'] = image_item[0]['url']
+            user.history_id = history_playlist_data['id']
+            db.session.commit()
+            spotify.playlist_change_details(history_playlist_data['id'], name="History")
     except:
         app.logger.info(user.spotify_id + ': Плейлист не прикреплён, нечего показывать')
     finally:
         return history_playlist_data
         
+
+def create_job(user, spotify, job_time=30):
+    job_time = job_time * 60
+    job = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[user.spotify_id, user.history_id, spotify], interval=job_time, repeat=None)
+    scheduler.enqueue_job(job)
+    user.job_id = job.id
+    db.session.commit()
+
+
 @app.route('/test')
 def test_drive():
     menu = [
