@@ -151,7 +151,6 @@ def index():
                     flash('Success!', category='alert-success')
                 else:
                     flash('You are not playlist creator or you are not following it', category='alert-danger')
-                    app.logger.info('Пытаешься не свой плейлист прикрепить далбаёб.....')
 
 
     #поиск плейлиста
