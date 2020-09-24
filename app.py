@@ -5,13 +5,15 @@
 """
 DEBUG = True
 
-from flask import Flask, session, request, redirect, render_template, url_for, flash, jsonify
+from flask import Flask, session, request, redirect, render_template, url_for, flash, jsonify, json
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
 from rq import Queue
 from rq_scheduler import Scheduler
 import rq_scheduler_dashboard
+from flask_migrate import Migrate
+
 
 
 import spotipy
@@ -43,6 +45,7 @@ else:
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -53,6 +56,8 @@ class User(db.Model):
     last_update = db.Column(db.String(80), nullable=True)
     job_id = db.Column(db.String(80), nullable=True)
     last_uuid = db.Column(db.String(80), nullable=True)
+    fixed_dedup = db.Column(db.Integer, nullable=True, default=0)
+    fixed_capacity = db.Column(db.Integer, nullable=True, default=0)
 
     def __repr__(self):
         return '<User %r>' % self.id
@@ -113,11 +118,22 @@ def index():
 
     #ЗАПУСК
     spotify = spotipy.Spotify(auth_manager=auth_manager)
-    addictional_info=None
     session_user_id = spotify.current_user()['id']
     user = get_user_query_by_id(session_user_id)
 
+    #вычислятор времени
     time_difference = time_worker(user)
+
+    #settings
+    settings = {
+        'dedup_status' : None,
+        'dedup_value' : 0,
+
+    }
+    if  user.fixed_dedup and user.fixed_dedup > 0:
+        settings['dedup_status'] = 'checked'
+        settings['dedup_value'] = user.fixed_dedup
+
     
     #POST запросы
     if request.method == "POST":
@@ -159,7 +175,6 @@ def index():
     history_playlist_data = attach_playlist(spotify, user)
  
     #CRON 
-    
     # если autoupdate = ON
     if user.update == True and user.history_id:
         updateChecked = "checked"
@@ -180,15 +195,16 @@ def index():
                 scheduler.cancel(user.job_id)
         except:
             pass
+
             
     return render_template(
         'index.html', 
         username=spotify.me()["display_name"], 
         menu = menu,
         updateChecked = updateChecked,
-        addictional_info = user,
         history_playlist_data = history_playlist_data,
-        time_difference = time_difference
+        time_difference = time_difference,
+        settings = settings
         )
 
 def time_worker(user):
@@ -298,6 +314,27 @@ def make_history():
     response = tasks.update_history(user.spotify_id, user.history_id, spotify)
 
     return jsonify({'response': response})
+
+@app.route('/update_settings', methods=['POST'])
+def update_settings():
+    if request.method == "POST":
+        auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
+        if not auth_manager.get_cached_token():
+            return redirect('/')
+        spotify = spotipy.Spotify(auth_manager=auth_manager)
+        user = get_user_query_by_id(spotify.current_user()['id'])
+
+        dedupStatus = request.form['dedupToggle']
+        dedupValue = request.form['dedupValue']
+        if dedupStatus == "true":
+            user.fixed_dedup = dedupValue
+        if dedupStatus == 'false':
+            user.fixed_dedup = None
+        db.session.commit()
+
+        return jsonify({'response': "Success!"})
+    else:
+        return jsonify({'response': "bruh"})
 
 @app.route('/logs')
 def open_logs():

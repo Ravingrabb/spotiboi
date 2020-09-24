@@ -14,20 +14,6 @@
   $('#deattachModal').on('shown.bs.modal', function () {
   $('#deattachModal').trigger('focus')
 })
-
-function manual_update() {
-            $.ajax({
-                type: "POST",
-                url: "/test",
-                contentType: 'application/json;charset=UTF-8',
-                data: {
-                  update: true
-                },
-                success: function(response){
-                  console.log(response.data)
-                },
-            });
-        }
 </script>
 
 <div class="album py-5 bg-light">
@@ -60,10 +46,18 @@ function manual_update() {
                 <div class="d-flex justify-content-between align-items-center">
                   <div class="btn-group">
                     <button type="button" onclick="window.open('https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
-                    '_blank')" class="btn btn-sm btn-outline-secondary">View</button>
+                    '_blank')" class="btn btn-sm btn-outline-secondary">
+                    View
+                    </button>
                     <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary">
                       <span id="updateSpinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                       Update
+                    </button>
+                    <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#settingsModal">
+                      <svg width="21" height="21" viewBox="0 0 16 16" class="bi bi-gear" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M8.837 1.626c-.246-.835-1.428-.835-1.674 0l-.094.319A1.873 1.873 0 0 1 4.377 3.06l-.292-.16c-.764-.415-1.6.42-1.184 1.185l.159.292a1.873 1.873 0 0 1-1.115 2.692l-.319.094c-.835.246-.835 1.428 0 1.674l.319.094a1.873 1.873 0 0 1 1.115 2.693l-.16.291c-.415.764.42 1.6 1.185 1.184l.292-.159a1.873 1.873 0 0 1 2.692 1.116l.094.318c.246.835 1.428.835 1.674 0l.094-.319a1.873 1.873 0 0 1 2.693-1.115l.291.16c.764.415 1.6-.42 1.184-1.185l-.159-.291a1.873 1.873 0 0 1 1.116-2.693l.318-.094c.835-.246.835-1.428 0-1.674l-.319-.094a1.873 1.873 0 0 1-1.115-2.692l.16-.292c.415-.764-.42-1.6-1.185-1.184l-.291.159A1.873 1.873 0 0 1 8.93 1.945l-.094-.319zm-2.633-.283c.527-1.79 3.065-1.79 3.592 0l.094.319a.873.873 0 0 0 1.255.52l.292-.16c1.64-.892 3.434.901 2.54 2.541l-.159.292a.873.873 0 0 0 .52 1.255l.319.094c1.79.527 1.79 3.065 0 3.592l-.319.094a.873.873 0 0 0-.52 1.255l.16.292c.893 1.64-.902 3.434-2.541 2.54l-.292-.159a.873.873 0 0 0-1.255.52l-.094.319c-.527 1.79-3.065 1.79-3.592 0l-.094-.319a.873.873 0 0 0-1.255-.52l-.292.16c-1.64.893-3.433-.902-2.54-2.541l.159-.292a.873.873 0 0 0-.52-1.255l-.319-.094c-1.79-.527-1.79-3.065 0-3.592l.319-.094a.873.873 0 0 0 .52-1.255l-.16-.292c-.892-1.64.902-3.433 2.541-2.54l.292.159a.873.873 0 0 0 1.255-.52l.094-.319z"/>
+                        <path fill-rule="evenodd" d="M8 5.754a2.246 2.246 0 1 0 0 4.492 2.246 2.246 0 0 0 0-4.492zM4.754 8a3.246 3.246 0 1 1 6.492 0 3.246 3.246 0 0 1-6.492 0z"/>
+                      </svg>
                     </button>
                   </div>
                   {% if time_difference != None %}
@@ -132,10 +126,46 @@ function manual_update() {
           </div>
         </form>
       </div>
-
     </div>
   </div>
 </div>
+
+<!-- Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Settings</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id='settingsForm'>
+          <div class="custom-control custom-switch">
+          <input type="checkbox" class="custom-control-input" name='fixedDedupSwitch' id="fixedDedupSwitch" onchange="checkCheckbox('fixedDedupSwitch', 'dedupValue')" {{settings.dedup_status}}>
+            <label class="custom-control-label" for="fixedDedupSwitch">Fixed de-duplicate</label>
+          </div>
+          <input id="dedupValue" type="number" 
+            {% if settings.dedup_status %} 
+              class="form-control reveal" value='{{settings.dedup_value}}'
+            {% else %}
+              class="form-control" value='100'
+            {% endif %}
+          >   
+          <input type="button" id='updateSettingsButton' value="Save" class="btn btn-sm btn-outline-primary" >
+        </form>
+        <div style="margin-top: 15px;" class="alert alert-success collapse" role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <div class='alertTextArea'></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
   {% for cat, msg in get_flashed_messages(True) %}
   <div class="alert {{cat}}" role="alert">
     {{msg}}
@@ -150,6 +180,37 @@ function manual_update() {
       </div>
 
   <script>
+    function checkCheckbox(id, inputId){
+      console.log(document.getElementById(id).checked);
+      isChecked = document.getElementById(id).checked;
+      if (isChecked) {
+        $('#' + inputId).addClass('reveal')
+      }
+      if (!isChecked) {
+        $('#' + inputId).removeClass('reveal')
+      }
+    }
+
+    // settiongs AJAX
+    $('#updateSettingsButton').click(function(){
+        $.ajax({
+                type: "POST",
+                url: "/update_settings",
+                dataType: 'json',
+                data: {
+                  dedupToggle: document.getElementById("fixedDedupSwitch").checked,
+                  dedupValue: $('#dedupValue').val()
+                      },
+              })
+        .done(function(data){
+              $('#settingsModal .alert').show()
+              $('#settingsModal .alert .alertTextArea').text(data.response)
+              $('#settingsModal .alert').delay(5000).fadeOut("slow")
+              console.log(data.response)
+              })
+          });
+          
+    //update AJAX
     $('#manualUpdate').click(function(){
         $('#updateSpinner').addClass('busy')
         $.ajax({
