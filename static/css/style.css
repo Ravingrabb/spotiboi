@@ -10,3 +10,11 @@ h1,h2,h3,h4,h5, a, p {
     margin-top: 30px;
     margin-left: 40%;
 }
+
+#updateSpinner { 
+    display: none; 
+} 
+
+.busy { 
+    display: inline-block !important
+}

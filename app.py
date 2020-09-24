@@ -5,7 +5,7 @@
 """
 DEBUG = True
 
-from flask import Flask, session, request, redirect, render_template, url_for, flash
+from flask import Flask, session, request, redirect, render_template, url_for, flash, jsonify
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
@@ -153,6 +153,8 @@ def index():
                     flash('You are not playlist creator or you are not following it', category='alert-danger')
 
 
+
+
     #поиск плейлиста
     history_playlist_data = attach_playlist(spotify, user)
  
@@ -259,41 +261,6 @@ def create_job(user, spotify, job_time=30):
     user.job_id = job.id
     db.session.commit()
 
-
-@app.route('/test')
-def test_drive():
-    menu = [
-    {'url' : url_for('currently_playing'),'title' : 'recently played'},
-    ]
-    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
-    if not auth_manager.get_cached_token():
-        return redirect('/')
-
-    #ЗАПУСК
-    spotify = spotipy.Spotify(auth_manager=auth_manager)
-    addictional_info=None
-    session_user_id = spotify.current_user()['id']
-    user = get_user_query_by_id(session_user_id)
-
-    time_difference = time_worker(user)
-
-    #поиск плейлиста
-
-    #просматриваем плейлисты и находим нужный
-    #is_following = spotify.playlist_is_following(user.history_id, [session_user_id])[0]
-    history_playlist_data = attach_playlist(spotify, user)
-            
-    return render_template(
-        'index.html', 
-        username=spotify.me()["display_name"], 
-        menu = menu,
-        updateChecked = True,
-        addictional_info = user,
-        history_playlist_data = history_playlist_data,
-        time_difference = time_difference
-        )
-
-
 @app.route('/sign_out')
 def sign_out():
     try:
@@ -320,7 +287,7 @@ def currently_playing():
             currently_played.append(track['name'])
     return render_template('recent.html', bodytext=currently_played)
 
-@app.route('/make_history')
+@app.route('/make_history', methods=['POST'])
 def make_history():
     auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
     if not auth_manager.get_cached_token():
@@ -328,20 +295,9 @@ def make_history():
     spotify = spotipy.Spotify(auth_manager=auth_manager)
     user = get_user_query_by_id(spotify.current_user()['id'])
 
-    tasks.update_history(user.spotify_id, user.history_id, spotify)
-    return "Updated"
+    response = tasks.update_history(user.spotify_id, user.history_id, spotify)
 
-@app.route('/test')
-def test_my_ass():
-    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
-    if not auth_manager.get_cached_token():
-        return redirect('/')
-    spotify = spotipy.Spotify(auth_manager=auth_manager)
-    user = get_user_query_by_id(spotify.current_user()['id'])
-
-    test_job = scheduler.schedule(datetime.utcnow(), tasks.test_task, args=[spotify.current_user()['id']], interval=10, repeat=1)
-    scheduler.enqueue_job(test_job)
-    return "slolok"
+    return jsonify({'response': response})
 
 @app.route('/logs')
 def open_logs():
@@ -361,6 +317,12 @@ def open_logs():
         output = ["no data"]
     
     return render_template('logs.html', bodytext=output)
+
+@app.route('/logs/clear')
+def clear_logs():
+    with open('logs.log', 'w'):
+        pass
+    return 'Success!'
 
 def get_user_query_by_id(session_user_id):
     query= User.query.filter_by(spotify_id=session_user_id).first()

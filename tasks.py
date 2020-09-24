@@ -24,11 +24,14 @@ def update_history(user_id, history_id, spotify):
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
             spotify.playlist_add_items(history_id, recently_played_uris, position=0)
             print(spotify.current_user()['id'] + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
+            return ("History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
         #иначе пропускаем
         else:
             print(spotify.current_user()['id'] + ": List is empty. Nothing to update.")
+            return ("List is empty. Nothing to update.")
     except spotipy.SpotifyException:
         print("Nothing to add for now")
+        return ("Nothing to add for now")
     finally:
         query = User.query.filter_by(spotify_id=user_id).first()
         query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")

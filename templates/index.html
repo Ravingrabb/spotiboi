@@ -14,6 +14,20 @@
   $('#deattachModal').on('shown.bs.modal', function () {
   $('#deattachModal').trigger('focus')
 })
+
+function manual_update() {
+            $.ajax({
+                type: "POST",
+                url: "/test",
+                contentType: 'application/json;charset=UTF-8',
+                data: {
+                  update: true
+                },
+                success: function(response){
+                  console.log(response.data)
+                },
+            });
+        }
 </script>
 
 <div class="album py-5 bg-light">
@@ -47,8 +61,10 @@
                   <div class="btn-group">
                     <button type="button" onclick="window.open('https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
                     '_blank')" class="btn btn-sm btn-outline-secondary">View</button>
-                    <button type="button" onclick="window.open('/make_history',
-                    '_blank')" class="btn btn-sm btn-outline-secondary">Update</button>
+                    <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary">
+                      <span id="updateSpinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      Update
+                    </button>
                   </div>
                   {% if time_difference != None %}
                     <small class="text-muted">Updated {{ time_difference }} min ago</small>
@@ -125,11 +141,37 @@
     {{msg}}
   </div>
   {% endfor %}
+  
+      <div id='successAlert' class="alert alert-success collapse" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <div id='alertTextArea'></div>
+      </div>
+
+  <script>
+    $('#manualUpdate').click(function(){
+        $('#updateSpinner').addClass('busy')
+        $.ajax({
+                type: "POST",
+                url: "/make_history",
+                data: {update: true},
+              })
+        .done(function(data){
+              $('#updateSpinner').removeClass('busy')
+              $('#successAlert').show()
+              $('#alertTextArea').text(data.response)
+              $('#successAlert').delay(5000).fadeOut("slow")
+              })
+          });
+  </script>
+
 {% endblock %}
 
 <script>
+
   window.open(
   'https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
   '_blank' // <- This is what makes it open in a new window.
-);
+);      
 </script>
