@@ -9,7 +9,7 @@
     {% if bodytext %}
         <h2>Last 10 track</h2>
         {% for m in bodytext %}
-        <p>{{ m }}</p>
+        <p>{{m.artists[0].name}} - {{m.name}}</p>
         {% endfor %}
     {% endif %}
 

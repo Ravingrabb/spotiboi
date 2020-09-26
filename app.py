@@ -13,7 +13,7 @@ from rq import Queue
 from rq_scheduler import Scheduler
 import rq_scheduler_dashboard
 from flask_migrate import Migrate
-
+from pprint import pprint
 
 
 import spotipy
@@ -299,8 +299,7 @@ def currently_playing():
     results = spotify.current_user_recently_played(limit=10)
     currently_played = []
     for i, item in enumerate(results['items']):
-            track = item['track']
-            currently_played.append(track['name'])
+            currently_played.append(item['track'])
     return render_template('recent.html', bodytext=currently_played)
 
 @app.route('/make_history', methods=['POST'])
@@ -335,6 +334,26 @@ def update_settings():
         return jsonify({'response': "Success!"})
     else:
         return jsonify({'response': "bruh"})
+
+@app.route('/auto_update', methods=['POST'])
+def auto_update():
+    if request.method == "POST":
+        auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
+        if not auth_manager.get_cached_token():
+            return redirect('/')
+        spotify = spotipy.Spotify(auth_manager=auth_manager)
+        user = get_user_query_by_id(spotify.current_user()['id'])
+
+        try:
+            if request.form['update']:
+                user.update = True
+            else:
+                user.update = False
+            db.session.commit()
+            return jsonify({'response': "Success!"})
+        except:
+            return jsonify({'response': "bruh"})
+
 
 @app.route('/logs')
 def open_logs():

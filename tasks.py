@@ -2,14 +2,12 @@ from datetime import datetime
 from flask import session
 import spotipy
 from app import db, User
-
+from pprint import pprint
 
 
 def update_history(user_id, history_id, spotify):
-     #создаётся плейлист из г
     query = User.query.filter_by(spotify_id=user_id).first()
     history_playlist = get_current_history_list(history_id, spotify, query)
-    print(len(history_playlist))
     #вытаскиваются последние прослушанные песни и сравниваются с текущей историей
     results = spotify.current_user_recently_played(limit=30)
     recently_played_uris = []
@@ -36,13 +34,13 @@ def update_history(user_id, history_id, spotify):
         query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
         db.session.commit()
 
+
 def get_current_history_list(playlist_id, sp, query):
     #если включена настройка ограничения дубликатора
     if query.fixed_dedup:
-        
         if query.fixed_dedup > 100:
             limit = query.fixed_dedup
-            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
+            results = sp.playlist_tracks(playlist_id, fields="items(track(uri)), next")
             tracks = results['items']
             while results['next'] and check_len(tracks, limit):
                 results = sp.next(results)
@@ -53,20 +51,19 @@ def get_current_history_list(playlist_id, sp, query):
                 tracks = tracks[:len(tracks)-diff]
 
         if query.fixed_dedup <= 100:
-            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri))", limit=query.fixed_dedup)
+            results = sp.playlist_tracks(playlist_id, fields="items(track(uri))", limit=query.fixed_dedup)
             tracks = results['items']
     #если ВЫКЛ
     else:
-        results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
+        results = sp.playlist_tracks(playlist_id, fields="items(track(uri)), next")
         tracks = results['items']
         while results['next']:
             results = sp.next(results)
             tracks.extend(results['items'])
 
-    currentPlaylist = []
-    for item in enumerate(tracks):
-        track = item[1]['track']
-        currentPlaylist.append(track['uri'])
+    currentPlaylist = set()
+    for item in tracks:
+        currentPlaylist.add(item['track']['uri'])
     return currentPlaylist
 
 def check_len(ar, limit):
