@@ -37,11 +37,8 @@
                 <h3 class="card-text">{{ history_playlist_data.name }} </h3>
                 <p class="card-text">This is your History playlist</p>
                 <div class="custom-control custom-switch">
-                  <form action="/" method="post">
-                      <input type="checkbox" class="custom-control-input" name='updateSwitch' id="customSwitch1" {{ updateChecked }} onchange="autoUpdateToggle()">
-                      <label class="custom-control-label" for="customSwitch1">Auto-update History</label>
-                      <input type="submit" value="Save" class="btn btn-sm btn-outline-primary">
-                  </form>
+                    <input type="checkbox" class="custom-control-input" name='updateSwitch' id="customSwitch1" {{ updateChecked }} onchange="autoUpdateToggle()">
+                    <label class="custom-control-label" for="customSwitch1">Auto-update History</label>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                   <div class="btn-group">
@@ -233,6 +230,7 @@
 
     //Auto-update
     function autoUpdateToggle() {
+      console.log(document.getElementById(event.target.id).checked)
       $.ajax({
                 type: "POST",
                 url: "/auto_update",

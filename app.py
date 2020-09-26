@@ -137,13 +137,6 @@ def index():
     
     #POST запросы
     if request.method == "POST":
-        if 'updateSwitch' in request.form:
-            user.update = True
-            db.session.commit()
-        else:
-            user.update = False
-            db.session.commit()
-
         if 'create_playlist' in request.form:
             spotify.user_playlist_create(user = session_user_id, name='History (fresh!)', description='Listening history. Created by SpotiBoi')
 
@@ -277,6 +270,7 @@ def create_job(user, spotify, job_time=30):
     user.job_id = job.id
     db.session.commit()
 
+
 @app.route('/sign_out')
 def sign_out():
     try:
@@ -345,14 +339,20 @@ def auto_update():
         user = get_user_query_by_id(spotify.current_user()['id'])
 
         try:
-            if request.form['update']:
+            if request.form['update'] == 'true':
                 user.update = True
-            else:
+                if not user.job_id or user.job_id not in scheduler:
+                    create_job(user, spotify)
+            elif request.form['update'] == 'false':
                 user.update = False
+                if user.job_id in scheduler:
+                    scheduler.cancel(user.job_id)
             db.session.commit()
+            
             return jsonify({'response': "Success!"})
         except:
             return jsonify({'response': "bruh"})
+        
 
 
 @app.route('/logs')
