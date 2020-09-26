@@ -56,7 +56,7 @@ class User(db.Model):
     last_update = db.Column(db.String(80), nullable=True)
     job_id = db.Column(db.String(80), nullable=True)
     last_uuid = db.Column(db.String(80), nullable=True)
-    fixed_dedup = db.Column(db.Integer, nullable=True, default=0)
+    fixed_dedup = db.Column(db.Integer, nullable=True, default=100)
     fixed_capacity = db.Column(db.Integer, nullable=True, default=0)
 
     def __repr__(self):

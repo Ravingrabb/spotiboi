@@ -153,6 +153,7 @@
               class="form-control" value='100'
             {% endif %}
           >   
+          <small class="form-text text-muted">Value must be 50 or more tracks</small>
           <input type="button" id='updateSettingsButton' value="Save" class="btn btn-sm btn-outline-primary" >
         </form>
         <div style="margin-top: 15px;" class="alert alert-success collapse" role="alert">
@@ -193,6 +194,11 @@
 
     // settiongs AJAX
     $('#updateSettingsButton').click(function(){
+        $('#dedupValue').removeClass('blocked')
+        if ($('#dedupValue').val() < 50){
+          $('#dedupValue').addClass('blocked')
+        }
+        else {
         $.ajax({
                 type: "POST",
                 url: "/update_settings",
@@ -208,7 +214,9 @@
               $('#settingsModal .alert').delay(5000).fadeOut("slow")
               console.log(data.response)
               })
-          });
+          }
+    });
+        
           
     //update AJAX
     $('#manualUpdate').click(function(){
