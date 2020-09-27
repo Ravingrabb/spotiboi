@@ -30,7 +30,7 @@
               <img src="{{ history_playlist_data.images }}" alt="cover" class="img-fluid" >
             {% else %}
               <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false" role="img" aria-label="Placeholder: Thumbnail"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"></rect><text x="35%" y="50%" fill="#eceeef" dy=".3em">No artwork :(</text></svg>
-            {% endif%}
+            {% endif %}
             <div class="card-body">
               <!-- Если плейлист есть и прикреплён -->
               {% if history_playlist_data.name != None %}
@@ -137,23 +137,32 @@
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
+
       <div class="modal-body">
         <form id='settingsForm'>
           <div class="custom-control custom-switch">
-          <input type="checkbox" class="custom-control-input" name='fixedDedupSwitch' id="fixedDedupSwitch" onchange="checkCheckbox('fixedDedupSwitch', 'dedupValue')" {{settings.dedup_status}}>
+            <input type="checkbox" class="custom-control-input" name='fixedDedupSwitch' id="fixedDedupSwitch" onchange="checkCheckbox('inputDiv1')" {{settings.dedup_status}}>
             <label class="custom-control-label" for="fixedDedupSwitch">Fixed de-duplicate</label>
           </div>
-          <input id="dedupValue" type="number" 
-            {% if settings.dedup_status %} 
-              class="form-control reveal" value='{{settings.dedup_value}}'
-            {% else %}
-              class="form-control" value='100'
-            {% endif %}
-          >   
-          <small class="form-text text-muted">Value must be 50 or more tracks</small>
+              
+          <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv1' >
+            <input id="dedupValue" type="number" class="form-control" value='{% if settings.dedup_status %}{{settings.dedup_value}}{% else %}100{% endif %}'>
+            <small class="form-text text-muted">Value must be 50 or more tracks</small>
+          </div>
+
+          <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" id="fixedPlaylistSwitch" onchange="checkCheckbox('inputDiv2')" {{settings.fixed_status}}>
+            <label class="custom-control-label" for="fixedPlaylistSwitch">Fixed playlist</label>
+          </div>
+              
+          <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv2' >
+            <input id="fixedValue" type="number" class="form-control" value='{% if settings.fixed_status %}{{settings.fixed_value}}{% else %}100{% endif %}'>
+          </div>
+          
+          
           <input type="button" style="margin-top: 10px" id='updateSettingsButton' value="Save" class="btn btn-sm btn-outline-primary" >
         </form>
-        <div style="margin-top: 15px;" class="alert alert-success collapse" role="alert">
+      <div style="margin-top: 15px;" class="alert alert-success collapse" role="alert">
           <div class='alertTextArea'></div>
         </div>
       </div>
@@ -175,9 +184,9 @@
       </div>
 
   <script>
-    function checkCheckbox(id, inputId){
-      console.log(document.getElementById(id).checked);
-      isChecked = document.getElementById(id).checked;
+    function checkCheckbox(inputId){
+      console.log(event.target.id);
+      isChecked = document.getElementById(event.target.id).checked;
       if (isChecked) {
         $('#' + inputId).addClass('reveal')
       }
@@ -189,8 +198,10 @@
     // settiongs AJAX
     $('#updateSettingsButton').click(function(){
         $('#dedupValue').removeClass('blocked')
-        if ($('#dedupValue').val() < 50){
-          $('#dedupValue').addClass('blocked')
+        $('#fixedValue').removeClass('blocked')
+        if ($('#dedupValue').val() < 50 || $('#fixedValue').val() < 100){
+          if ($('#dedupValue').val() < 50) { $('#dedupValue').addClass('blocked') }
+          if ($('#fixedValue').val() < 100) { $('#dedupValue').addClass('blocked') }
         }
         else {
         $.ajax({
@@ -198,8 +209,10 @@
                 url: "/update_settings",
                 dataType: 'json',
                 data: {
-                  dedupToggle: document.getElementById("fixedDedupSwitch").checked,
-                  dedupValue: $('#dedupValue').val()
+                  dedupStatus: document.getElementById("fixedDedupSwitch").checked,
+                  dedupValue: $('#dedupValue').val(),
+                  fixedStatus: document.getElementById("fixedPlaylistSwitch").checked,
+                  fixedValue: $('#fixedValue').val()
                       },
               })
         .done(function(data){

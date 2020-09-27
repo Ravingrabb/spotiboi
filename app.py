@@ -12,9 +12,9 @@ import os
 import dotenv
 import uuid
 import spotipy
+
 from pprint import pprint
 from flask_migrate import Migrate
-import rq_scheduler_dashboard
 from rq_scheduler import Scheduler
 from rq import Queue
 from redis import Redis
@@ -128,11 +128,15 @@ def index():
     settings = {
         'dedup_status': None,
         'dedup_value': 0,
-
+        'fixed_status': None,
+        'fixed_value': 0
     }
     if user.fixed_dedup and user.fixed_dedup > 0:
         settings['dedup_status'] = 'checked'
         settings['dedup_value'] = user.fixed_dedup
+    if user.fixed_capacity and user.fixed_capacity > 0:
+        settings['fixed_status'] = 'checked'
+        settings['fixed_value'] = user.fixed_capacity
 
     # POST запросы
     if request.method == "POST":
@@ -324,17 +328,24 @@ def update_settings():
         spotify = spotipy.Spotify(auth_manager=auth_manager)
         user = get_user_query_by_id(spotify.current_user()['id'])
 
-        dedupStatus = request.form['dedupToggle']
-        dedupValue = request.form['dedupValue']
-        if dedupStatus == "true":
-            user.fixed_dedup = dedupValue
-        if dedupStatus == 'false':
-            user.fixed_dedup = None
+        dedup_status = request.form['dedupStatus']
+        dedup_value = request.form['dedupValue']
+        fixed_status = request.form['fixedStatus']
+        fixed_value = request.form['fixedValue']
+        user.fixed_dedup = settings_worker(dedup_status, dedup_value)
+        user.fixed_capacity = settings_worker(fixed_status, fixed_value)
         db.session.commit()
 
         return jsonify({'response': "Success!"})
     else:
         return jsonify({'response': "bruh"})
+
+def settings_worker(var_status, var_value):
+    if var_status == "true":
+        return var_value
+    if var_status == 'false':
+        return None
+    
 
 
 @app.route('/auto_update', methods=['POST'])

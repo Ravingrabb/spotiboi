@@ -7,22 +7,33 @@ from pprint import pprint
 
 def update_history(user_id, history_id, spotify):
     query = User.query.filter_by(spotify_id=user_id).first()
+    results_tracks_number = 30
+    # получаем историю прослушиваний (учитывая настройки )
     history_playlist = get_current_history_list(history_id, spotify, query)
-    #вытаскиваются последние прослушанные песни и сравниваются с текущей историей
-    results = spotify.current_user_recently_played(limit=30)
+    # вытаскиваются последние прослушанные песни и сравниваются с текущей историей
+    results = spotify.current_user_recently_played(limit=results_tracks_number)
     recently_played_uris = []
     try:
         for idx, item in enumerate(results['items']):
             track = item['track']
             if track['uri'] not in history_playlist:
                 recently_played_uris.append(track['uri'])
-        #если есть новые треки для добавления - они добавляются
+        # если есть новые треки для добавления - они добавляются в History
         if recently_played_uris:
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
             spotify.playlist_add_items(history_id, recently_played_uris, position=0)
+            # если стоит настройка ограничения плейлиста по размеру
+            if query.fixed_capacity:
+                playlist_size = spotify.playlist_tracks(history_id, fields='total')
+                if playlist_size['total'] >= query.fixed_capacity:
+                    result = spotify.playlist_tracks(history_id, fields="items(track(uri,name))", limit=results_tracks_number, offset=query.fixed_capacity)
+                    tracks_to_delete = []
+                    for item in result['items']:
+                        tracks_to_delete.append(item['track']['uri'])
+                    spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)
             print(spotify.current_user()['id'] + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
             return ("History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
-        #иначе пропускаем
+        # иначе пропускаем
         else:
             print(spotify.current_user()['id'] + ": List is empty. Nothing to update.")
             return ("List is empty. Nothing to update.")
