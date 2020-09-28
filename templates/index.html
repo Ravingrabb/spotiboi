@@ -182,6 +182,14 @@
                         <input id="fixedValue" type="number" class="form-control"
                             value='{% if settings.fixed_status %}{{settings.fixed_value}}{% else %}100{% endif %}'>
                     </div>
+
+                    <label for="updateTimeValue">Auto-update time</label>
+                    <input id="updateTimeValue" type="number" class="form-control"
+                        value='{{settings.update_time}}'>
+                    <small class="form-text text-muted">In minutes</small>
+                    
+
+                    <!-- SUMBIT BUTTON -->
                     <input type="button" style="margin-top: 10px" id='updateSettingsButton' value="Save"
                         class="btn btn-sm btn-outline-primary">
                 </form>
@@ -219,13 +227,17 @@
         }
     }
 
-    // settiongs AJAX
+    // settings AJAX
     $('#updateSettingsButton').click(function () {
-        $('#dedupValue').removeClass('blocked')
-        $('#fixedValue').removeClass('blocked')
-        if ($('#dedupValue').val() < 50 || $('#fixedValue').val() < 100) {
+        inputIds = ['#dedupValue', '#fixedValue', '#updateTimeValue']
+        $(inputIds[0]).removeClass('blocked')
+        $(inputIds[1]).removeClass('blocked')
+        $(inputIds[2]).removeClass('blocked')
+
+        if ($('#dedupValue').val() < 50 || $('#fixedValue').val() < 100 || $('#updateTimeValue').val() <= 0) {
             if ($('#dedupValue').val() < 50) { $('#dedupValue').addClass('blocked') }
             if ($('#fixedValue').val() < 100) { $('#dedupValue').addClass('blocked') }
+            if ($('#updateTimeValue').val() <= 0) { $('#updateTimeValue').addClass('blocked') }
         }
         else {
             $.ajax({
@@ -236,7 +248,8 @@
                     dedupStatus: document.getElementById("fixedDedupSwitch").checked,
                     dedupValue: $('#dedupValue').val(),
                     fixedStatus: document.getElementById("fixedPlaylistSwitch").checked,
-                    fixedValue: $('#fixedValue').val()
+                    fixedValue: $('#fixedValue').val(),
+                    updateTimeValue: $('#updateTimeValue').val()
                 },
             })
                 .done(function (data) {
@@ -247,6 +260,7 @@
                 })
         }
     });
+
 
 
     //update AJAX

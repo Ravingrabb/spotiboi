@@ -7,16 +7,13 @@ from dotenv import load_dotenv
 import tasks
 import logging
 from datetime import datetime
-import time
 import os
-import dotenv
 import uuid
 import spotipy
 
 from pprint import pprint
 from flask_migrate import Migrate
 from rq_scheduler import Scheduler
-from rq import Queue
 from redis import Redis
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
@@ -51,7 +48,7 @@ class User(db.Model):
     spotify_id = db.Column(db.String(80), unique=True, nullable=False)
     update = db.Column(db.Boolean, unique=False, nullable=False)
     history_id = db.Column(db.String(80), unique=True, nullable=True)
-    update_time = db.Column(db.Integer, nullable=True)
+    update_time = db.Column(db.Integer, default=30)
     last_update = db.Column(db.String(80), nullable=True)
     job_id = db.Column(db.String(80), nullable=True)
     last_uuid = db.Column(db.String(80), nullable=True)
@@ -129,7 +126,8 @@ def index():
         'dedup_status': None,
         'dedup_value': 0,
         'fixed_status': None,
-        'fixed_value': 0
+        'fixed_value': 0,
+        'update_time': user.update_time
     }
     if user.fixed_dedup and user.fixed_dedup > 0:
         settings['dedup_status'] = 'checked'
@@ -271,6 +269,8 @@ def attach_playlist(spotify, user):
 
 
 def create_job(user, spotify, job_time=30):
+    if user.update_time:
+        job_time = int(user.update_time)
     job_time = job_time * 60
     job = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[
                              user.spotify_id, user.history_id, spotify], interval=job_time, repeat=None)
@@ -328,13 +328,24 @@ def update_settings():
         spotify = spotipy.Spotify(auth_manager=auth_manager)
         user = get_user_query_by_id(spotify.current_user()['id'])
 
+        # TODO: удалить, если всё работает
         dedup_status = request.form['dedupStatus']
         dedup_value = request.form['dedupValue']
         fixed_status = request.form['fixedStatus']
         fixed_value = request.form['fixedValue']
-        user.fixed_dedup = settings_worker(dedup_status, dedup_value)
-        user.fixed_capacity = settings_worker(fixed_status, fixed_value)
-        db.session.commit()
+        update_time = request.form['updateTimeValue']
+        
+        user.fixed_dedup = settings_worker(request.form['dedupStatus'], request.form['dedupValue'])
+        user.fixed_capacity = settings_worker(request.form['fixedStatus'], request.form['fixedValue'])
+        if user.update_time != request.form['updateTimeValue']:
+            user.update_time = request.form['updateTimeValue']
+            # если работа работается, но uuid не совпадает
+            if user.job_id in scheduler:
+                scheduler.cancel(user.job_id)
+                db.session.commit()
+                create_job(user, spotify)
+            else:
+                db.session.commit()
 
         return jsonify({'response': "Success!"})
     else:

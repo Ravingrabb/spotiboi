@@ -30,3 +30,13 @@ h1,h2,h3,h4,h5, a, p {
 .blocked {
     background-color: #ffcfcf !important
 }
+
+#settingsForm label {
+    margin-top: 20px;
+    margin-bottom: 0px;
+}
+
+#settingsForm .custom-switch:first-child > label {
+    margin-top: 0px !important;
+    margin-bottom: 0px;
+}
