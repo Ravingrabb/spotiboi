@@ -11,260 +11,283 @@
 </div>
 
 <script>
-  $('#deattachModal').on('shown.bs.modal', function () {
-  $('#deattachModal').trigger('focus')
-})
+    $('#deattachModal').on('shown.bs.modal', function () {
+        $('#deattachModal').trigger('focus')
+    })
 </script>
 
 <div class="album py-5 bg-light">
     <div class="container">
-      <div class="row">
-        <div class="col-md-4">
-          <a style="position: absolute; top: 1px; right: 21px; z-index: 1; color: #6c757d;" href="#" title="De-attach playlist" class="text-decoration-none" data-toggle="modal" data-target="#deattachModal">
-            <svg width="16" height="16" viewBox="0 0 16 16" class="bi bi-x-circle-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-              <path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"></path>
-            </svg>
-          </a>
-          <div class="card mb-4 shadow-sm">
-            {% if history_playlist_data.images != None %}
-              <img src="{{ history_playlist_data.images }}" alt="cover" class="img-fluid" >
-            {% else %}
-              <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false" role="img" aria-label="Placeholder: Thumbnail"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"></rect><text x="35%" y="50%" fill="#eceeef" dy=".3em">No artwork :(</text></svg>
-            {% endif %}
-            <div class="card-body">
-              <!-- Если плейлист есть и прикреплён -->
-              {% if history_playlist_data.name != None %}
-                <h3 class="card-text">{{ history_playlist_data.name }} </h3>
-                <p class="card-text">This is your History playlist</p>
-                <div class="custom-control custom-switch">
-                    <input type="checkbox" class="custom-control-input" name='updateSwitch' id="customSwitch1" {{ updateChecked }} onchange="autoUpdateToggle()">
-                    <label class="custom-control-label" style='padding-bottom: 10px;' for="customSwitch1">Auto-update History</label>
-                </div>
-                <div class="d-flex justify-content-between align-items-center">
-                  <div class="btn-group">
-                    <button type="button" onclick="window.open('https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
+        <div class="row">
+            <div class="col-md-4">
+                <a style="position: absolute; top: 1px; right: 21px; z-index: 1; color: #6c757d;" href="#"
+                    title="De-attach playlist" class="text-decoration-none" data-toggle="modal"
+                    data-target="#deattachModal">
+                    <svg width="16" height="16" viewBox="0 0 16 16" class="bi bi-x-circle-fill" fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                            d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z">
+                        </path>
+                    </svg>
+                </a>
+                <div class="card mb-4 shadow-sm">
+                    {% if history_playlist_data.images != None %}
+                    <img src="{{ history_playlist_data.images }}" alt="cover" class="img-fluid">
+                    {% else %}
+                    <svg class="bd-placeholder-img card-img-top" width="100%" height="225"
+                        xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false"
+                        role="img" aria-label="Placeholder: Thumbnail">
+                        <title>Placeholder</title>
+                        <rect width="100%" height="100%" fill="#55595c"></rect><text x="35%" y="50%" fill="#eceeef"
+                            dy=".3em">No artwork :(</text>
+                    </svg>
+                    {% endif %}
+                    <div class="card-body">
+                        <!-- Если плейлист есть и прикреплён -->
+                        {% if history_playlist_data.name != None %}
+                        <h3 class="card-text">{{ history_playlist_data.name }} </h3>
+                        <p class="card-text">This is your History playlist</p>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" name='updateSwitch' id="customSwitch1"
+                                {{ updateChecked }} onchange="autoUpdateToggle()">
+                            <label class="custom-control-label" style='padding-bottom: 10px;'
+                                for="customSwitch1">Auto-update History</label>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="btn-group">
+                                <button type="button" onclick="window.open('https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
                     '_blank')" class="btn btn-sm btn-outline-secondary">
-                    View
-                    </button>
-                    <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary">
-                      <span id="updateSpinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                      Update
-                    </button>
-                    <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#settingsModal">
-                      <svg width="21" height="21" viewBox="0 0 16 16" class="bi bi-gear" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd" d="M8.837 1.626c-.246-.835-1.428-.835-1.674 0l-.094.319A1.873 1.873 0 0 1 4.377 3.06l-.292-.16c-.764-.415-1.6.42-1.184 1.185l.159.292a1.873 1.873 0 0 1-1.115 2.692l-.319.094c-.835.246-.835 1.428 0 1.674l.319.094a1.873 1.873 0 0 1 1.115 2.693l-.16.291c-.415.764.42 1.6 1.185 1.184l.292-.159a1.873 1.873 0 0 1 2.692 1.116l.094.318c.246.835 1.428.835 1.674 0l.094-.319a1.873 1.873 0 0 1 2.693-1.115l.291.16c.764.415 1.6-.42 1.184-1.185l-.159-.291a1.873 1.873 0 0 1 1.116-2.693l.318-.094c.835-.246.835-1.428 0-1.674l-.319-.094a1.873 1.873 0 0 1-1.115-2.692l.16-.292c.415-.764-.42-1.6-1.185-1.184l-.291.159A1.873 1.873 0 0 1 8.93 1.945l-.094-.319zm-2.633-.283c.527-1.79 3.065-1.79 3.592 0l.094.319a.873.873 0 0 0 1.255.52l.292-.16c1.64-.892 3.434.901 2.54 2.541l-.159.292a.873.873 0 0 0 .52 1.255l.319.094c1.79.527 1.79 3.065 0 3.592l-.319.094a.873.873 0 0 0-.52 1.255l.16.292c.893 1.64-.902 3.434-2.541 2.54l-.292-.159a.873.873 0 0 0-1.255.52l-.094.319c-.527 1.79-3.065 1.79-3.592 0l-.094-.319a.873.873 0 0 0-1.255-.52l-.292.16c-1.64.893-3.433-.902-2.54-2.541l.159-.292a.873.873 0 0 0-.52-1.255l-.319-.094c-1.79-.527-1.79-3.065 0-3.592l.319-.094a.873.873 0 0 0 .52-1.255l-.16-.292c-.892-1.64.902-3.433 2.541-2.54l.292.159a.873.873 0 0 0 1.255-.52l.094-.319z"/>
-                        <path fill-rule="evenodd" d="M8 5.754a2.246 2.246 0 1 0 0 4.492 2.246 2.246 0 0 0 0-4.492zM4.754 8a3.246 3.246 0 1 1 6.492 0 3.246 3.246 0 0 1-6.492 0z"/>
-                      </svg>
-                    </button>
-                  </div>
-                  {% if time_difference != None %}
-                    <small class="text-muted">Updated {{ time_difference }} min ago</small>
-                  {% endif %}
+                                    View
+                                </button>
+                                <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary">
+                                    <span id="updateSpinner" class="spinner-border spinner-border-sm" role="status"
+                                        aria-hidden="true"></span>
+                                    Update
+                                </button>
+                                <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary"
+                                    data-toggle="modal" data-target="#settingsModal">
+                                    <svg width="21" height="21" viewBox="0 0 16 16" class="bi bi-gear"
+                                        fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd"
+                                            d="M8.837 1.626c-.246-.835-1.428-.835-1.674 0l-.094.319A1.873 1.873 0 0 1 4.377 3.06l-.292-.16c-.764-.415-1.6.42-1.184 1.185l.159.292a1.873 1.873 0 0 1-1.115 2.692l-.319.094c-.835.246-.835 1.428 0 1.674l.319.094a1.873 1.873 0 0 1 1.115 2.693l-.16.291c-.415.764.42 1.6 1.185 1.184l.292-.159a1.873 1.873 0 0 1 2.692 1.116l.094.318c.246.835 1.428.835 1.674 0l.094-.319a1.873 1.873 0 0 1 2.693-1.115l.291.16c.764.415 1.6-.42 1.184-1.185l-.159-.291a1.873 1.873 0 0 1 1.116-2.693l.318-.094c.835-.246.835-1.428 0-1.674l-.319-.094a1.873 1.873 0 0 1-1.115-2.692l.16-.292c.415-.764-.42-1.6-1.185-1.184l-.291.159A1.873 1.873 0 0 1 8.93 1.945l-.094-.319zm-2.633-.283c.527-1.79 3.065-1.79 3.592 0l.094.319a.873.873 0 0 0 1.255.52l.292-.16c1.64-.892 3.434.901 2.54 2.541l-.159.292a.873.873 0 0 0 .52 1.255l.319.094c1.79.527 1.79 3.065 0 3.592l-.319.094a.873.873 0 0 0-.52 1.255l.16.292c.893 1.64-.902 3.434-2.541 2.54l-.292-.159a.873.873 0 0 0-1.255.52l-.094.319c-.527 1.79-3.065 1.79-3.592 0l-.094-.319a.873.873 0 0 0-1.255-.52l-.292.16c-1.64.893-3.433-.902-2.54-2.541l.159-.292a.873.873 0 0 0-.52-1.255l-.319-.094c-1.79-.527-1.79-3.065 0-3.592l.319-.094a.873.873 0 0 0 .52-1.255l-.16-.292c-.892-1.64.902-3.433 2.541-2.54l.292.159a.873.873 0 0 0 1.255-.52l.094-.319z" />
+                                        <path fill-rule="evenodd"
+                                            d="M8 5.754a2.246 2.246 0 1 0 0 4.492 2.246 2.246 0 0 0 0-4.492zM4.754 8a3.246 3.246 0 1 1 6.492 0 3.246 3.246 0 0 1-6.492 0z" />
+                                    </svg>
+                                </button>
+                            </div>
+                            {% if time_difference != None %}
+                            <small class="text-muted">Updated {{ time_difference }} min ago</small>
+                            {% endif %}
+                        </div>
+                        <!-- Если плейлиста нет -->
+                        {% else %}
+                        <p class="card-text">You don't have attached history playlist</p>
+                        <form action="/" method="post">
+                            <input type="hidden" name="create_playlist">
+                            <input type="submit" value="Create now" class="btn btn-sm btn-outline-primary">
+                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal"
+                            data-target="#attachModal">
+                            Attach your own playlist
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
-              <!-- Если плейлиста нет -->
-              {% else %}
-                <p class="card-text">You don't have attached history playlist</p>
-                <form action="/" method="post">
-                  <input type="hidden" name="create_playlist">
-                  <input type="submit" value="Create now" class="btn btn-sm btn-outline-primary">
-                </form>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#attachModal">
-                  Attach your own playlist
-                </button>
-              {% endif %}
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
 
-  <!-- Detach Modal -->
+<!-- Detach Modal -->
 <div class="modal fade" id="deattachModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Warning!</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to detach the playlist?
-      </div>
-      <div class="modal-footer">
-        <form action="/" method="post">
-          <input type="hidden" name="detach_playlist">
-          <input type="submit" class="btn btn-primary" value="Yes">
-        </form>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Warning!</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to detach the playlist?
+            </div>
+            <div class="modal-footer">
+                <form action="/" method="post">
+                    <input type="hidden" name="detach_playlist">
+                    <input type="submit" class="btn btn-primary" value="Yes">
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <!-- Attach Modal -->
 <div class="modal fade" id="attachModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Attach your own playlist</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form action="/" method="post">
-          <div class="form-group">
-            <label for="uriInput">Playlist URI</label>
-            <input name='uriInput' type="text" class="form-control" id="uriInput" aria-describedby="uri" placeholder="URI">
-            <small id="uriHelp" class="form-text text-muted">If you can't find URI, right-click on your playlist -> Share -> Copy Spotify URI. Do not confuse with URL!</small>
-            <input type="submit" class="btn btn-primary" value="Attach">
-          </div>
-        </form>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Attach your own playlist</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="/" method="post">
+                    <div class="form-group">
+                        <label for="uriInput">Playlist URI</label>
+                        <input name='uriInput' type="text" class="form-control" id="uriInput" aria-describedby="uri"
+                            placeholder="URI">
+                        <small id="uriHelp" class="form-text text-muted">If you can't find URI, right-click on your
+                            playlist -> Share -> Copy Spotify URI. Do not confuse with URL!</small>
+                        <input type="submit" class="btn btn-primary" value="Attach">
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <!-- Settings Modal -->
 <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Settings</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id='settingsForm'>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" name='fixedDedupSwitch'
+                            id="fixedDedupSwitch" onchange="checkCheckbox('inputDiv1')" {{settings.dedup_status}}>
+                        <label class="custom-control-label" for="fixedDedupSwitch">Fixed de-duplicate</label>
+                    </div>
 
-      <div class="modal-body">
-        <form id='settingsForm'>
-          <div class="custom-control custom-switch">
-            <input type="checkbox" class="custom-control-input" name='fixedDedupSwitch' id="fixedDedupSwitch" onchange="checkCheckbox('inputDiv1')" {{settings.dedup_status}}>
-            <label class="custom-control-label" for="fixedDedupSwitch">Fixed de-duplicate</label>
-          </div>
-              
-          <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv1' >
-            <input id="dedupValue" type="number" class="form-control" value='{% if settings.dedup_status %}{{settings.dedup_value}}{% else %}100{% endif %}'>
-            <small class="form-text text-muted">Value must be 50 or more tracks</small>
-          </div>
+                    <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv1'>
+                        <input id="dedupValue" type="number" class="form-control"
+                            value='{% if settings.dedup_status %}{{settings.dedup_value}}{% else %}100{% endif %}'>
+                        <small class="form-text text-muted">Value must be 50 or more tracks</small>
+                    </div>
 
-          <div class="custom-control custom-switch">
-            <input type="checkbox" class="custom-control-input" id="fixedPlaylistSwitch" onchange="checkCheckbox('inputDiv2')" {{settings.fixed_status}}>
-            <label class="custom-control-label" for="fixedPlaylistSwitch">Fixed playlist</label>
-          </div>
-              
-          <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv2' >
-            <input id="fixedValue" type="number" class="form-control" value='{% if settings.fixed_status %}{{settings.fixed_value}}{% else %}100{% endif %}'>
-          </div>
-          
-          
-          <input type="button" style="margin-top: 10px" id='updateSettingsButton' value="Save" class="btn btn-sm btn-outline-primary" >
-        </form>
-      <div style="margin-top: 15px;" class="alert alert-success collapse" role="alert">
-          <div class='alertTextArea'></div>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="fixedPlaylistSwitch"
+                            onchange="checkCheckbox('inputDiv2')" {{settings.fixed_status}}>
+                        <label class="custom-control-label" for="fixedPlaylistSwitch">Fixed playlist</label>
+                    </div>
+
+                    <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv2'>
+                        <input id="fixedValue" type="number" class="form-control"
+                            value='{% if settings.fixed_status %}{{settings.fixed_value}}{% else %}100{% endif %}'>
+                    </div>
+                    <input type="button" style="margin-top: 10px" id='updateSettingsButton' value="Save"
+                        class="btn btn-sm btn-outline-primary">
+                </form>
+                <div style="margin-top: 15px;" class="alert alert-success collapse" role="alert">
+                    <div class='alertTextArea'></div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 
-  {% for cat, msg in get_flashed_messages(True) %}
-  <div class="alert {{cat}}" role="alert">
+{% for cat, msg in get_flashed_messages(True) %}
+<div class="alert {{cat}}" role="alert">
     {{msg}}
-  </div>
-  {% endfor %}
+</div>
+{% endfor %}
   
-      <div id='successAlert' class="alert alert-success collapse" role="alert">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <div id='alertTextArea'></div>
-      </div>
+<div id='successAlert' class="alert alert-success collapse" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <div id='alertTextArea'></div>
+</div>
 
-  <script>
-    function checkCheckbox(inputId){
-      console.log(event.target.id);
-      isChecked = document.getElementById(event.target.id).checked;
-      if (isChecked) {
-        $('#' + inputId).addClass('reveal')
-      }
-      if (!isChecked) {
-        $('#' + inputId).removeClass('reveal')
-      }
+<script>
+
+    function checkCheckbox(inputId) {
+        console.log(event.target.id);
+        isChecked = document.getElementById(event.target.id).checked;
+        if (isChecked) {
+            $('#' + inputId).addClass('reveal')
+        }
+        if (!isChecked) {
+            $('#' + inputId).removeClass('reveal')
+        }
     }
 
     // settiongs AJAX
-    $('#updateSettingsButton').click(function(){
+    $('#updateSettingsButton').click(function () {
         $('#dedupValue').removeClass('blocked')
         $('#fixedValue').removeClass('blocked')
-        if ($('#dedupValue').val() < 50 || $('#fixedValue').val() < 100){
-          if ($('#dedupValue').val() < 50) { $('#dedupValue').addClass('blocked') }
-          if ($('#fixedValue').val() < 100) { $('#dedupValue').addClass('blocked') }
+        if ($('#dedupValue').val() < 50 || $('#fixedValue').val() < 100) {
+            if ($('#dedupValue').val() < 50) { $('#dedupValue').addClass('blocked') }
+            if ($('#fixedValue').val() < 100) { $('#dedupValue').addClass('blocked') }
         }
         else {
-        $.ajax({
+            $.ajax({
                 type: "POST",
                 url: "/update_settings",
                 dataType: 'json',
                 data: {
-                  dedupStatus: document.getElementById("fixedDedupSwitch").checked,
-                  dedupValue: $('#dedupValue').val(),
-                  fixedStatus: document.getElementById("fixedPlaylistSwitch").checked,
-                  fixedValue: $('#fixedValue').val()
-                      },
-              })
-        .done(function(data){
-              $('#settingsModal .alert').show()
-              $('#settingsModal .alert .alertTextArea').text(data.response)
-              $('#settingsModal .alert').delay(5000).fadeOut("slow")
-              console.log(data.response)
-              })
-          }
+                    dedupStatus: document.getElementById("fixedDedupSwitch").checked,
+                    dedupValue: $('#dedupValue').val(),
+                    fixedStatus: document.getElementById("fixedPlaylistSwitch").checked,
+                    fixedValue: $('#fixedValue').val()
+                },
+            })
+                .done(function (data) {
+                    $('#settingsModal .alert').show()
+                    $('#settingsModal .alert .alertTextArea').text(data.response)
+                    $('#settingsModal .alert').delay(5000).fadeOut("slow")
+                    console.log(data.response)
+                })
+        }
     });
-        
-          
+
+
     //update AJAX
-    $('#manualUpdate').click(function(){
+    $('#manualUpdate').click(function () {
         $('#updateSpinner').addClass('busy')
         $.ajax({
-                type: "POST",
-                url: "/make_history",
-                data: {update: true},
-              })
-        .done(function(data){
-              $('#updateSpinner').removeClass('busy')
-              $('#successAlert').show()
-              $('#alertTextArea').text(data.response)
-              $('#successAlert').delay(5000).fadeOut("slow")
-              })
-          });
+            type: "POST",
+            url: "/make_history",
+            data: { update: true },
+        })
+            .done(function (data) {
+                $('#updateSpinner').removeClass('busy')
+                $('#successAlert').show()
+                $('#alertTextArea').text(data.response)
+                $('#successAlert').delay(5000).fadeOut("slow")
+            })
+    });
 
     //Auto-update
     function autoUpdateToggle() {
-      console.log(document.getElementById(event.target.id).checked)
-      $.ajax({
-                type: "POST",
-                url: "/auto_update",
-                data: {update: document.getElementById(event.target.id).checked},
-              })
-        .done(function(data){
-              $('#successAlert').show()
-              $('#alertTextArea').text(data.response)
-              $('#successAlert').delay(5000).fadeOut("slow")
-              })
+        console.log(document.getElementById(event.target.id).checked)
+        $.ajax({
+            type: "POST",
+            url: "/auto_update",
+            data: { update: document.getElementById(event.target.id).checked },
+        })
+            .done(function (data) {
+                $('#successAlert').show()
+                $('#alertTextArea').text(data.response)
+                $('#successAlert').delay(5000).fadeOut("slow")
+            })
     }
-  </script>
+</script>
 
     
 
 {% endblock %}
 
 <script>
-
-  window.open(
-  'https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
-  '_blank' // <- This is what makes it open in a new window.
-);      
+    window.open(
+        'https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
+        '_blank' // <- This is what makes it open in a new window.
+    );      
 </script>
