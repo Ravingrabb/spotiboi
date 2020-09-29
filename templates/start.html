@@ -1,15 +1,25 @@
 {% extends 'base.html' %}
 
 {% block body %}
-<div class="start">
-    <h2 align="center"><b>Create playlist with your recently playing tracks</h2></b>
-    <h5 align="center">And automaticly update it with one button</h5>
-    <a class="btn btn-success center" href="{{ auth_url }}">Log in with Spotify</a>
+
+<div class="start text-center" >
+    <h2><b>Create playlist with your recently playing tracks</h2></b>
+    <h5>And automaticly update it with one button</h5>
+    <a class="btn btn-success mt-4" href="{{ auth_url }}">Log in with Spotify</a>
 </div>
+
+<img style="
+position: absolute;
+top: 431px;
+left: 42px;
+width: 500px;
+height: 500px;"
+ src="static\img\open-doodles-dancing.png" alt="">
+
 {% endblock %}
 
 {% block background %}
-<img style="position: absolute; z-index:-1; left:-130px; top: -150px" src="{{url_for('static', filename='img/circle1.svg')}}">
+<img style="position: absolute; z-index:-1; left:-250px; top: -150px" src="{{url_for('static', filename='img/circle1.svg')}}">
 <img style="position: absolute; z-index:-1; left: 1188px; top: -69px;" src="{{url_for('static', filename='img/circle1.svg')}}" height="444" width="444">
 <img style="position: absolute; z-index:-1; left: 1092px; top: 645px;" src="{{url_for('static', filename='img/circle1.svg')}}" height="191" width="191">
 <img style="position: absolute; z-index:-1; left: 623px; top: 779px;" src="{{url_for('static', filename='img/circle1.svg')}}" height="39" width="39">

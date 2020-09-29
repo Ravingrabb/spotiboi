@@ -87,7 +87,7 @@ def session_cache_path():
 @app.route('/', methods=['POST', 'GET'])
 def index():
     menu = [
-        {'url': url_for('currently_playing'), 'title': 'recently played'},
+        {'url': url_for('currently_playing'), 'title': 'Recently played'},
     ]
 
     if not session.get('uuid'):

@@ -2,13 +2,15 @@ h1,h2,h3,h4,h5, a, p {
     font-family: 'Montserrat', sans-serif;
 }
 
-.start {
-    margin-top: 30%;
-}
+body {
+    overflow: hidden !important;
+} 
 
-.center {
-    margin-top: 30px;
-    margin-left: 40%;
+.start {
+    margin-top: 20%;
+    background-color: #f9f9f9ed;
+    padding: 20px;
+    border-radius: 51px;
 }
 
 #updateSpinner { 
