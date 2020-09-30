@@ -21,7 +21,7 @@ msgstr ""
 
 #: app.py:98
 msgid "Recently played tracks"
-msgstr "Недавно проигранное"
+msgstr "История"
 
 #: app.py:362 app.py:395 app.py:424
 msgid "Success!"
@@ -37,7 +37,7 @@ msgstr "История обновлена в "
 
 #: tasks.py:40
 msgid "List is empty. Nothing to update."
-msgstr "Нет ничего нового, что можно было бы добавить в плейлист"
+msgstr "Пока что нечего добавить в плейлист :)"
 
 #: templates/index.html:6 templates/localetest.html:4
 msgid "Hi"
