@@ -3,7 +3,7 @@
 {% block body %}
 <div class="ml-2 container">
     <div class="row">
-        <h2>Hi {{ username }} <a href="/sign_out">[sign out]</a> </h2>
+        <h2>{{ _('Hi') }} {{ username }} <a href="/sign_out">[{{ _('sign out')}}]</a> </h2>
         
     </div>
     <div class="row pt-3" style='padding-bottom: 30px;'>
@@ -40,32 +40,36 @@
                     <svg class="bd-placeholder-img card-img-top" width="100%" height="225"
                         xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false"
                         role="img" aria-label="Placeholder: Thumbnail">
-                        <title>Placeholder</title>
+                        <title>No artwork</title>
                         <rect width="100%" height="100%" fill="#55595c"></rect><text x="35%" y="50%" fill="#eceeef"
-                            dy=".3em">No artwork :(</text>
+                            dy=".3em">{{_('No artwork')}} :(</text>
                     </svg>
                     {% endif %}
                     <div class="card-body">
                         <!-- Если плейлист есть и прикреплён -->
                         {% if history_playlist_data.name != None %}
                         <h3 class="card-text">{{ history_playlist_data.name }} </h3>
-                        <p class="card-text">This is your History playlist</p>
+                        <p class="card-text">
+                            {{ _('This is your History playlist') }}
+                        </p>
                         <div class="custom-control custom-switch">
                             <input type="checkbox" class="custom-control-input" name='updateSwitch' id="customSwitch1"
                                 {{ updateChecked }} onchange="autoUpdateToggle()">
                             <label class="custom-control-label" style='padding-bottom: 10px;'
-                                for="customSwitch1">Auto-update History</label>
+                                for="customSwitch1">
+                                {{_('Auto-update History')}}
+                            </label>
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
-                            <div class="btn-group">
+                            <div class="btn-group mt-3">
                                 <button type="button" onclick="window.open('https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
-                    '_blank')" class="btn btn-sm btn-outline-secondary">
-                                    View
+                                '_blank')" class="btn btn-sm btn-outline-secondary">
+                                    {{_('View')}}
                                 </button>
                                 <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary">
                                     <span id="updateSpinner" class="spinner-border spinner-border-sm" role="status"
                                         aria-hidden="true"></span>
-                                    Update
+                                    {{_('Update')}}
                                 </button>
                                 <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary"
                                     data-toggle="modal" data-target="#settingsModal">
@@ -78,20 +82,22 @@
                                     </svg>
                                 </button>
                             </div>
-                            {% if time_difference != None %}
-                            <small class="text-muted">Updated {{ time_difference }} min ago</small>
-                            {% endif %}
                         </div>
+                        {% if time_difference != None %}
+                        <small class="text-muted">
+                            {{_("Updated")}} {{ time_difference }} {{_('min ago')}}
+                        </small>
+                        {% endif %}
                         <!-- Если плейлиста нет -->
                         {% else %}
-                        <p class="card-text">You don't have attached history playlist</p>
+                        <p class="card-text">{{_('You don\'t have attached history playlist')}}</p>
                         <form action="/" method="post">
                             <input type="hidden" name="create_playlist">
                             <input type="submit" value="Create now" class="btn btn-sm btn-outline-primary">
                         </form>
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal"
                             data-target="#attachModal">
-                            Attach your own playlist
+                            {{_('Attach your own playlist')}}
                         </button>
                         {% endif %}
                     </div>
@@ -106,20 +112,20 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Warning!</h5>
+                <h5 class="modal-title" id="exampleModalLabel">{{_('Warning!')}}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                Are you sure you want to detach the playlist?
+                {{_('Are you sure you want to detach the playlist?')}}
             </div>
             <div class="modal-footer">
                 <form action="/" method="post">
                     <input type="hidden" name="detach_playlist">
-                    <input type="submit" class="btn btn-primary" value="Yes">
+                    <input type="submit" class="btn btn-primary" value="{{_('Yes')}}">
                 </form>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{{_('No')}}</button>
             </div>
         </div>
     </div>
@@ -130,7 +136,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Attach your own playlist</h5>
+                <h5 class="modal-title" id="exampleModalLabel">{{_('Attach your own playlist')}}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -138,11 +144,14 @@
             <div class="modal-body">
                 <form action="/" method="post">
                     <div class="form-group">
-                        <label for="uriInput">Playlist URI</label>
+                        <label for="uriInput">
+                            {{_('Playlist URI')}}
+                        </label>
                         <input name='uriInput' type="text" class="form-control" id="uriInput" aria-describedby="uri"
                             placeholder="URI">
-                        <small id="uriHelp" class="form-text text-muted">If you can't find URI, right-click on your
-                            playlist -> Share -> Copy Spotify URI. Do not confuse with URL!</small>
+                        <small id="uriHelp" class="form-text text-muted">
+                            {{_('If you can\'t find URI, right-click on your playlist -> Share -> Copy Spotify URI. Do not confuse with URL!')}}
+                        </small>
                         <input type="submit" class="btn btn-primary" value="Attach">
                     </div>
                 </form>
@@ -156,7 +165,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Settings</h5>
+                <h5 class="modal-title" id="exampleModalLabel">{{_('Settings')}}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -166,19 +175,23 @@
                     <div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input" name='fixedDedupSwitch'
                             id="fixedDedupSwitch" onchange="checkCheckbox('inputDiv1')" {{settings.dedup_status}}>
-                        <label class="custom-control-label" for="fixedDedupSwitch">Fixed de-duplicate</label>
+                        <label class="custom-control-label" for="fixedDedupSwitch">
+                            {{_('Fixed de-duplicate')}}
+                        </label>
                     </div>
 
                     <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv1'>
                         <input id="dedupValue" type="number" class="form-control"
                             value='{% if settings.dedup_status %}{{settings.dedup_value}}{% else %}100{% endif %}'>
-                        <small class="form-text text-muted">Value must be 50 or more tracks</small>
+                        <small class="form-text text-muted">
+                            {{_('Value must be 50 or more tracks')}}
+                        </small>
                     </div>
 
                     <div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input" id="fixedPlaylistSwitch"
                             onchange="checkCheckbox('inputDiv2')" {{settings.fixed_status}}>
-                        <label class="custom-control-label" for="fixedPlaylistSwitch">Fixed playlist</label>
+                        <label class="custom-control-label" for="fixedPlaylistSwitch">{{_('Fixed playlist')}}</label>
                     </div>
 
                     <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv2'>
@@ -186,14 +199,16 @@
                             value='{% if settings.fixed_status %}{{settings.fixed_value}}{% else %}100{% endif %}'>
                     </div>
 
-                    <label for="updateTimeValue">Auto-update time</label>
+                    <label for="updateTimeValue">
+                        {{_('Auto-update time')}}
+                    </label>
                     <input id="updateTimeValue" type="number" class="form-control"
                         value='{{settings.update_time}}'>
-                    <small class="form-text text-muted">In minutes</small>
+                    <small class="form-text text-muted">{{_('In minutes')}}</small>
                     
 
                     <!-- SUMBIT BUTTON -->
-                    <input type="button" style="margin-top: 10px" id='updateSettingsButton' value="Save"
+                    <input type="button" style="margin-top: 10px" id='updateSettingsButton' value="{{_('Save')}}"
                         class="btn btn-sm btn-outline-primary">
                 </form>
                 <div style="margin-top: 15px;" class="alert alert-success collapse" role="alert">

@@ -1,0 +1,137 @@
+# Translations template for PROJECT.
+# Copyright (C) 2020 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2020.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2020-09-30 23:29+0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.8.0\n"
+
+#: app.py:98
+msgid "Recently played tracks"
+msgstr ""
+
+#: app.py:362 app.py:395 app.py:424
+msgid "Success!"
+msgstr ""
+
+#: app.py:364 app.py:397
+msgid "bruh"
+msgstr ""
+
+#: tasks.py:36
+msgid "History updated in "
+msgstr ""
+
+#: tasks.py:40
+msgid "List is empty. Nothing to update."
+msgstr ""
+
+#: templates/index.html:6 templates/localetest.html:4
+msgid "Hi"
+msgstr ""
+
+#: templates/index.html:6
+msgid "sign out"
+msgstr ""
+
+#: templates/index.html:45
+msgid "No artwork"
+msgstr ""
+
+#: templates/index.html:53
+msgid "This is your History playlist"
+msgstr ""
+
+#: templates/index.html:60
+msgid "Auto-update History"
+msgstr ""
+
+#: templates/index.html:67
+msgid "View"
+msgstr ""
+
+#: templates/index.html:72
+msgid "Update"
+msgstr ""
+
+#: templates/index.html:88
+msgid "Updated"
+msgstr ""
+
+#: templates/index.html:88
+msgid "min ago"
+msgstr ""
+
+#: templates/index.html:93
+msgid "You don't have attached history playlist"
+msgstr ""
+
+#: templates/index.html:100 templates/index.html:139
+msgid "Attach your own playlist"
+msgstr ""
+
+#: templates/index.html:115
+msgid "Warning!"
+msgstr ""
+
+#: templates/index.html:121
+msgid "Are you sure you want to detach the playlist?"
+msgstr ""
+
+#: templates/index.html:126
+msgid "Yes"
+msgstr ""
+
+#: templates/index.html:128
+msgid "No"
+msgstr ""
+
+#: templates/index.html:148
+msgid "Playlist URI"
+msgstr ""
+
+#: templates/index.html:153
+msgid ""
+"If you can't find URI, right-click on your playlist -> Share -> Copy "
+"Spotify URI. Do not confuse with URL!"
+msgstr ""
+
+#: templates/index.html:168
+msgid "Settings"
+msgstr ""
+
+#: templates/index.html:179
+msgid "Fixed de-duplicate"
+msgstr ""
+
+#: templates/index.html:187
+msgid "Value must be 50 or more tracks"
+msgstr ""
+
+#: templates/index.html:194
+msgid "Fixed playlist"
+msgstr ""
+
+#: templates/index.html:203
+msgid "Auto-update time"
+msgstr ""
+
+#: templates/index.html:207
+msgid "In minutes"
+msgstr ""
+
+#: templates/index.html:211
+msgid "Save"
+msgstr ""
+

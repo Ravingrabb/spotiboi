@@ -1,8 +1,4 @@
-"""
-    python3 -m flask run --port=8080
-    NOTE: If receiving "port already in use" error, try other ports: 5000, 8090, 8888, etc...
-        (will need to be updated in your Spotify app and SPOTIPY_REDIRECT_URI variable)
-"""
+
 from dotenv import load_dotenv
 import tasks
 import logging
@@ -18,6 +14,7 @@ from redis import Redis
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from flask import Flask, session, request, redirect, render_template, url_for, flash, jsonify, json
+from flask_babel import Babel, gettext
 DEBUG = True
 
 
@@ -29,6 +26,7 @@ app.config['SECRET_KEY'] = os.urandom(64)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = './.flask_session/'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['BABEL_DEFAULT_LOCALE'] = 'en'
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -41,6 +39,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+babel = Babel(app)
 
 
 class User(db.Model):
@@ -67,7 +66,7 @@ scheduler = Scheduler(connection=Redis())
 Session(app)
 # логи
 logging.basicConfig(filename='logs.log', level=logging.INFO)
-#иниц. БД
+# иниц. БД
 
 # создание кэша для авторизации
 caches_folder = './.spotify_caches/'
@@ -83,11 +82,20 @@ if os.path.exists(dotenv_path):
 def session_cache_path():
     return caches_folder + session.get('uuid')
 
+@babel.localeselector
+def get_locale():
+    #return 'ru'
+    #translations = [str(translation) for translation in babel.list_translations()]
+    return request.accept_languages.best_match(['en', 'ru'])
+    
+@app.route('/localetest')
+def locale_test():
+    return render_template('localetest.html')
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
     menu = [
-        {'url': url_for('currently_playing'), 'title': 'Recently played'},
+        {'url': url_for('currently_playing'), 'title': gettext('Recently played tracks')},
     ]
 
     if not session.get('uuid'):
@@ -140,7 +148,10 @@ def index():
     if request.method == "POST":
         if 'create_playlist' in request.form:
             spotify.user_playlist_create(
-                user=session_user_id, name='History (fresh!)', description='Listening history. Created by SpotiBoi')
+                user=session_user_id, 
+                name='History (fresh!)', 
+                description='Listening history. Created by SpotiBoi'
+                )
 
         if 'detach_playlist' in request.form:
             user.history_id = None
@@ -189,8 +200,9 @@ def index():
         except:
             pass
 
+
     return render_template(
-        'index.html',
+        'index.html', 
         username=spotify.me()["display_name"],
         menu=menu,
         updateChecked=updateChecked,
@@ -347,9 +359,9 @@ def update_settings():
             else:
                 db.session.commit()
 
-        return jsonify({'response': "Success!"})
+        return jsonify({'response': gettext('Success!')})
     else:
-        return jsonify({'response': "bruh"})
+        return jsonify({'response': gettext('bruh')})
 
 def settings_worker(var_status, var_value):
     if var_status == "true":
@@ -380,9 +392,9 @@ def auto_update():
                     scheduler.cancel(user.job_id)
             db.session.commit()
 
-            return jsonify({'response': "Success!"})
+            return jsonify({'response': gettext('Success!')})
         except:
-            return jsonify({'response': "bruh"})
+            return jsonify({'response': gettext('bruh')})
 
 
 @app.route('/logs')
@@ -409,7 +421,7 @@ def open_logs():
 def clear_logs():
     with open('logs.log', 'w'):
         pass
-    return 'Success!'
+    return gettext('Success!')
 
 
 def get_user_query_by_id(session_user_id):

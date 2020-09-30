@@ -3,6 +3,7 @@ from flask import session
 import spotipy
 from app import db, User
 from pprint import pprint
+from flask_babel import gettext
 
 
 def update_history(user_id, history_id, spotify):
@@ -32,11 +33,11 @@ def update_history(user_id, history_id, spotify):
                         tracks_to_delete.append(item['track']['uri'])
                     spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)
             print(spotify.current_user()['id'] + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
-            return ("History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
+            return (gettext('History updated in ') + datetime.strftime(datetime.now(), "%H:%M:%S"))
         # иначе пропускаем
         else:
             print(spotify.current_user()['id'] + ": List is empty. Nothing to update.")
-            return ("List is empty. Nothing to update.")
+            return (gettext('List is empty. Nothing to update.'))
     except spotipy.SpotifyException:
         print("Nothing to add for now")
         return ("Nothing to add for now")
