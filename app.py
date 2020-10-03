@@ -435,9 +435,9 @@ def open_logs():
         output = []
         jobs_and_times = scheduler.get_jobs(with_times=True)
         output.append(jobs_and_times)
-        file = open('logs.log', encoding='utf-8')
-        for row in file:
-            output.append(row)
+        with open('logs.log', encoding='utf-8') as file:
+            for row in file:
+                output.append(row)
     else:
         output = ["no data"]
 
