@@ -13,6 +13,12 @@ def update_history(user_id, history_id, spotify):
     history_playlist = get_current_history_list(history_id, spotify, query)
     # вытаскиваются последние прослушанные песни и сравниваются с текущей историей
     results = spotify.current_user_recently_played(limit=results_tracks_number)
+
+    recently_played_uris2 = [
+        item['track']['uri'] 
+        for idx, item in enumerate(results['items']) 
+        if item['track']['uri'] not in history_playlist]
+
     recently_played_uris = []
     try:
         for idx, item in enumerate(results['items']):
@@ -74,6 +80,11 @@ def get_current_history_list(playlist_id, sp, query):
             tracks.extend(results['items'])
 
     currentPlaylist = set()
+    currentPlaylist2 = [
+        item['track']['uri']
+        for item in tracks
+        ]
+
     for item in tracks:
         currentPlaylist.add(item['track']['uri'])
     return currentPlaylist
