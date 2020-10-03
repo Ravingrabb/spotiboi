@@ -1,11 +1,12 @@
 
 from dotenv import load_dotenv
-import tasks
+
 import logging
 from datetime import datetime
 import os
 import uuid
 import spotipy
+import sys
 
 from pprint import pprint
 from flask_migrate import Migrate
@@ -15,6 +16,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from flask import Flask, session, request, redirect, render_template, url_for, flash, jsonify, json
 from flask_babel import Babel, gettext
+from functools import wraps
+
 DEBUG = True
 
 
@@ -37,10 +40,12 @@ else:
     SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 
+# objects
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 babel = Babel(app)
-
+Session(app)
+scheduler = Scheduler(connection=Redis())
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -57,16 +62,20 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.id
 
+import tasks
 
-# расписания
-# Get a scheduler for the "default" queue
-scheduler = Scheduler(connection=Redis())
-
-# сессии
-Session(app)
-# логи
 logging.basicConfig(filename='logs.log', level=logging.INFO)
-# иниц. БД
+
+
+def check_auth(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
+        if not auth_manager.get_cached_token():
+            return redirect('/')
+        sp = spotipy.Spotify(auth_manager=auth_manager)
+        return func(spotify = sp)
+    return wrapper
 
 # создание кэша для авторизации
 caches_folder = './.spotify_caches/'
@@ -82,15 +91,27 @@ if os.path.exists(dotenv_path):
 def session_cache_path():
     return caches_folder + session.get('uuid')
 
+def db_commit() -> None:
+    global db
+    try:
+        db.session.commit()
+    except:
+        print('Database commit returned error:\n')
+        err = sys.exc_info()
+        for e in err:
+            print(e)
+
 @babel.localeselector
 def get_locale():
     #return 'ru'
     #translations = [str(translation) for translation in babel.list_translations()]
     return request.accept_languages.best_match(['en', 'ru'])
     
+
 @app.route('/localetest')
 def locale_test():
     return render_template('localetest.html')
+
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
@@ -156,7 +177,7 @@ def index():
         if 'detach_playlist' in request.form:
             user.history_id = None
             user.update = False
-            db.session.commit()
+            db_commit()
 
         if 'uriInput' in request.form:
             data = request.form.get('uriInput')
@@ -184,21 +205,28 @@ def index():
         updateChecked = "checked"
         # если работа не задана или она не в расписании
         if not user.job_id or user.job_id not in scheduler:
-            create_job(user, spotify)
+            try:
+                create_job(user, spotify)
+            except Exception as e:
+                print (e)
         # если работа работается, но uuid не совпадает
         if user.job_id in scheduler and user.last_uuid != session.get('uuid'):
-            scheduler.cancel(user.job_id)
-            create_job(user, spotify)
-            user.last_uuid = session.get('uuid')
-            db.session.commit()
+            try:
+                scheduler.cancel(user.job_id)
+                create_job(user, spotify)
+                user.last_uuid = session.get('uuid')
+                db.session.commit()
+            except Exception as e:
+                print (e)
+
     # если autoupdate = OFF
     else:
         updateChecked = None
         try:
             if user.job_id in scheduler:
                 scheduler.cancel(user.job_id)
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
 
     return render_template(
@@ -235,7 +263,7 @@ def find_playlist(spotify, user, history_playlist_data):
                 history_playlist_data['images'] = image_item[0]['url']
     if not user.history_id or user.history_id != history_playlist_data['id']:
         user.history_id = history_playlist_data['id']
-        db.session.commit()
+        db_commit()
 
 
 def attach_playlist(spotify, user):
@@ -284,11 +312,14 @@ def create_job(user, spotify, job_time=30):
     if user.update_time:
         job_time = int(user.update_time)
     job_time = job_time * 60
-    job = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[
-                             user.spotify_id, user.history_id, spotify], interval=job_time, repeat=None)
-    scheduler.enqueue_job(job)
-    user.job_id = job.id
-    db.session.commit()
+    try:
+        job = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[
+                                user.spotify_id, user.history_id, spotify], interval=job_time, repeat=None)
+        scheduler.enqueue_job(job)
+        user.job_id = job.id
+        db_commit()
+    except Exception as e:
+        print(e)
 
 
 @app.route('/sign_out')
@@ -303,12 +334,8 @@ def sign_out():
 
 
 @app.route('/currently_playing')
-def currently_playing():
-    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
-    if not auth_manager.get_cached_token():
-        return redirect('/')
-    spotify = spotipy.Spotify(auth_manager=auth_manager)
-
+@check_auth
+def currently_playing(spotify=None):
     '''Start here'''
     results = spotify.current_user_recently_played(limit=10)
     currently_played = []
