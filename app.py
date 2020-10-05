@@ -62,7 +62,9 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.id
 
+
 import tasks
+
 
 logging.basicConfig(filename='logs.log', level=logging.INFO)
 
@@ -91,6 +93,7 @@ if os.path.exists(dotenv_path):
 def session_cache_path():
     return caches_folder + session.get('uuid')
 
+
 def db_commit() -> None:
     global db
     try:
@@ -101,16 +104,12 @@ def db_commit() -> None:
         for e in err:
             print(e)
 
+
 @babel.localeselector
 def get_locale():
     #return 'ru'
     #translations = [str(translation) for translation in babel.list_translations()]
     return request.accept_languages.best_match(['en', 'ru'])
-    
-
-@app.route('/localetest')
-def locale_test():
-    return render_template('localetest.html')
 
 
 @app.route('/', methods=['POST', 'GET'])
@@ -142,28 +141,19 @@ def index():
 
     # Step 4. Signed in, display data
 
+    if not UserSettings:
+        UserSettings = tasks.UserSettings(auth_manager)
     # ЗАПУСК
     spotify = spotipy.Spotify(auth_manager=auth_manager)
     session_user_id = spotify.current_user()['id']
     user = get_user_query_by_id(session_user_id)
+    
 
     # вычислятор времени
-    time_difference = time_worker(user)
+    time_difference = UserSettings.time_worker()
 
     # settings
-    settings = {
-        'dedup_status': None,
-        'dedup_value': 0,
-        'fixed_status': None,
-        'fixed_value': 0,
-        'update_time': user.update_time
-    }
-    if user.fixed_dedup and user.fixed_dedup > 0:
-        settings['dedup_status'] = 'checked'
-        settings['dedup_value'] = user.fixed_dedup
-    if user.fixed_capacity and user.fixed_capacity > 0:
-        settings['fixed_status'] = 'checked'
-        settings['fixed_value'] = user.fixed_capacity
+    UserSettings.settings_worker()
 
     # POST запросы
     if request.method == "POST":
@@ -197,37 +187,10 @@ def index():
                         'You are not playlist creator or you are not following it', category='alert-danger')
 
     # поиск плейлиста
-    history_playlist_data = attach_playlist(spotify, user)
+    history_playlist_data = UserSettings.attach_playlist()
 
     # CRON
-    # если autoupdate = ON
-    if user.update == True and user.history_id:
-        updateChecked = "checked"
-        # если работа не задана или она не в расписании
-        if not user.job_id or user.job_id not in scheduler:
-            try:
-                create_job(user, spotify)
-            except Exception as e:
-                print (e)
-        # если работа работается, но uuid не совпадает
-        if user.job_id in scheduler and user.last_uuid != session.get('uuid'):
-            try:
-                scheduler.cancel(user.job_id)
-                create_job(user, spotify)
-                user.last_uuid = session.get('uuid')
-                db.session.commit()
-            except Exception as e:
-                print (e)
-
-    # если autoupdate = OFF
-    else:
-        updateChecked = None
-        try:
-            if user.job_id in scheduler:
-                scheduler.cancel(user.job_id)
-        except Exception as e:
-            print(e)
-
+    updateChecked = UserSettings.check_worker_status()
 
     return render_template(
         'index.html', 
@@ -236,90 +199,8 @@ def index():
         updateChecked=updateChecked,
         history_playlist_data=history_playlist_data,
         time_difference=time_difference,
-        settings=settings
+        settings=UserSettings.settings
     )
-
-
-def time_worker(user):
-    if user.last_update:
-        time_past = user.last_update
-        time_now = datetime.now()
-        FMT = '%H:%M:%S'
-        duration = time_now - datetime.strptime(time_past, FMT)
-        time_difference = duration.seconds // 60
-        return time_difference
-    else:
-        return None
-
-
-def find_playlist(spotify, user, history_playlist_data):
-    playlists = spotify.current_user_playlists()
-    for idx, item in enumerate(playlists['items']):
-        if "History" in item['name']:
-            history_playlist_data['name'] = item['name']
-            history_playlist_data['id'] = item['id']
-            image_item = item['images']
-            if image_item:
-                history_playlist_data['images'] = image_item[0]['url']
-    if not user.history_id or user.history_id != history_playlist_data['id']:
-        user.history_id = history_playlist_data['id']
-        db_commit()
-
-
-def attach_playlist(spotify, user):
-    # создаётся заготовок пустого плейлиста
-    history_playlist_data = {
-        'name': None,
-        'id': None,
-        'images': None
-    }
-    # посмотреть все плейлисты юзера
-    try:
-        # сморим все плейлисты
-        playlists = spotify.current_user_playlists()
-        # если привязан ID плейлиста и юзер подписан на него, то выводим инфу
-        if user.history_id and spotify.playlist_is_following(user.history_id, [user.spotify_id])[0]:
-            current_playlist = spotify.playlist(
-                user.history_id, fields="name, id, images")
-            history_playlist_data['name'] = current_playlist['name']
-            history_playlist_data['id'] = current_playlist['id']
-            history_playlist_data['images'] = current_playlist['images'][0]['url']
-        # если ID плейлиста привязан, но юзер не подписан на плейлист
-        elif user.history_id and not spotify.playlist_is_following(user.history_id, [user.spotify_id])[0]:
-            user.history_id = None
-            db.session.commit()
-        # если ID плейлиста не привязан, например если только что создали плейлист History через спотибой
-        elif not user.history_id:
-            for idx, item in enumerate(playlists['items']):
-                if item['name'] == "History (fresh!)":
-                    history_playlist_data['name'] = "History"
-                    history_playlist_data['id'] = item['id']
-                    image_item = item['images']
-                if image_item:
-                    history_playlist_data['images'] = image_item[0]['url']
-            user.history_id = history_playlist_data['id']
-            db.session.commit()
-            spotify.playlist_change_details(
-                history_playlist_data['id'], name="History")
-    except:
-        app.logger.info(user.spotify_id +
-                        ': Плейлист не прикреплён, нечего показывать')
-    finally:
-        return history_playlist_data
-
-
-def create_job(user, spotify, job_time=30):
-    if user.update_time:
-        job_time = int(user.update_time)
-    job_time = job_time * 60
-    try:
-        job = scheduler.schedule(datetime.utcnow(), tasks.update_history, args=[
-                                user.spotify_id, user.history_id, spotify], interval=job_time, repeat=None)
-        scheduler.enqueue_job(job)
-        user.job_id = job.id
-        db_commit()
-    except Exception as e:
-        print(e)
 
 
 @app.route('/sign_out')
