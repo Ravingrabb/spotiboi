@@ -37,6 +37,7 @@ def check_auth(func):
         return func(spotify = sp)
     return wrapper
 
+
 def auth(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -46,7 +47,6 @@ def auth(func):
         get_user = tasks.UserSettings(auth_manager)
         return func(UserSettings = get_user)
     return wrapper
-
 
 
 # создание кэша для авторизации
@@ -113,7 +113,7 @@ def index():
    
     UserSettings = tasks.UserSettings(auth_manager)
     # ЗАПУСК
-    spotify = UserSettings.user_id
+    spotify = UserSettings.spotify
     session_user_id = spotify.current_user()['id']
     #user = get_user_query_by_id(session_user_id)
     
