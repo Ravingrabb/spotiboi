@@ -1,10 +1,8 @@
 from datetime import datetime
 from flask import session
 import spotipy
-from sqlalchemy.orm import query
-from app import db, User, scheduler
+from start_settings import db, User, scheduler
 from flask_babel import gettext
-import time
 
 
 class UserSettings():

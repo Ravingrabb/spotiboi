@@ -7,45 +7,19 @@ import uuid
 import spotipy
 import sys
 
+from start_settings import app, db, scheduler, User
 from flask_migrate import Migrate
-from rq_scheduler import Scheduler
-from redis import Redis
-from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
-from flask import Flask, session, request, redirect, render_template, url_for, flash, jsonify, json
+from flask import session, request, redirect, render_template, url_for, flash, jsonify, json
 from flask_babel import Babel, gettext
 from functools import wraps
 
 DEBUG = True
 
-
-# создаём приложуху
-app = Flask(__name__)
-
-# Конфиг
-app.config.from_object('config')
 # objects
-db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 babel = Babel(app)
 Session(app)
-scheduler = Scheduler(connection=Redis(port='6381'))
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    spotify_id = db.Column(db.String(80), unique=True, nullable=False)
-    update = db.Column(db.Boolean, unique=False, nullable=False)
-    history_id = db.Column(db.String(80), unique=True, nullable=True)
-    update_time = db.Column(db.Integer, default=30)
-    last_update = db.Column(db.String(80), nullable=True)
-    job_id = db.Column(db.String(80), nullable=True)
-    last_uuid = db.Column(db.String(80), nullable=True)
-    fixed_dedup = db.Column(db.Integer, nullable=True, default=100)
-    fixed_capacity = db.Column(db.Integer, nullable=True, default=0)
-
-    def __repr__(self):
-        return '<User %r>' % self.id
-
 
 import tasks
 
@@ -139,9 +113,9 @@ def index():
    
     UserSettings = tasks.UserSettings(auth_manager)
     # ЗАПУСК
-    spotify = spotipy.Spotify(auth_manager=auth_manager)
+    spotify = UserSettings.user_id
     session_user_id = spotify.current_user()['id']
-    user = get_user_query_by_id(session_user_id)
+    #user = get_user_query_by_id(session_user_id)
     
 
     # вычислятор времени
@@ -160,11 +134,13 @@ def index():
                 )
 
         if 'detach_playlist' in request.form:
-            user.history_id = None
-            user.update = False
+            query = UserSettings.new_query()
+            query.history_id = None
+            query.update = False
             db_commit()
 
         if 'uriInput' in request.form:
+            query = UserSettings.new_query()
             data = request.form.get('uriInput')
             # если рандом текст какой-то
             if "spotify:playlist:" not in data:
@@ -173,8 +149,8 @@ def index():
                 data = data.replace('spotify:playlist:', '')
                 if ' ' in data:
                     data = data.replace(' ', '')
-                if spotify.playlist_is_following(data, [user.spotify_id])[0]:
-                    user.history_id = data
+                if spotify.playlist_is_following(data, [query.spotify_id])[0]:
+                    query.history_id = data
                     db.session.commit()
                     flash('Success!', category='alert-success')
                 else:
@@ -282,13 +258,10 @@ def auto_update(UserSettings):
 
 
 @app.route('/logs')
-def open_logs():
-    auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
-    if not auth_manager.get_cached_token():
-        return redirect('/')
-    spotify = spotipy.Spotify(auth_manager=auth_manager)
-    user = get_user_query_by_id(spotify.current_user()['id'])
-    if spotify.current_user()['id'] == "21ymkhpptvowil6ku5ljhvbua":
+@auth
+def open_logs(UserSettings):
+    user = UserSettings.new_query()
+    if UserSettings.user_id == "21ymkhpptvowil6ku5ljhvbua":
         output = []
         jobs_and_times = scheduler.get_jobs(with_times=True)
         output.append(jobs_and_times)
