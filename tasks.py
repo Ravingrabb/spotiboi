@@ -1,17 +1,18 @@
 from datetime import datetime
-from spotiboi.app import settings_worker
 from flask import session
 import spotipy
 from sqlalchemy.orm import query
 from app import db, User, scheduler
 from flask_babel import gettext
+import time
+
 
 class UserSettings():
     
     def __init__(self, auth_manager) -> None:
         self.spotify = spotipy.Spotify(auth_manager=auth_manager)
-        user_id = self.spotify.current_user()['id']
-        self.query = User.query.filter_by(spotify_id=user_id).first()
+        self.user_id = self.spotify.current_user()['id']
+        self.query = User.query.filter_by(spotify_id=self.user_id).first()
         self.settings = {
             'dedup_status': None,
             'dedup_value': 0,
@@ -20,9 +21,22 @@ class UserSettings():
             'update_time': self.query.update_time
         }
 
+    def create_job(self, job_time=30) -> None:
+        if self.query.update_time:
+            job_time = int(self.query.update_time)
+        self.job_time = job_time * 60
+        try:
+            self.job = scheduler.schedule(datetime.utcnow(), update_history, args=[
+                                    self.query.spotify_id, self.query.history_id, self.spotify], interval=self.job_time, repeat=None)
+            scheduler.enqueue_job(self.job)
+            self.query.job_id = self.job.id
+            db.session.commit()
+        except Exception as e:
+            print(e)
+            
+            
     def check_worker_status(self):
-        """ Функция для проверки работы менеджера расписаний и стстауса авто-обновления """
-
+        """ Функция для проверки работы менеджера расписаний и статуса авто-обновления """
         self.query = User.query.filter_by(spotify_id=self.user_id).first()
         
         # если autoupdate = ON
@@ -30,14 +44,14 @@ class UserSettings():
             # если работа не задана или она не в расписании
             if not self.query.job_id or self.query.job_id not in scheduler:
                 try:
-                    create_job(self.query, self.spotify)
+                    self.create_job()
                 except Exception as e:
                     print (e)
             # если работа работается, но uuid не совпадает
             if self.query.job_id in scheduler and self.query.last_uuid != session.get('uuid'):
                 try:
                     scheduler.cancel(self.query.job_id)
-                    create_job(self.query, self.spotify)
+                    self.create_job()
                     self.query.last_uuid = session.get('uuid')
                     db.session.commit()
                 except Exception as e:
@@ -72,19 +86,6 @@ class UserSettings():
             self.settings['fixed_status'] = 'checked'
             self.settings['fixed_value'] = self.query.fixed_capacity
     
-
-    def create_job(self, job_time=30) -> None:
-        if self.query.update_time:
-            self.job_time = int(self.query.update_time)
-        self.job_time = job_time * 60
-        try:
-            self.job = scheduler.schedule(datetime.utcnow(), update_history, args=[
-                                    self.query.spotify_id, self.query.history_id, self.spotify], interval=job_time, repeat=None)
-            scheduler.enqueue_job(self.job)
-            self.query.job_id = self.job.id
-            db.session.commit()
-        except Exception as e:
-            print(e)
 
     def attach_playlist(self):
         # создаётся заготовок пустого плейлиста
@@ -126,6 +127,10 @@ class UserSettings():
                             ': Плейлист не прикреплён, нечего показывать')
         finally:
             return self.history_playlist_data
+        
+    def new_query(self):
+        return User.query.filter_by(spotify_id=self.user_id).first()
+        
 
 
 
@@ -137,17 +142,21 @@ def update_history(user_id, history_id, spotify):
     # вытаскиваются последние прослушанные песни и сравниваются с текущей историей
     results = spotify.current_user_recently_played(limit=results_tracks_number)
 
-    recently_played_uris2 = [
+  
+
+    recently_played_uris = [
         item['track']['uri'] 
         for idx, item in enumerate(results['items']) 
         if item['track']['uri'] not in history_playlist]
 
-    recently_played_uris = []
+
+  
+    #recently_played_uris = []
     try:
-        for idx, item in enumerate(results['items']):
-            track = item['track']
-            if track['uri'] not in history_playlist:
-                recently_played_uris.append(track['uri'])
+    #    for idx, item in enumerate(results['items']):
+    #        track = item['track']
+    #        if track['uri'] not in history_playlist:
+    #            recently_played_uris.append(track['uri'])
         # если есть новые треки для добавления - они добавляются в History
         if recently_played_uris:
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
@@ -174,7 +183,7 @@ def update_history(user_id, history_id, spotify):
         query = User.query.filter_by(spotify_id=user_id).first()
         query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
         db.session.commit()
-
+        
 
 def get_current_history_list(playlist_id, sp, query):
     #если включена настройка ограничения дубликатора
@@ -186,7 +195,6 @@ def get_current_history_list(playlist_id, sp, query):
             while results['next'] and check_len(tracks, limit):
                 results = sp.next(results)
                 tracks.extend(results['items'])
-                isEnough = check_len(tracks, limit)
             if not check_len(tracks, limit):
                 diff = len(tracks) - limit
                 tracks = tracks[:len(tracks)-diff]
@@ -201,15 +209,14 @@ def get_current_history_list(playlist_id, sp, query):
         while results['next']:
             results = sp.next(results)
             tracks.extend(results['items'])
-
-    currentPlaylist = set()
-    currentPlaylist2 = [
+            
+    currentPlaylist = {
         item['track']['uri']
         for item in tracks
-        ]
-
-    for item in tracks:
-        currentPlaylist.add(item['track']['uri'])
+    }
+    #currentPlaylist = set()
+    #for item in tracks:
+    #    currentPlaylist.add(item['track']['uri'])
     return currentPlaylist
 
 def check_len(ar, limit):
