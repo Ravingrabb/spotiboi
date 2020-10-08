@@ -1,6 +1,4 @@
 
-from dotenv import load_dotenv
-
 import logging
 import os
 import uuid
@@ -13,6 +11,7 @@ from flask_session import Session
 from flask import session, request, redirect, render_template, url_for, flash, jsonify, json
 from flask_babel import Babel, gettext
 from functools import wraps
+from dotenv import load_dotenv
 
 DEBUG = True
 
@@ -20,6 +19,7 @@ DEBUG = True
 migrate = Migrate(app, db)
 babel = Babel(app)
 Session(app)
+
 
 import tasks
 
@@ -291,4 +291,4 @@ def get_user_query_by_id(session_user_id):
 
 
 if __name__ == '__main__':
-    app.run(threaded=True, debug=DEBUG, host='0.0.0.0', port='5001')
+    app.run(threaded=True, debug=DEBUG, host='0.0.0.0')

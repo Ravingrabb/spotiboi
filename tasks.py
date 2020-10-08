@@ -18,6 +18,9 @@ class UserSettings():
             'fixed_value': 0,
             'update_time': self.query.update_time
         }
+        
+    def new_query(self):
+        return User.query.filter_by(spotify_id=self.user_id).first()
 
     def create_job(self, job_time=30) -> None:
         if self.query.update_time:
@@ -65,6 +68,7 @@ class UserSettings():
             return None
 
     def time_worker(self) -> int:
+        self.query = self.new_query()
         if self.query.last_update:
             self.time_past = self.query.last_update
             self.time_now = datetime.now()
@@ -74,6 +78,7 @@ class UserSettings():
             return self.time_difference
         else:
             return None
+        
 
 
     def settings_worker(self) -> None:
@@ -126,8 +131,7 @@ class UserSettings():
         finally:
             return self.history_playlist_data
         
-    def new_query(self):
-        return User.query.filter_by(spotify_id=self.user_id).first()
+    
         
 
 
@@ -140,21 +144,12 @@ def update_history(user_id, history_id, spotify):
     # вытаскиваются последние прослушанные песни и сравниваются с текущей историей
     results = spotify.current_user_recently_played(limit=results_tracks_number)
 
-  
-
     recently_played_uris = [
         item['track']['uri'] 
         for idx, item in enumerate(results['items']) 
         if item['track']['uri'] not in history_playlist]
 
-
-  
-    #recently_played_uris = []
     try:
-    #    for idx, item in enumerate(results['items']):
-    #        track = item['track']
-    #        if track['uri'] not in history_playlist:
-    #            recently_played_uris.append(track['uri'])
         # если есть новые треки для добавления - они добавляются в History
         if recently_played_uris:
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
@@ -180,7 +175,11 @@ def update_history(user_id, history_id, spotify):
     finally:
         query = User.query.filter_by(spotify_id=user_id).first()
         query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            print(e)
+            
         
 
 def get_current_history_list(playlist_id, sp, query):

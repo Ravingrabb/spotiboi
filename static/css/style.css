@@ -39,3 +39,16 @@ h1,h2,h3,h4,h5, a, p {
     margin-top: 0px !important;
     margin-bottom: 0px;
 }
+
+.tippy-box[data-theme~='spotigreen'] {
+    background-color: #28a745;
+    color:white;
+  }
+
+.tippy-box[data-theme~='spotigreen'][data-placement^='right'] > .tippy-arrow::before {
+    border-right-color: #28a745;
+  }
+
+.tippy-box[data-inertia][data-state='visible'] {
+    transition-timing-function: cubic-bezier(.26,.66,.83,.67);
+  }

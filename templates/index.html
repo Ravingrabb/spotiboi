@@ -251,10 +251,14 @@
 <script src="https://unpkg.com/@popperjs/core@2"></script>
 <script src="https://unpkg.com/tippy.js@6"></script>
 <script>
-    const bruh = tippy('#testTippy', {
-        content: 'Updated!',
-        trigger: 'manual'
-      });
+    const instance = tippy(document.querySelector('#testTippy'),{
+        trigger: 'manual',
+        placement: 'right-end',
+        duration: [100, 200],
+        theme: "spotigreen",
+        animation: 'scale',
+        inertia: true,
+    });
 
     function checkCheckbox(inputId) {
         console.log(event.target.id);
@@ -312,10 +316,14 @@
             data: { update: true },
         })
             .done(function (data) {
+                instance.setProps({
+                    content: data.response,
+                  });
+                instance.show()
                 $('#updateSpinner').removeClass('busy')
-                $('#successAlert').show()
-                $('#alertTextArea').text(data.response)
-                $('#successAlert').delay(5000).fadeOut("slow")
+                //$('#successAlert').show()
+                //$('#alertTextArea').text(data.response)
+                //$('#successAlert').delay(5000).fadeOut("slow")
             })
     });
 

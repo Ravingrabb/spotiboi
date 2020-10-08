@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.config.from_object('config')
 
 db = SQLAlchemy(app)
-scheduler = Scheduler(connection=Redis(port='6381'))
+scheduler = Scheduler(connection=Redis())
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
