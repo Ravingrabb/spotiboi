@@ -22,9 +22,9 @@
 <div class="album py-5 bg-light">
     <div class="container">
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-lg-4 col-md-6 col-sm-6">
                 <a style="position: absolute; top: 1px; right: 21px; z-index: 1; color: #6c757d;" href="#"
-                    title="De-attach playlist" class="text-decoration-none" data-toggle="modal"
+                    title="Detach playlist" class="text-decoration-none" data-toggle="modal"
                     data-target="#deattachModal">
                     <svg width="16" height="16" viewBox="0 0 16 16" class="bi bi-x-circle-fill" fill="currentColor"
                         xmlns="http://www.w3.org/2000/svg">
@@ -48,7 +48,9 @@
                     <div class="card-body">
                         <!-- Если плейлист есть и прикреплён -->
                         {% if history_playlist_data.name != None %}
-                        <h3 id='testTippy' class="card-text">{{ history_playlist_data.name }} </h3>
+                        <h3 class="card-text">
+                           <a id='testTippy' style="color : #212529" href="https://open.spotify.com/playlist/{{ history_playlist_data.id }}"> {{ history_playlist_data.name }}</a> 
+                        </h3>
                         <p class="card-text">
                             {{ _('This is your History playlist') }}
                         </p>
@@ -177,7 +179,12 @@
                             id="fixedDedupSwitch" onchange="checkCheckbox('inputDiv1')" {{settings.dedup_status}}>
                         <label class="custom-control-label" for="fixedDedupSwitch">
                             {{_('Fixed de-duplicate')}}
+                            <svg id='dedupQuestion' class='ml-1 d-none d-sm-inline' width="12" height="12" viewBox="0 0 16 16" class="bi bi-question-circle" fill="#6c757d" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                              </svg>
                         </label>
+                        
                     </div>
 
                     <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv1'>
@@ -191,7 +198,12 @@
                     <div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input" id="fixedPlaylistSwitch"
                             onchange="checkCheckbox('inputDiv2')" {{settings.fixed_status}}>
-                        <label class="custom-control-label" for="fixedPlaylistSwitch">{{_('Fixed playlist')}}</label>
+                        <label class="custom-control-label" for="fixedPlaylistSwitch">{{_('Fixed playlist')}}
+                            <svg id='dedupFixed' class='d-none d-sm-inline ml-1' width="12" height="12" viewBox="0 0 16 16" class="bi bi-question-circle" fill="#6c757d" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                              </svg>
+                        </label>
                     </div>
 
                     <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv2'>
@@ -250,15 +262,37 @@
 
 <script src="https://unpkg.com/@popperjs/core@2"></script>
 <script src="https://unpkg.com/tippy.js@6"></script>
+
+<input type="hidden" id="dedupQuestionText" 
+value="{{_('When enabled, Spotiboi will check duplicates of the last N tracks of your History Playlist. This is necessary to speed up the update function')}}">
+<input type="hidden" id="dedupFixedText" 
+value="{{_('When enabled, limits the size of your playlist to the number of tracks specified in the setting. New tracks will be added, old ones removed.')}}">
 <script>
     const instance = tippy(document.querySelector('#testTippy'),{
         trigger: 'manual',
+        arrow: false,
+        offset: [0, 10],
         placement: 'right-end',
         duration: [100, 200],
         theme: "spotigreen",
         animation: 'scale',
         inertia: true,
     });
+
+    tippy(document.querySelector('#dedupQuestion'),{
+        content: $('#dedupQuestionText').val() ,
+        placement: 'right-end',
+        duration: [100, 200],
+        inertia: true,
+    });
+
+    tippy(document.querySelector('#dedupFixed'),{
+        content: $('#dedupFixedText').val() ,
+        placement: 'right-end',
+        duration: [100, 200],
+        inertia: true,
+    });
+
 
     function checkCheckbox(inputId) {
         console.log(event.target.id);
@@ -321,6 +355,7 @@
                   });
                 instance.show()
                 $('#updateSpinner').removeClass('busy')
+                
                 //$('#successAlert').show()
                 //$('#alertTextArea').text(data.response)
                 //$('#successAlert').delay(5000).fadeOut("slow")

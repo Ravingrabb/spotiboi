@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-10-01 02:56+0500\n"
+"POT-Creation-Date: 2020-10-08 22:52+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,24 +17,24 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: app.py:98
+#: app.py:78
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:362 app.py:395 app.py:424
+#: app.py:217 app.py:244 app.py:270
 msgid "Success!"
 msgstr ""
 
-#: app.py:364 app.py:397
+#: app.py:219 app.py:246
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:36
-msgid "History updated in "
+#: tasks.py:167
+msgid "History updated"
 msgstr ""
 
-#: tasks.py:40
-msgid "List is empty. Nothing to update."
+#: tasks.py:171
+msgid "Nothing to update"
 msgstr ""
 
 #: templates/index.html:6 templates/localetest.html:4
@@ -49,90 +49,102 @@ msgstr ""
 msgid "No artwork"
 msgstr ""
 
-#: templates/index.html:53
+#: templates/index.html:55
 msgid "This is your History playlist"
 msgstr ""
 
-#: templates/index.html:60
+#: templates/index.html:62
 msgid "Auto-update History"
 msgstr ""
 
-#: templates/index.html:67
+#: templates/index.html:69
 msgid "View"
 msgstr ""
 
-#: templates/index.html:72
+#: templates/index.html:74
 msgid "Update"
 msgstr ""
 
-#: templates/index.html:88
+#: templates/index.html:90
 msgid "Updated"
 msgstr ""
 
-#: templates/index.html:88
+#: templates/index.html:90
 msgid "min ago"
 msgstr ""
 
-#: templates/index.html:93
+#: templates/index.html:95
 msgid "You don't have attached history playlist"
 msgstr ""
 
-#: templates/index.html:100 templates/index.html:139
+#: templates/index.html:102 templates/index.html:141
 msgid "Attach your own playlist"
 msgstr ""
 
-#: templates/index.html:115
+#: templates/index.html:117
 msgid "Warning!"
 msgstr ""
 
-#: templates/index.html:121
+#: templates/index.html:123
 msgid "Are you sure you want to detach the playlist?"
 msgstr ""
 
-#: templates/index.html:126
+#: templates/index.html:128
 msgid "Yes"
 msgstr ""
 
-#: templates/index.html:128
+#: templates/index.html:130
 msgid "No"
 msgstr ""
 
-#: templates/index.html:148
+#: templates/index.html:150
 msgid "Playlist URI"
 msgstr ""
 
-#: templates/index.html:153
+#: templates/index.html:155
 msgid ""
 "If you can't find URI, right-click on your playlist -> Share -> Copy "
 "Spotify URI. Do not confuse with URL!"
 msgstr ""
 
-#: templates/index.html:168
+#: templates/index.html:170
 msgid "Settings"
 msgstr ""
 
-#: templates/index.html:179
+#: templates/index.html:181
 msgid "Fixed de-duplicate"
 msgstr ""
 
-#: templates/index.html:187
+#: templates/index.html:194
 msgid "Value must be 50 or more tracks"
 msgstr ""
 
-#: templates/index.html:194
+#: templates/index.html:201
 msgid "Fixed playlist"
 msgstr ""
 
-#: templates/index.html:203
+#: templates/index.html:215
 msgid "Auto-update time"
 msgstr ""
 
-#: templates/index.html:207
+#: templates/index.html:219
 msgid "In minutes"
 msgstr ""
 
-#: templates/index.html:211
+#: templates/index.html:223
 msgid "Save"
+msgstr ""
+
+#: templates/index.html:267
+msgid ""
+"When enabled, Spotiboi will check duplicates of the last N tracks of your"
+" History Playlist. This is necessary to speed up the update function"
+msgstr ""
+
+#: templates/index.html:269
+msgid ""
+"When enabled, limits the size of your playlist to the number of tracks "
+"specified in the setting. New tracks will be added, old ones removed."
 msgstr ""
 
 #: templates/start.html:6

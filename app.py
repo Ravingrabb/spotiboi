@@ -1,4 +1,8 @@
 
+# pybabel extract -F babel.cfg -k lazy_gettext -o messages.pot .
+# pybabel update -i messages.pot -d translations
+# pybabel compile -d translations
+
 import logging
 import os
 import uuid
@@ -25,18 +29,6 @@ import tasks
 
 
 logging.basicConfig(filename='logs.log', level=logging.INFO)
-
-
-def check_auth(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
-        if not auth_manager.get_cached_token():
-            return redirect('/')
-        sp = spotipy.Spotify(auth_manager=auth_manager)
-        return func(spotify = sp)
-    return wrapper
-
 
 def auth(func):
     @wraps(func)
@@ -77,8 +69,6 @@ def db_commit() -> None:
 
 @babel.localeselector
 def get_locale():
-    #return 'ru'
-    #translations = [str(translation) for translation in babel.list_translations()]
     return request.accept_languages.best_match(['en', 'ru'])
 
 
@@ -115,7 +105,6 @@ def index():
     # ЗАПУСК
     spotify = UserSettings.spotify
     session_user_id = spotify.current_user()['id']
-    #user = get_user_query_by_id(session_user_id)
     
 
     # вычислятор времени

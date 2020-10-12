@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-10-01 02:56+0500\n"
+"POT-Creation-Date: 2020-10-08 22:52+0500\n"
 "PO-Revision-Date: 2020-09-30 22:31+0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -19,25 +19,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: app.py:98
+#: app.py:78
 msgid "Recently played tracks"
 msgstr "История"
 
-#: app.py:362 app.py:395 app.py:424
+#: app.py:217 app.py:244 app.py:270
 msgid "Success!"
 msgstr "Успешно!"
 
-#: app.py:364 app.py:397
+#: app.py:219 app.py:246
 msgid "bruh"
 msgstr "Произошла какая-то ошибка... 🤔"
 
-#: tasks.py:36
-msgid "History updated in "
-msgstr "История обновлена в "
+#: tasks.py:167
+msgid "History updated"
+msgstr "История обновлена"
 
-#: tasks.py:40
-msgid "List is empty. Nothing to update."
-msgstr "Пока что нечего добавить в плейлист :)"
+#: tasks.py:171
+msgid "Nothing to update"
+msgstr "Нечего добавлять"
 
 #: templates/index.html:6 templates/localetest.html:4
 msgid "Hi"
@@ -51,59 +51,59 @@ msgstr "выйти"
 msgid "No artwork"
 msgstr "Нет обложки"
 
-#: templates/index.html:53
+#: templates/index.html:55
 msgid "This is your History playlist"
 msgstr "Это твой плейлист"
 
-#: templates/index.html:60
+#: templates/index.html:62
 msgid "Auto-update History"
 msgstr "Автообновление плейлиста"
 
-#: templates/index.html:67
+#: templates/index.html:69
 msgid "View"
 msgstr "Открыть"
 
-#: templates/index.html:72
+#: templates/index.html:74
 msgid "Update"
 msgstr "Обновить"
 
-#: templates/index.html:88
+#: templates/index.html:90
 msgid "Updated"
 msgstr "Обновлено"
 
-#: templates/index.html:88
+#: templates/index.html:90
 msgid "min ago"
 msgstr "мин. назад"
 
-#: templates/index.html:93
+#: templates/index.html:95
 msgid "You don't have attached history playlist"
 msgstr "У вас нет прикреплённого плейлиста истории"
 
-#: templates/index.html:100 templates/index.html:139
+#: templates/index.html:102 templates/index.html:141
 msgid "Attach your own playlist"
 msgstr "Прикрепить свой собственный плейлист"
 
-#: templates/index.html:115
+#: templates/index.html:117
 msgid "Warning!"
 msgstr "Внимание!"
 
-#: templates/index.html:121
+#: templates/index.html:123
 msgid "Are you sure you want to detach the playlist?"
 msgstr "Вы уверены, что хотите открепить плейлист?"
 
-#: templates/index.html:126
+#: templates/index.html:128
 msgid "Yes"
 msgstr "Да"
 
-#: templates/index.html:128
+#: templates/index.html:130
 msgid "No"
 msgstr "Нет"
 
-#: templates/index.html:148
+#: templates/index.html:150
 msgid "Playlist URI"
 msgstr "URI плейлиста"
 
-#: templates/index.html:153
+#: templates/index.html:155
 msgid ""
 "If you can't find URI, right-click on your playlist -> Share -> Copy "
 "Spotify URI. Do not confuse with URL!"
@@ -111,33 +111,55 @@ msgstr ""
 "Если вы не можете найти URI, с ПК версии нажмите правой кнопкой мыши по "
 "плейлисту -> Поделиться -> Копировать Spotify URI.. Не перепутайте с URL!"
 
-#: templates/index.html:168
+#: templates/index.html:170
 msgid "Settings"
 msgstr "Настройки"
 
-#: templates/index.html:179
+#: templates/index.html:181
 msgid "Fixed de-duplicate"
 msgstr "Проверять на дубли последние N треков"
 
-#: templates/index.html:187
+#: templates/index.html:194
 msgid "Value must be 50 or more tracks"
 msgstr "Значение должно быть больше 50 треков"
 
-#: templates/index.html:194
+#: templates/index.html:201
 msgid "Fixed playlist"
 msgstr "Фиксированный плейлист"
 
-#: templates/index.html:203
+#: templates/index.html:215
 msgid "Auto-update time"
 msgstr "Время автоматического обновления"
 
-#: templates/index.html:207
+#: templates/index.html:219
 msgid "In minutes"
 msgstr "В минутах"
 
-#: templates/index.html:211
+#: templates/index.html:223
 msgid "Save"
 msgstr "Сохранить"
+
+#: templates/index.html:267
+msgid ""
+"When enabled, Spotiboi will check duplicates of the last N tracks of your"
+" History Playlist. This is necessary to speed up the update function"
+msgstr ""
+"Ваш плейлист с историей будет проверяться на дубликаты. В поле ниже "
+"укажите кол-во треков, которые будут проверяться. В первую очередь это "
+"нужно для того, чтобы при авто-обновлении в ваш плейлист не добавлялись "
+"одни и те же треки раз за разом. Рекомендуется использовать значение "
+"между 50 и 100 треками. Выключение функции может нагружать сервер и "
+"запросы будут обрабатываться дольше, так что отключать не рекомендуется "
+":)"
+
+#: templates/index.html:269
+msgid ""
+"When enabled, limits the size of your playlist to the number of tracks "
+"specified in the setting. New tracks will be added, old ones removed."
+msgstr ""
+"Когда функция включена, ограничивает размер вашего плейлиста числом "
+"треков, указанным в настройках. Новые треки будут добавляться, старые - "
+"удаляться. Если функция выключена - плейлист не будет ограничен."
 
 #: templates/start.html:6
 msgid "Create playlist with your recently playing tracks"
@@ -150,4 +172,10 @@ msgstr "И обновляй его автоматически всего одн�
 #: templates/start.html:8
 msgid "Log in with Spotify"
 msgstr "Войти с помощью Spotify"
+
+#~ msgid "History updated"
+#~ msgstr "История обновлена"
+
+#~ msgid "History updated in "
+#~ msgstr ""
 
