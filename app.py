@@ -161,6 +161,9 @@ def index():
         time_difference=time_difference,
         settings=UserSettings.settings
     )
+@app.route('/faq')
+def faq():
+    return render_template('faq.html')
 
 
 @app.route('/sign_out')

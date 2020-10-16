@@ -95,7 +95,7 @@
                         <p class="card-text">{{_('You don\'t have attached history playlist')}}</p>
                         <form action="/" method="post">
                             <input type="hidden" name="create_playlist">
-                            <input type="submit" value="Create now" class="btn btn-sm btn-outline-primary">
+                            <input type="submit" value="{{_('Create now')}}" class="btn btn-sm btn-outline-primary">
                         </form>
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal"
                             data-target="#attachModal">
@@ -154,7 +154,7 @@
                         <small id="uriHelp" class="form-text text-muted">
                             {{_('If you can\'t find URI, right-click on your playlist -> Share -> Copy Spotify URI. Do not confuse with URL!')}}
                         </small>
-                        <input type="submit" class="btn btn-primary" value="Attach">
+                        <input type="submit" class="btn btn-primary" value="{{_('Attach')}}">
                     </div>
                 </form>
             </div>
@@ -233,7 +233,7 @@
         <div class="container">
             <div class="row">
                 <div class="col">
-                    <span class="text-muted">Perfectly works <a target="blank" href="http://smarterplaylists.playlistmachinery.com">smarterplaylists</a></span>
+                    <span class="text-muted">Perfectly works with <a target="blank" href="http://smarterplaylists.playlistmachinery.com">smarterplaylists</a></span>
                 </div>
                 <div class="col>
                     <span class="text-muted text-right">
@@ -249,6 +249,9 @@
 
 {% for cat, msg in get_flashed_messages(True) %}
 <div class="alert {{cat}}" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
     {{msg}}
 </div>
 {% endfor %}
@@ -343,7 +346,8 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
 
     //update AJAX
     $('#manualUpdate').click(function () {
-        $('#updateSpinner').addClass('busy')
+        $('#updateSpinner').addClass('busy');
+        $('#manualUpdate').prop('disabled', true);
         $.ajax({
             type: "POST",
             url: "/make_history",
@@ -355,10 +359,7 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
                   });
                 instance.show()
                 $('#updateSpinner').removeClass('busy')
-                
-                //$('#successAlert').show()
-                //$('#alertTextArea').text(data.response)
-                //$('#successAlert').delay(5000).fadeOut("slow")
+                $('#manualUpdate').prop('disabled', false);
             })
     });
 

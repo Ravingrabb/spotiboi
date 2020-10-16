@@ -10,7 +10,12 @@ class UserSettings():
     def __init__(self, auth_manager) -> None:
         self.spotify = spotipy.Spotify(auth_manager=auth_manager)
         self.user_id = self.spotify.current_user()['id']
-        self.query = User.query.filter_by(spotify_id=self.user_id).first()
+        if not User.query.filter_by(spotify_id=self.user_id).first():
+            db.session.add(User(spotify_id=self.user_id, update=False))
+            db.session.commit()
+            self.query = User.query.filter_by(spotify_id=self.user_id).first()
+        else:
+            self.query = User.query.filter_by(spotify_id=self.user_id).first()
         self.settings = {
             'dedup_status': None,
             'dedup_value': 0,
@@ -138,7 +143,7 @@ class UserSettings():
 
 def update_history(user_id, history_id, spotify):
     query = User.query.filter_by(spotify_id=user_id).first()
-    results_tracks_number = 30
+    results_tracks_number = 50
     # получаем историю прослушиваний (учитывая настройки )
     history_playlist = get_current_history_list(history_id, spotify, query)
     # вытаскиваются последние прослушанные песни и сравниваются с текущей историей

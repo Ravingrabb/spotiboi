@@ -15,7 +15,7 @@ class User(db.Model):
     spotify_id = db.Column(db.String(80), unique=True, nullable=False)
     update = db.Column(db.Boolean, unique=False, nullable=False)
     history_id = db.Column(db.String(80), unique=True, nullable=True)
-    update_time = db.Column(db.Integer, default=30)
+    update_time = db.Column(db.Integer, default=60)
     last_update = db.Column(db.String(80), nullable=True)
     job_id = db.Column(db.String(80), nullable=True)
     last_uuid = db.Column(db.String(80), nullable=True)

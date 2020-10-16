@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-10-08 22:52+0500\n"
+"POT-Creation-Date: 2020-10-16 14:54+0500\n"
 "PO-Revision-Date: 2020-09-30 22:31+0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -23,19 +23,19 @@ msgstr ""
 msgid "Recently played tracks"
 msgstr "История"
 
-#: app.py:217 app.py:244 app.py:270
+#: app.py:220 app.py:247 app.py:273
 msgid "Success!"
 msgstr "Успешно!"
 
-#: app.py:219 app.py:246
+#: app.py:222 app.py:249
 msgid "bruh"
 msgstr "Произошла какая-то ошибка... 🤔"
 
-#: tasks.py:167
+#: tasks.py:172
 msgid "History updated"
 msgstr "История обновлена"
 
-#: tasks.py:171
+#: tasks.py:176
 msgid "Nothing to update"
 msgstr "Нечего добавлять"
 
@@ -79,6 +79,10 @@ msgstr "мин. назад"
 msgid "You don't have attached history playlist"
 msgstr "У вас нет прикреплённого плейлиста истории"
 
+#: templates/index.html:98
+msgid "Create now"
+msgstr "Создать новый плейлист"
+
 #: templates/index.html:102 templates/index.html:141
 msgid "Attach your own playlist"
 msgstr "Прикрепить свой собственный плейлист"
@@ -111,6 +115,10 @@ msgstr ""
 "Если вы не можете найти URI, с ПК версии нажмите правой кнопкой мыши по "
 "плейлисту -> Поделиться -> Копировать Spotify URI.. Не перепутайте с URL!"
 
+#: templates/index.html:157
+msgid "Attach"
+msgstr "Прикрепить"
+
 #: templates/index.html:170
 msgid "Settings"
 msgstr "Настройки"
@@ -139,7 +147,7 @@ msgstr "В минутах"
 msgid "Save"
 msgstr "Сохранить"
 
-#: templates/index.html:267
+#: templates/index.html:270
 msgid ""
 "When enabled, Spotiboi will check duplicates of the last N tracks of your"
 " History Playlist. This is necessary to speed up the update function"
@@ -152,7 +160,7 @@ msgstr ""
 "запросы будут обрабатываться дольше, так что отключать не рекомендуется "
 ":)"
 
-#: templates/index.html:269
+#: templates/index.html:272
 msgid ""
 "When enabled, limits the size of your playlist to the number of tracks "
 "specified in the setting. New tracks will be added, old ones removed."

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="accordion" id="accordionExample">
+    <div class="card">
+      <div class="card-header" id="headingOne">
+        <h2 class="mb-0">
+          <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            <b>{{_('What is Spotiboi for?')}}</b>
+          </button>
+        </h2>
+      </div>
+  
+      <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+        <div class="card-body">
+            {{_("First of all, Spotiboi was created to work with a <a href=\"http://smarterplaylists.playlistmachinery.com\">Smarter playlists</a> service. Spotiboi collects information about the songs you listened to and moves these songs into a separate playlist called \"History\". In the future, you can use the \"History\" playlist to create smart playlists and exclude songs you've already listened to.")}}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header" id="headingTwo">
+        <h2 class="mb-0">
+          <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+            <b>{{_('Spotiboi adds only 50 songs at a time. Why?')}}</b>
+          </button>
+        </h2>
+      </div>
+      <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+        <div class="card-body">
+            {{_('This is an API limitation of Spotify :(')}}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header" id="headingThree">
+        <h2 class="mb-0">
+          <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+            <b>{{_("Songs are not added to my playlist!")}}</b>
+          </button>
+        </h2>
+      </div>
+      <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+        <div class="card-body">
+            {{_("You should make you History playlist public. Any tracks listened to while the user had “Private Session” enabled in their client will not be added. ")}}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+        <div class="card-header" id="heading4">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                <b>{{_('Are missed songs will be added to the playlist?')}}</b>
+            </button>
+          </h2>
+        </div>
+        <div id="collapseThree" class="collapse" aria-labelledby="heading4" data-parent="#accordionExample">
+            <div class="card-body">
+                {{_('No. You must listen to the song to the end, or you can rewind the song to the very end and then it will be counted (rewinding is not recommended).')}}
+            </div>
+        </div>
+      </div>
+  </div>
+{% endblock body %}

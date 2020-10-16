@@ -1,4 +1,4 @@
-h1,h2,h3,h4,h5, a, p {
+h1,h2,h3,h4,h5 {
     font-family: 'Montserrat', sans-serif;
 }
 
@@ -52,3 +52,7 @@ h1,h2,h3,h4,h5, a, p {
 .tippy-box[data-inertia][data-state='visible'] {
     transition-timing-function: cubic-bezier(.26,.66,.83,.67);
   }
+
+.accordion b {
+    color: black;
+}

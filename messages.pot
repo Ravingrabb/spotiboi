@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-10-08 22:52+0500\n"
+"POT-Creation-Date: 2020-10-16 14:54+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,19 +21,19 @@ msgstr ""
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:217 app.py:244 app.py:270
+#: app.py:220 app.py:247 app.py:273
 msgid "Success!"
 msgstr ""
 
-#: app.py:219 app.py:246
+#: app.py:222 app.py:249
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:167
+#: tasks.py:172
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:171
+#: tasks.py:176
 msgid "Nothing to update"
 msgstr ""
 
@@ -77,6 +77,10 @@ msgstr ""
 msgid "You don't have attached history playlist"
 msgstr ""
 
+#: templates/index.html:98
+msgid "Create now"
+msgstr ""
+
 #: templates/index.html:102 templates/index.html:141
 msgid "Attach your own playlist"
 msgstr ""
@@ -107,6 +111,10 @@ msgid ""
 "Spotify URI. Do not confuse with URL!"
 msgstr ""
 
+#: templates/index.html:157
+msgid "Attach"
+msgstr ""
+
 #: templates/index.html:170
 msgid "Settings"
 msgstr ""
@@ -135,13 +143,13 @@ msgstr ""
 msgid "Save"
 msgstr ""
 
-#: templates/index.html:267
+#: templates/index.html:270
 msgid ""
 "When enabled, Spotiboi will check duplicates of the last N tracks of your"
 " History Playlist. This is necessary to speed up the update function"
 msgstr ""
 
-#: templates/index.html:269
+#: templates/index.html:272
 msgid ""
 "When enabled, limits the size of your playlist to the number of tracks "
 "specified in the setting. New tracks will be added, old ones removed."
