@@ -1,8 +1,6 @@
-h1,h2,h3,h4,h5 {
-    font-family: 'Montserrat', sans-serif;
+.spotiboi-header {
+    font-family: 'Montserrat', sans-serif !important;
 }
-
-
 .start {
     margin-top: 20%;
     background-color: #f9f9f9ed;
@@ -55,4 +53,16 @@ h1,h2,h3,h4,h5 {
 
 .accordion b {
     color: black;
+}
+
+.card {
+    border-radius: 8px !important;
+}
+
+.card img {
+    border-radius: 8px !important
+}
+
+.modal-content {
+    border-radius: 10px !important;
 }

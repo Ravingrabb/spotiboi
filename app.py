@@ -29,7 +29,7 @@ Session(app)
 import tasks
 
 
-logging.basicConfig(filename='logs.log', level=logging.INFO)
+logging.basicConfig(filename='logs.log', level=logging.ERROR)
 
 def auth(func):
     @wraps(func)
@@ -188,10 +188,10 @@ def test(UserSettings):
     last_fm_data_to_uri = []
     for q in last_fm_data:
         try:
-            last_fm_data_to_uri.append(UserSettings.spotify.search(q['name'] + " artist:" + q['artist'], limit=1)['tracks']['items'][0]['id'])
+            last_fm_data_to_uri.append(UserSettings.spotify.search(q['name'] + " artist:" + q['artist'], limit=1)['tracks']['items'][0])
         except:
             continue
-    UserSettings.spotify.playlist_add_items("spotify:playlist:3zNpZCc7Kf8MI5MS8fMhg3", last_fm_data_to_uri, position=0)
+    #UserSettings.spotify.playlist_add_items("spotify:playlist:3zNpZCc7Kf8MI5MS8fMhg3", last_fm_data_to_uri, position=0)
     return render_template('test.html', queries=last_fm_data_to_uri)
         
     
@@ -239,6 +239,7 @@ def update_settings(UserSettings):
         
         user.fixed_dedup = return_db_value(request.form['dedupStatus'], request.form['dedupValue'])
         user.fixed_capacity = return_db_value(request.form['fixedStatus'], request.form['fixedValue'])
+        user.lastfm_username = return_db_value(request.form['lastFmStatus'], request.form['lastFmValue'])
         if user.update_time != request.form['updateTimeValue']:
             user.update_time = request.form['updateTimeValue']
             # если работа работается, но uuid не совпадает

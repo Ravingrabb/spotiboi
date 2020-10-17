@@ -1,8 +1,11 @@
 from datetime import datetime
+import logging
 from flask import session
 import spotipy
+from sqlalchemy.orm import query
 from start_settings import db, User, scheduler
 from flask_babel import gettext
+import pylast
 
 
 class UserSettings():
@@ -21,11 +24,15 @@ class UserSettings():
             'dedup_value': 0,
             'fixed_status': None,
             'fixed_value': 0,
-            'update_time': self.query.update_time
+            'update_time': self.query.update_time,
+            'lastfm_status': 0,
+            'lastfm_value': self.query.lastfm_username
         }
+     
         
     def new_query(self):
         return User.query.filter_by(spotify_id=self.user_id).first()
+
 
     def create_job(self, job_time=30) -> None:
         if self.query.update_time:
@@ -72,6 +79,7 @@ class UserSettings():
                 print(e)
             return None
 
+
     def time_worker(self) -> int:
         self.query = self.new_query()
         if self.query.last_update:
@@ -85,7 +93,6 @@ class UserSettings():
             return None
         
 
-
     def settings_worker(self) -> None:
         if self.query.fixed_dedup and self.query.fixed_dedup > 0:
             self.settings['dedup_status'] = 'checked'
@@ -93,6 +100,8 @@ class UserSettings():
         if self.query.fixed_capacity and self.query.fixed_capacity > 0:
             self.settings['fixed_status'] = 'checked'
             self.settings['fixed_value'] = self.query.fixed_capacity
+        if self.query.lastfm_username:
+            self.settings['lastfm_status'] = 'checked'
     
 
     def attach_playlist(self):
@@ -137,22 +146,59 @@ class UserSettings():
             return self.history_playlist_data
         
     
-        
-
-
-
+    
 def update_history(user_id, history_id, spotify):
     query = User.query.filter_by(spotify_id=user_id).first()
     results_tracks_number = 50
     # получаем историю прослушиваний (учитывая настройки )
     history_playlist = get_current_history_list(history_id, spotify, query)
-    # вытаскиваются последние прослушанные песни и сравниваются с текущей историей
+    # вытаскиваются последние прослушанные песни
     results = spotify.current_user_recently_played(limit=results_tracks_number)
-
+    
+    #песни сравниваются с историей
     recently_played_uris = [
         item['track']['uri'] 
         for idx, item in enumerate(results['items']) 
         if item['track']['uri'] not in history_playlist]
+    
+    # если в настройках указан логин lasfm, то вытаскиваются данные с него
+    if (query.lastfm_username):
+        try:
+            API_KEY = "b6d8eb5b11e5ea1e81a3f116cfa6169f"
+            API_SECRET = "7108511ff8fee65ba231fba99902a1d5"
+            username = query.lastfm_username
+
+            network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
+                                    username=username)
+            
+            def get_recent_tracks(username, number):
+                recent_tracks = network.get_user(username).get_recent_tracks(limit=number)
+                return recent_tracks
+            
+            result = get_recent_tracks(username, 50)
+            
+            # достаём данные из lastfm
+            last_fm_data = [
+                {'name': song[0].title, 'artist': song[0].artist.name}
+                for song in result
+            ]
+            # переводим эти данные в uri спотифай
+            last_fm_data_to_uri = []
+            for q in last_fm_data:
+                try:
+                    last_fm_data_to_uri.append(spotify.search(q['name'] + " artist:" + q['artist'], limit=1)['tracks']['items'][0]['uri'])
+                except:
+                    continue
+            
+            # проверяем все результаты на дубликаты 
+            for track in last_fm_data_to_uri:
+                if track not in recently_played_uris and track not in history_playlist:
+                    recently_played_uris.append(track)
+                else:
+                    continue
+        except:
+            logging.error('can not get lastfm data')
+            print('can not get lastfm data')
 
     try:
         # если есть новые треки для добавления - они добавляются в History
@@ -216,9 +262,6 @@ def get_current_history_list(playlist_id, sp, query):
         item['track']['uri']
         for item in tracks
     }
-    #currentPlaylist = set()
-    #for item in tracks:
-    #    currentPlaylist.add(item['track']['uri'])
     return currentPlaylist
 
 def check_len(ar, limit):
