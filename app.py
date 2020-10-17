@@ -8,6 +8,8 @@ import os
 import uuid
 import spotipy
 import sys
+import pylast
+from urllib.parse import unquote
 
 from start_settings import app, db, scheduler, User
 from flask_migrate import Migrate
@@ -23,7 +25,6 @@ DEBUG = True
 migrate = Migrate(app, db)
 babel = Babel(app)
 Session(app)
-
 
 import tasks
 
@@ -161,6 +162,39 @@ def index():
         time_difference=time_difference,
         settings=UserSettings.settings
     )
+
+
+@app.route('/test')
+@auth
+def test(UserSettings):
+    API_KEY = "b6d8eb5b11e5ea1e81a3f116cfa6169f"
+    API_SECRET = "7108511ff8fee65ba231fba99902a1d5"
+    username = "Ravingrabb"
+
+    network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
+                               username=username)
+    
+    def get_recent_tracks(username, number):
+        recent_tracks = network.get_user(username).get_recent_tracks(limit=number)
+        return recent_tracks
+    
+    result = get_recent_tracks(username, 50)
+    
+    last_fm_data = [
+        {'name': song[0].title, 'artist': song[0].artist.name}
+        for song in result
+    ]
+        
+    last_fm_data_to_uri = []
+    for q in last_fm_data:
+        try:
+            last_fm_data_to_uri.append(UserSettings.spotify.search(q['name'] + " artist:" + q['artist'], limit=1)['tracks']['items'][0]['id'])
+        except:
+            continue
+    UserSettings.spotify.playlist_add_items("spotify:playlist:3zNpZCc7Kf8MI5MS8fMhg3", last_fm_data_to_uri, position=0)
+    return render_template('test.html', queries=last_fm_data_to_uri)
+        
+    
 @app.route('/faq')
 def faq():
     return render_template('faq.html')
@@ -186,8 +220,6 @@ def currently_playing(UserSettings):
         item['track']
         for i, item in enumerate(results['items'])
     ]
-    #for i, item in enumerate(results['items']):
-    #    currently_played.append(item['track'])
     return render_template('recent.html', bodytext=currently_played)
 
 
@@ -225,8 +257,7 @@ def return_db_value(var_status, var_value):
     if var_status == "true":
         return var_value
     if var_status == 'false':
-        return None
-    
+        return None 
 
 
 @app.route('/auto_update', methods=['POST'])

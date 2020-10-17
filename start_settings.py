@@ -10,6 +10,8 @@ app.config.from_object('config')
 db = SQLAlchemy(app)
 scheduler = Scheduler(connection=Redis())
 
+# flask db migrate -m "users table"
+# flask db upgrade
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     spotify_id = db.Column(db.String(80), unique=True, nullable=False)
@@ -21,6 +23,7 @@ class User(db.Model):
     last_uuid = db.Column(db.String(80), nullable=True)
     fixed_dedup = db.Column(db.Integer, nullable=True, default=100)
     fixed_capacity = db.Column(db.Integer, nullable=True, default=0)
+    lastfm_username = db.Column(db.String(80), nullable=True)
 
     def __repr__(self):
         return '<User %r>' % self.id
