@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-10-16 14:54+0500\n"
+"POT-Creation-Date: 2020-10-18 02:27+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,24 +17,67 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: app.py:78
+#: app.py:79
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:220 app.py:247 app.py:273
+#: app.py:253 app.py:279 app.py:305
 msgid "Success!"
 msgstr ""
 
-#: app.py:222 app.py:249
+#: app.py:255 app.py:281
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:172
+#: tasks.py:218
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:176
+#: tasks.py:222
 msgid "Nothing to update"
+msgstr ""
+
+#: templates/faq.html:9
+msgid "What is Spotiboi for?"
+msgstr ""
+
+#: templates/faq.html:16
+msgid ""
+"First of all, Spotiboi was created to work with a <a "
+"href=\"http://smarterplaylists.playlistmachinery.com\">Smarter "
+"playlists</a> service. Spotiboi collects information about the songs you "
+"listened to and moves these songs into a separate playlist called "
+"\"History\". In the future, you can use the \"History\" playlist to "
+"create smart playlists and exclude songs you've already listened to."
+msgstr ""
+
+#: templates/faq.html:24
+msgid "Spotiboi adds only 50 songs at a time. Why?"
+msgstr ""
+
+#: templates/faq.html:30
+msgid "This is an API limitation of Spotify :("
+msgstr ""
+
+#: templates/faq.html:38
+msgid "Songs are not added to my playlist!"
+msgstr ""
+
+#: templates/faq.html:44
+msgid ""
+"You should make you History playlist public. Any tracks listened to while"
+" the user had “Private Session” enabled in their client will not be "
+"added. "
+msgstr ""
+
+#: templates/faq.html:52
+msgid "Are skipped songs will be added to the playlist?"
+msgstr ""
+
+#: templates/faq.html:58
+msgid ""
+"No. You must listen to the song to the end, or you can rewind the song to"
+" the very end and then it will be counted (rewinding is not recommended)."
 msgstr ""
 
 #: templates/index.html:6 templates/localetest.html:4
@@ -49,107 +92,115 @@ msgstr ""
 msgid "No artwork"
 msgstr ""
 
-#: templates/index.html:55
+#: templates/index.html:56
 msgid "This is your History playlist"
 msgstr ""
 
-#: templates/index.html:62
+#: templates/index.html:63
 msgid "Auto-update History"
 msgstr ""
 
-#: templates/index.html:69
+#: templates/index.html:70
 msgid "View"
 msgstr ""
 
-#: templates/index.html:74
+#: templates/index.html:75
 msgid "Update"
 msgstr ""
 
-#: templates/index.html:90
+#: templates/index.html:91
 msgid "Updated"
 msgstr ""
 
-#: templates/index.html:90
+#: templates/index.html:91
 msgid "min ago"
 msgstr ""
 
-#: templates/index.html:95
+#: templates/index.html:96
 msgid "You don't have attached history playlist"
 msgstr ""
 
-#: templates/index.html:98
+#: templates/index.html:99
 msgid "Create now"
 msgstr ""
 
-#: templates/index.html:102 templates/index.html:141
+#: templates/index.html:103 templates/index.html:142
 msgid "Attach your own playlist"
 msgstr ""
 
-#: templates/index.html:117
+#: templates/index.html:118
 msgid "Warning!"
 msgstr ""
 
-#: templates/index.html:123
+#: templates/index.html:124
 msgid "Are you sure you want to detach the playlist?"
 msgstr ""
 
-#: templates/index.html:128
+#: templates/index.html:129
 msgid "Yes"
 msgstr ""
 
-#: templates/index.html:130
+#: templates/index.html:131
 msgid "No"
 msgstr ""
 
-#: templates/index.html:150
+#: templates/index.html:151
 msgid "Playlist URI"
 msgstr ""
 
-#: templates/index.html:155
+#: templates/index.html:156
 msgid ""
 "If you can't find URI, right-click on your playlist -> Share -> Copy "
 "Spotify URI. Do not confuse with URL!"
 msgstr ""
 
-#: templates/index.html:157
+#: templates/index.html:158
 msgid "Attach"
 msgstr ""
 
-#: templates/index.html:170
+#: templates/index.html:171
 msgid "Settings"
 msgstr ""
 
-#: templates/index.html:181
+#: templates/index.html:182
 msgid "Fixed de-duplicate"
 msgstr ""
 
-#: templates/index.html:194
+#: templates/index.html:195
 msgid "Value must be 50 or more tracks"
 msgstr ""
 
-#: templates/index.html:201
+#: templates/index.html:202
 msgid "Fixed playlist"
 msgstr ""
 
-#: templates/index.html:215
+#: templates/index.html:216
 msgid "Auto-update time"
 msgstr ""
 
-#: templates/index.html:219
+#: templates/index.html:220
 msgid "In minutes"
 msgstr ""
 
-#: templates/index.html:223
+#: templates/index.html:225
+msgid "Integration with LastFM"
+msgstr ""
+
+#: templates/index.html:232
+msgid "Attention! When integration is enabled, the update will take much longer."
+msgstr ""
+
+#: templates/index.html:237
 msgid "Save"
 msgstr ""
 
-#: templates/index.html:270
+#: templates/index.html:284
 msgid ""
 "When enabled, Spotiboi will check duplicates of the last N tracks of your"
 " History Playlist. This is necessary to speed up the update function"
 msgstr ""
 
-#: templates/index.html:272
+#: templates/index.html:286
 msgid ""
 "When enabled, limits the size of your playlist to the number of tracks "
 "specified in the setting. New tracks will be added, old ones removed."

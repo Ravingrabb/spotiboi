@@ -3,12 +3,11 @@
 # pybabel update -i messages.pot -d translations
 # pybabel compile -d translations
 
-import logging
 import os
 import uuid
 import spotipy
 import sys
-import pylast
+#import pylast
 from urllib.parse import unquote
 
 from start_settings import app, db, scheduler, User
@@ -19,7 +18,7 @@ from flask_babel import Babel, gettext
 from functools import wraps
 from dotenv import load_dotenv
 
-DEBUG = True
+DEBUG = False
 
 # objects
 migrate = Migrate(app, db)
@@ -27,9 +26,6 @@ babel = Babel(app)
 Session(app)
 
 import tasks
-
-
-logging.basicConfig(filename='logs.log', level=logging.ERROR)
 
 def auth(func):
     @wraps(func)
@@ -90,6 +86,7 @@ def index():
     if request.args.get("code"):
         # Step 3. Being redirected from Spotify auth page
         auth_manager.get_access_token(request.args.get("code"))
+        app.logger.error('cant get access token')
         return redirect('/')
 
     try:
@@ -284,11 +281,8 @@ def auto_update(UserSettings):
 @app.route('/logs')
 @auth
 def open_logs(UserSettings):
-    user = UserSettings.new_query()
     if UserSettings.user_id == "21ymkhpptvowil6ku5ljhvbua":
         output = []
-        jobs_and_times = scheduler.get_jobs(with_times=True)
-        output.append(jobs_and_times)
         with open('logs.log', encoding='utf-8') as file:
             for row in file:
                 output.append(row)
