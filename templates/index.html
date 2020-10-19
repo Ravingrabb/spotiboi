@@ -1,16 +1,18 @@
 {% extends 'base.html' %}
 
 {% block body %}
+
 <div class="ml-2 container">
     <div class="row">
         <h2>{{ _('Hi') }}, {{ username }} <a href="/sign_out">[{{ _('sign out')}}]</a> </h2>
-        
     </div>
+    
     <div class="row pt-3" style='padding-bottom: 30px;'>
         {% for m in menu %}
             <button type="button" onclick="location.href='{{ m.url }}';" class="btn btn-success btn-lg">{{ m.title }}</button>
         {% endfor %}
     </div>
+
 </div>
 
 <script>
@@ -222,13 +224,16 @@
                     <div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input" id="lastFmSwitch"
                         onchange="checkCheckbox('inputDiv3')" {{settings.lastfm_status}}>
-                        <label class="custom-control-label" for="lastFmSwitch">{{_('Integration with LastFM')}}
+                        <label class="custom-control-label" for="lastFmSwitch">{{_('Integration with Last.fm')}}
                         </label>
                     </div>
 
-                    <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv3'>
-                        <input id="lastFmValue" type="text" class="form-control" placeholder="Your LastFM username"
-                            value='{{settings.lastfm_value}}'>
+                    <div class='inputDiv {% if settings.lastfm_status %} reveal {% endif %}' id='inputDiv3'>
+                        <input id="lastFmValue" type="text" class="form-control" placeholder="Your last.fm username"
+                           {% if settings.lastfm_value %}
+                                value='{{settings.lastfm_value}}'
+                           {% endif %} 
+                           >
                         <small class="form-text text-muted">{{_('Attention! When integration is enabled, the update will take much longer.')}}</small>
                     </div>
                     
@@ -238,6 +243,9 @@
                         class="btn btn-sm btn-outline-primary">
                 </form>
                 <div style="margin-top: 15px;" class="alert alert-success collapse" role="alert">
+                    <div class='alertTextArea'></div>
+                </div>
+                <div style="margin-top: 15px;" class="alert alert-danger collapse" role="alert">
                     <div class='alertTextArea'></div>
                 </div>
             </div>
@@ -349,10 +357,16 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
                 },
             })
                 .done(function (data) {
-                    $('#settingsModal .alert').show()
-                    $('#settingsModal .alert .alertTextArea').text(data.response)
-                    $('#settingsModal .alert').delay(5000).fadeOut("slow")
-                    console.log(data.response)
+                    if (data.error){
+                        $('#settingsModal .alert-danger').show()
+                        $('#settingsModal .alert-danger .alertTextArea').text(data.error)
+                        $('#settingsModal .alert-danger').delay(3000).fadeOut("slow")
+                    }
+                    else {
+                        $('#settingsModal .alert-success').show()
+                        $('#settingsModal .alert-success .alertTextArea').text(data.response)
+                        $('#settingsModal .alert-success').delay(3000).fadeOut("slow")
+                    }
                 })
         }
     });

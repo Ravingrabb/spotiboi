@@ -7,7 +7,7 @@ import os
 import uuid
 import spotipy
 import sys
-#import pylast
+import pylast
 from urllib.parse import unquote
 
 from start_settings import app, db, scheduler, User
@@ -87,13 +87,13 @@ def index():
     if request.args.get("code"):
         # Step 3. Being redirected from Spotify auth page
         auth_manager.get_access_token(request.args.get("code"))
-        app.logger.error('cant get access token')
         return redirect('/')
 
     try:
         if not auth_manager.get_cached_token():
             # Step 2. Display sign in link when no token
             auth_url = auth_manager.get_authorize_url()
+            app.logger.error('cant get access token')
             return render_template('start.html', auth_url=auth_url)
     except spotipy.SpotifyException:
         return redirect('/sign_out')
@@ -171,26 +171,13 @@ def test(UserSettings):
 
     network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
                                username=username)
+    try:
+        user = network.get_user("Ravingrabb")
+    except:
+        user = None
+    print(user.get_name(properly_capitalized=True))
     
-    def get_recent_tracks(username, number):
-        recent_tracks = network.get_user(username).get_recent_tracks(limit=number)
-        return recent_tracks
-    
-    result = get_recent_tracks(username, 50)
-    
-    last_fm_data = [
-        {'name': song[0].title, 'artist': song[0].artist.name}
-        for song in result
-    ]
-        
-    last_fm_data_to_uri = []
-    for q in last_fm_data:
-        try:
-            last_fm_data_to_uri.append(UserSettings.spotify.search(q['name'] + " artist:" + q['artist'], limit=1)['tracks']['items'][0])
-        except:
-            continue
-    #UserSettings.spotify.playlist_add_items("spotify:playlist:3zNpZCc7Kf8MI5MS8fMhg3", last_fm_data_to_uri, position=0)
-    return render_template('test.html', queries=last_fm_data_to_uri)
+    return render_template('test.html', queries="kek")
         
     
 @app.route('/faq')
@@ -234,11 +221,26 @@ def make_history(UserSettings):
 @auth
 def update_settings(UserSettings):
     if request.method == "POST":
+        API_KEY = "b6d8eb5b11e5ea1e81a3f116cfa6169f"
+        API_SECRET = "7108511ff8fee65ba231fba99902a1d5"
+        username = "Ravingrabb"
+
+        network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
+                               username=username)
         user = UserSettings.new_query()
-        
+        # прогоняем все данные из настроек
         user.fixed_dedup = return_db_value(request.form['dedupStatus'], request.form['dedupValue'])
         user.fixed_capacity = return_db_value(request.form['fixedStatus'], request.form['fixedValue'])
         user.lastfm_username = return_db_value(request.form['lastFmStatus'], request.form['lastFmValue'])
+        if user.lastfm_username:
+            try:
+                lastfm_user = network.get_user(user.lastfm_username)
+                lastfm_user.get_name(properly_capitalized=True)
+            except:
+                user.lastfm_username = None
+                db.session.commit()
+                return jsonify({'error': gettext("Error! Can't find that last.fm user")})
+            
         if user.update_time != request.form['updateTimeValue']:
             user.update_time = request.form['updateTimeValue']
             # если работа работается, но uuid не совпадает
@@ -254,6 +256,8 @@ def update_settings(UserSettings):
         return jsonify({'response': gettext('bruh')})
 
 def return_db_value(var_status, var_value):
+    '''Функция проверяет статус настройки. Если true, то значение переходи в БД.
+    Если false, то в бд присваивается None '''
     if var_status == "true":
         return var_value
     if var_status == 'false':
