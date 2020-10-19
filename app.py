@@ -18,7 +18,7 @@ from flask_babel import Babel, gettext
 from functools import wraps
 from dotenv import load_dotenv
 
-DEBUG = False
+DEBUG = True
 
 # objects
 migrate = Migrate(app, db)
@@ -76,6 +76,7 @@ def index():
     ]
 
     if not session.get('uuid'):
+        app.logger.error("Can't find UUID in session. I will create a new one.")
         # Step 1. Visitor is unknown, give random ID
         session['uuid'] = str(uuid.uuid4())
 
@@ -212,11 +213,12 @@ def sign_out():
 @auth
 def currently_playing(UserSettings):
     '''Start here'''
-    results = UserSettings.spotify.current_user_recently_played(limit=15)
+    results = UserSettings.spotify.current_user_recently_played(limit=30)
     currently_played = [
-        item['track']
+        [item['track'], UserSettings.spotify.track(item['track']['id'])]
         for i, item in enumerate(results['items'])
     ]
+    
     return render_template('recent.html', bodytext=currently_played)
 
 

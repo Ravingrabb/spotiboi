@@ -7,9 +7,19 @@
 {% block body %}
 
     {% if bodytext %}
-        <h2>Last 10 track</h2>
+        <h2>Last 30 tracks</h2>
         {% for m in bodytext %}
-        <p>{{m.artists[0].name}} - {{m.name}}</p>
+        <div class="songData">
+            <div class="d-flex flex-row">
+                <div class="p-2">
+                    <img wigth='40' height="40" src="{{m[1].album.images[2].url}}">
+                </div>
+                <div class="p-2 align-middle">
+                    <span class='align-middle'>{{m[0].artists[0].name}} - {{m[0].name}}</span>
+                </div>
+                
+            </div>
+        </div>
         {% endfor %}
     {% endif %}
 

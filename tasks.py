@@ -149,7 +149,7 @@ class UserSettings():
     
 def update_history(user_id, history_id, spotify):
     query = User.query.filter_by(spotify_id=user_id).first()
-    results_tracks_number = 50
+    results_tracks_number = 30
     # получаем историю прослушиваний (учитывая настройки )
     history_playlist = get_current_history_list(history_id, spotify, query)
     # вытаскиваются последние прослушанные песни
@@ -160,7 +160,7 @@ def update_history(user_id, history_id, spotify):
         item['track']['uri'] 
         for idx, item in enumerate(results['items']) 
         if item['track']['uri'] not in history_playlist]
-    
+ 
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
     if (query.lastfm_username):
         try:
@@ -175,13 +175,14 @@ def update_history(user_id, history_id, spotify):
                 recent_tracks = network.get_user(username).get_recent_tracks(limit=number)
                 return recent_tracks
             
-            result = get_recent_tracks(username, 50)
+            result = get_recent_tracks(username, 30)
             
             # достаём данные из lastfm
             last_fm_data = [
                 {'name': song[0].title, 'artist': song[0].artist.name}
                 for song in result
             ]
+            
             # переводим эти данные в uri спотифай
             last_fm_data_to_uri = []
             for q in last_fm_data:
@@ -196,9 +197,10 @@ def update_history(user_id, history_id, spotify):
                     recently_played_uris.append(track)
                 else:
                     continue
+                
         except:
             logging.error('can not get lastfm data')
-            print('can not get lastfm data')
+        
 
     try:
         # если есть новые треки для добавления - они добавляются в History
@@ -248,11 +250,11 @@ def get_current_history_list(playlist_id, sp, query):
                 tracks = tracks[:len(tracks)-diff]
 
         if query.fixed_dedup <= 100:
-            results = sp.playlist_tracks(playlist_id, fields="items(track(uri))", limit=query.fixed_dedup)
+            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri))", limit=query.fixed_dedup)
             tracks = results['items']
     #если ВЫКЛ
     else:
-        results = sp.playlist_tracks(playlist_id, fields="items(track(uri)), next")
+        results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
         tracks = results['items']
         while results['next']:
             results = sp.next(results)
@@ -262,6 +264,8 @@ def get_current_history_list(playlist_id, sp, query):
         item['track']['uri']
         for item in tracks
     }
+
+        
     return currentPlaylist
 
 def check_len(ar, limit):
