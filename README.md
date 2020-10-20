@@ -1,4 +1,4 @@
-# h1 Setting up
+# Setting up
 On root directory create ".env" file/ 
 Add lines and change values with your Spotify API data:
 
