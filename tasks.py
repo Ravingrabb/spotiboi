@@ -11,14 +11,17 @@ import pylast
 class UserSettings():
     
     def __init__(self, auth_manager) -> None:
+        
         self.spotify = spotipy.Spotify(auth_manager=auth_manager)
         self.user_id = self.spotify.current_user()['id']
+        
         if not User.query.filter_by(spotify_id=self.user_id).first():
             db.session.add(User(spotify_id=self.user_id, update=False))
             db.session.commit()
             self.query = User.query.filter_by(spotify_id=self.user_id).first()
         else:
             self.query = User.query.filter_by(spotify_id=self.user_id).first()
+            
         self.settings = {
             'dedup_status': None,
             'dedup_value': 0,
@@ -105,12 +108,16 @@ class UserSettings():
     
 
     def attach_playlist(self):
+        """ Функция, необходимая только дял отображение плейлиста юзера, данные
+        которого находятся в базе данных """
+        
         # создаётся заготовок пустого плейлиста
         self.history_playlist_data = {
             'name': None,
             'id': None,
             'images': None
         }
+        
         # посмотреть все плейлисты юзера
         try:
             # сморим все плейлисты
@@ -148,8 +155,11 @@ class UserSettings():
     
     
 def update_history(user_id, history_id, spotify):
+    """ Функция обновления истории """
+    
     query = User.query.filter_by(spotify_id=user_id).first()
     results_tracks_number = 30
+    
     # получаем историю прослушиваний (учитывая настройки )
     history_playlist = get_current_history_list(history_id, spotify, query)
     # вытаскиваются последние прослушанные песни
@@ -163,19 +173,13 @@ def update_history(user_id, history_id, spotify):
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
     if (query.lastfm_username):
-        try:
+        try:       
             API_KEY = "b6d8eb5b11e5ea1e81a3f116cfa6169f"
             API_SECRET = "7108511ff8fee65ba231fba99902a1d5"
             username = query.lastfm_username
-
             network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
                                     username=username)
-            
-            def get_recent_tracks(username, number):
-                recent_tracks = network.get_user(username).get_recent_tracks(limit=number)
-                return recent_tracks
-            
-            result = get_recent_tracks(username, 30)
+            result = network.get_user(username).get_recent_tracks(limit=30)
             
             # достаём данные из lastfm
             last_fm_data = [
@@ -199,14 +203,17 @@ def update_history(user_id, history_id, spotify):
                     continue
                 
         except:
-            logging.error('can not get lastfm data')
+            logging.error('Can not get lastfm data')
         
-
-    try:
+    
+    try:  
         # если есть новые треки для добавления - они добавляются в History
         if recently_played_uris:
+            # убираем дубликаты
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
+            
             spotify.playlist_add_items(history_id, recently_played_uris, position=0)
+            
             # если стоит настройка ограничения плейлиста по размеру
             if query.fixed_capacity:
                 playlist_size = spotify.playlist_tracks(history_id, fields='total')
@@ -236,7 +243,15 @@ def update_history(user_id, history_id, spotify):
         
 
 def get_current_history_list(playlist_id, sp, query):
-    #если включена настройка ограничения дубликатора
+    """ Функция получения истории прослушиваний """
+    def check_len(ar, limit):
+        if len(ar) >= limit:
+            return False
+        else:
+            return True
+        
+    
+    # если  FIXED DEDUP ON
     if query.fixed_dedup:
         if query.fixed_dedup > 100:
             limit = query.fixed_dedup
@@ -248,11 +263,10 @@ def get_current_history_list(playlist_id, sp, query):
             if not check_len(tracks, limit):
                 diff = len(tracks) - limit
                 tracks = tracks[:len(tracks)-diff]
-
         if query.fixed_dedup <= 100:
             results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri))", limit=query.fixed_dedup)
             tracks = results['items']
-    #если ВЫКЛ
+    # если FIXED DEDUP OFF, добавляются все треки
     else:
         results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
         tracks = results['items']
@@ -263,13 +277,6 @@ def get_current_history_list(playlist_id, sp, query):
     currentPlaylist = {
         item['track']['uri']
         for item in tracks
-    }
-
-        
+    }  
     return currentPlaylist
 
-def check_len(ar, limit):
-    if len(ar) >= limit:
-        return False
-    else:
-        return True

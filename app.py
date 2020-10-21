@@ -5,6 +5,7 @@
 
 import os
 import uuid
+from requests.cookies import create_cookie
 import spotipy
 import sys
 import pylast
@@ -13,7 +14,7 @@ from urllib.parse import unquote
 from start_settings import app, db, scheduler, User
 from flask_migrate import Migrate
 from flask_session import Session
-from flask import session, request, redirect, render_template, url_for, flash, jsonify, json
+from flask import session, request, redirect, render_template, url_for, flash, jsonify, json, make_response
 from flask_babel import Babel, gettext
 from functools import wraps
 from dotenv import load_dotenv
@@ -27,6 +28,7 @@ Session(app)
 
 import tasks
 
+# декоратор для авторизации
 def auth(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -69,6 +71,8 @@ def get_locale():
     return request.accept_languages.best_match(['en', 'ru'])
 
 
+# ---------------PAGES START HERE-------------------
+
 @app.route('/', methods=['POST', 'GET'])
 def index():
     menu = [
@@ -76,9 +80,11 @@ def index():
     ]
 
     if not session.get('uuid'):
-        app.logger.error("Can't find UUID in session. I will create a new one.")
         # Step 1. Visitor is unknown, give random ID
-        session['uuid'] = str(uuid.uuid4())
+        if request.cookies.get('uuid'):
+            session['uuid'] = request.cookies.get('uuid')
+        else:
+            session['uuid'] = str(uuid.uuid4())
 
     auth_manager = spotipy.oauth2.SpotifyOAuth(scope='playlist-modify-private user-read-recently-played playlist-modify-public',
                                                cache_path=session_cache_path(),
@@ -87,8 +93,7 @@ def index():
     if request.args.get("code"):
         # Step 3. Being redirected from Spotify auth page
         auth_manager.get_access_token(request.args.get("code"))
-        return redirect('/')
-
+        return redirect('/create_cookie')
     try:
         if not auth_manager.get_cached_token():
             # Step 2. Display sign in link when no token
@@ -105,7 +110,6 @@ def index():
     spotify = UserSettings.spotify
     session_user_id = spotify.current_user()['id']
     
-
     # вычислятор времени
     time_difference = UserSettings.time_worker()
 
@@ -150,7 +154,6 @@ def index():
 
     # CRON
     updateChecked = UserSettings.check_worker_status()
-
     return render_template(
         'index.html', 
         username=spotify.me()["display_name"],
@@ -181,6 +184,7 @@ def test(UserSettings):
         
     
 @app.route('/faq')
+@auth
 def faq():
     return render_template('faq.html')
 
@@ -209,6 +213,36 @@ def currently_playing(UserSettings):
     return render_template('recent.html', bodytext=currently_played)
 
 
+@app.route('/logs')
+@auth
+def open_logs(UserSettings):
+    if UserSettings.user_id == "21ymkhpptvowil6ku5ljhvbua":
+        output = []
+        with open('logs.log', encoding='utf-8') as file:
+            for row in file:
+                output.append(row)
+    else:
+        output = ["no data"]
+
+    return render_template('logs.html', bodytext=output)
+
+
+@app.route('/logs/clear')
+def clear_logs():
+    with open('logs.log', 'w'):
+        pass
+    return gettext('Success!')
+
+
+@app.route('/create_cookie')
+def create_cookie():
+    resp = make_response(render_template('cookie.html'))
+    resp.set_cookie('uuid', session.get('uuid'))
+    return resp
+
+
+# --------------- ONLY POST PAGES -----------------
+
 @app.route('/make_history', methods=['POST'])
 @auth
 def make_history(UserSettings):
@@ -221,18 +255,14 @@ def make_history(UserSettings):
 @auth
 def update_settings(UserSettings):
     if request.method == "POST":
-        API_KEY = "b6d8eb5b11e5ea1e81a3f116cfa6169f"
-        API_SECRET = "7108511ff8fee65ba231fba99902a1d5"
-        username = "Ravingrabb"
-
-        network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
-                               username=username)
         user = UserSettings.new_query()
-        # прогоняем все данные из настроек
-        user.fixed_dedup = return_db_value(request.form['dedupStatus'], request.form['dedupValue'])
-        user.fixed_capacity = return_db_value(request.form['fixedStatus'], request.form['fixedValue'])
-        user.lastfm_username = return_db_value(request.form['lastFmStatus'], request.form['lastFmValue'])
-        if user.lastfm_username:
+        
+        def check_lastfm_username():
+            API_KEY = "b6d8eb5b11e5ea1e81a3f116cfa6169f"
+            API_SECRET = "7108511ff8fee65ba231fba99902a1d5"
+            network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
+                               username=user.lastfm_username)
+            
             try:
                 lastfm_user = network.get_user(user.lastfm_username)
                 lastfm_user.get_name(properly_capitalized=True)
@@ -240,6 +270,15 @@ def update_settings(UserSettings):
                 user.lastfm_username = None
                 db.session.commit()
                 return jsonify({'error': gettext("Error! Can't find that last.fm user")})
+        
+        # прогоняем все данные из настроек
+        user.fixed_dedup = return_db_value(request.form['dedupStatus'], request.form['dedupValue'])
+        user.fixed_capacity = return_db_value(request.form['fixedStatus'], request.form['fixedValue'])
+        user.lastfm_username = return_db_value(request.form['lastFmStatus'], request.form['lastFmValue'])
+        
+        if user.lastfm_username:
+            check_lastfm_username()
+            
             
         if user.update_time != request.form['updateTimeValue']:
             user.update_time = request.form['updateTimeValue']
@@ -282,27 +321,6 @@ def auto_update(UserSettings):
             return jsonify({'response': gettext('Success!')})
         except:
             return jsonify({'response': gettext('bruh')})
-
-
-@app.route('/logs')
-@auth
-def open_logs(UserSettings):
-    if UserSettings.user_id == "21ymkhpptvowil6ku5ljhvbua":
-        output = []
-        with open('logs.log', encoding='utf-8') as file:
-            for row in file:
-                output.append(row)
-    else:
-        output = ["no data"]
-
-    return render_template('logs.html', bodytext=output)
-
-
-@app.route('/logs/clear')
-def clear_logs():
-    with open('logs.log', 'w'):
-        pass
-    return gettext('Success!')
 
 
 def get_user_query_by_id(session_user_id):
