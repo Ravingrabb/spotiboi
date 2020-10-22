@@ -156,62 +156,6 @@ class UserSettings():
     
 def update_history(user_id, history_id, spotify) -> str:
     """ Функция обновления истории """
-    
-    def add_lastfm_tracks(recently_played_uris, query) -> list:
-        """ Получение и добавление треков last.fm """
-        try:
-            API_KEY = "b6d8eb5b11e5ea1e81a3f116cfa6169f"
-            API_SECRET = "7108511ff8fee65ba231fba99902a1d5"
-            username = query.lastfm_username
-            network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
-                                        username=username)
-            result = network.get_user(username).get_recent_tracks(limit=30)
-                
-            # достаём данные из lastfm
-            last_fm_data = [
-                {'name': song[0].title, 'artist': song[0].artist.name}
-                for song in result
-            ]
-            
-            # переводим эти данные в uri спотифай
-            last_fm_data_to_uri = []
-            for q in last_fm_data:
-                try:
-                    last_fm_data_to_uri.append(spotify.search(q['name'] + " artist:" + q['artist'], limit=1)['tracks']['items'][0]['uri'])
-                except:
-                    continue
-                
-            # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
-            #for track in last_fm_data_to_uri:
-            #    if track not in recently_played_uris and track not in history_playlist:
-            #        recently_played_uris.insert(0, track)
-            #    else:
-            #        continue    
-                
-            # функция 2.0
-            #for i, track in enumerate(last_fm_data_to_uri):
-            #    if track in history_playlist:
-            #        last_fm_data_to_uri.pop(i)
-                    
-            for i, track in enumerate(last_fm_data_to_uri):
-                if track in history_playlist:
-                    last_fm_data_to_uri.pop(i)
-                    continue
-                    
-                if track in recently_played_uris:
-                    next_index = recently_played_uris.index(track) + 1
-                    if len(recently_played_uris) >= next_index and last_fm_data_to_uri[i] != recently_played_uris[next_index]:
-                        recently_played_uris.insert(next_index, track)
-                        
-                else:
-                    recently_played_uris.insert(0, track)
-                    
-            return recently_played_uris
-                        
-
-            
-        except Exception as e:
-            logging.error(e)
             
     def limit_playlist_size():
         """ Обрезка плейлиста, если стоит настройка фиксированного плейлиста """
@@ -242,8 +186,36 @@ def update_history(user_id, history_id, spotify) -> str:
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
     if (query.lastfm_username):
-        recently_played_uris = add_lastfm_tracks(recently_played_uris, query)
-        
+        try:
+            API_KEY = "b6d8eb5b11e5ea1e81a3f116cfa6169f"
+            API_SECRET = "7108511ff8fee65ba231fba99902a1d5"
+            username = query.lastfm_username
+            network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
+                                        username=username)
+            result = network.get_user(username).get_recent_tracks(limit=30)
+                
+            # достаём данные из lastfm
+            last_fm_data = [
+                {'name': song[0].title, 'artist': song[0].artist.name}
+                for song in result
+            ]
+            
+            # переводим эти данные в uri спотифай
+            last_fm_data_to_uri = []
+            for q in last_fm_data:
+                try:
+                    last_fm_data_to_uri.append(spotify.search(q['name'] + " artist:" + q['artist'], limit=1)['tracks']['items'][0]['uri'])
+                except:
+                    continue
+                    
+            # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
+            for track in last_fm_data_to_uri:
+                if track not in recently_played_uris and track not in history_playlist:
+                    recently_played_uris.insert(0, track)
+                else:
+                    continue      
+        except Exception as e:
+            logging.error(e)
     try:  
         # если есть новые треки для добавления - они добавляются в History
         if recently_played_uris:
