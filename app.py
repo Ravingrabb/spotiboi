@@ -77,6 +77,7 @@ def get_locale():
 def index():
     menu = [
         {'url': url_for('currently_playing'), 'title': gettext('Recently played tracks')},
+        {'url': url_for('faq'), 'title': 'FAQ'},
     ]
 
     if not session.get('uuid'):
@@ -194,7 +195,6 @@ def test(UserSettings):
         
     
 @app.route('/faq')
-@auth
 def faq():
     return render_template('faq.html')
 

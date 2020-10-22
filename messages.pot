@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-10-22 14:52+0500\n"
+"POT-Creation-Date: 2020-10-23 01:33+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,23 +21,23 @@ msgstr ""
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:234 app.py:293 app.py:321
+#: app.py:244 app.py:303 app.py:331
 msgid "Success!"
 msgstr ""
 
-#: app.py:272
+#: app.py:282
 msgid "Error! Can't find that last.fm user"
 msgstr ""
 
-#: app.py:295 app.py:323
+#: app.py:305 app.py:333
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:232
+#: tasks.py:233
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:236
+#: tasks.py:237
 msgid "Nothing to update"
 msgstr ""
 
