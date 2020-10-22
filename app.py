@@ -174,13 +174,23 @@ def test(UserSettings):
 
     network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
                                username=username)
-    try:
-        user = network.get_user("Ravingrabb")
-    except:
-        user = None
-    print(user.get_name(properly_capitalized=True))
+    result = network.get_user(username).get_recent_tracks(limit=5)
     
-    return render_template('test.html', queries="kek")
+    # достаём данные из lastfm
+    last_fm_data = [
+        {'name': song[0].title, 'artist': song[0].artist.name, 'album': song.album}
+        for song in result
+    ]
+    # переводим эти данные в uri спотифай
+    last_fm_data_to_uri = []
+    for q in last_fm_data:
+        try:
+            track = UserSettings.spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
+            last_fm_data_to_uri.append(track)
+        except:
+            continue
+    
+    return render_template('test.html', queries=last_fm_data_to_uri)
         
     
 @app.route('/faq')

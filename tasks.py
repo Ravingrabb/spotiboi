@@ -196,15 +196,15 @@ def update_history(user_id, history_id, spotify) -> str:
                 
             # достаём данные из lastfm
             last_fm_data = [
-                {'name': song[0].title, 'artist': song[0].artist.name}
+                {'name': song[0].title, 'artist': song[0].artist.name, 'album': song.album}
                 for song in result
             ]
-            
             # переводим эти данные в uri спотифай
             last_fm_data_to_uri = []
             for q in last_fm_data:
                 try:
-                    last_fm_data_to_uri.append(spotify.search(q['name'] + " artist:" + q['artist'], limit=1)['tracks']['items'][0]['uri'])
+                    track = UserSettings.spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
+                    last_fm_data_to_uri.append(track)
                 except:
                     continue
                     
@@ -213,9 +213,10 @@ def update_history(user_id, history_id, spotify) -> str:
                 if track not in recently_played_uris and track not in history_playlist:
                     recently_played_uris.insert(0, track)
                 else:
-                    continue      
+                    continue    
+                  
         except Exception as e:
-            logging.error(e)
+            logging.error(e + e.args)
     try:  
         # если есть новые треки для добавления - они добавляются в History
         if recently_played_uris:

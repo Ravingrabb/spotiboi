@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-10-18 02:27+0500\n"
+"POT-Creation-Date: 2020-10-22 14:52+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,19 +21,23 @@ msgstr ""
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:253 app.py:279 app.py:305
+#: app.py:234 app.py:293 app.py:321
 msgid "Success!"
 msgstr ""
 
-#: app.py:255 app.py:281
+#: app.py:272
+msgid "Error! Can't find that last.fm user"
+msgstr ""
+
+#: app.py:295 app.py:323
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:218
+#: tasks.py:232
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:222
+#: tasks.py:236
 msgid "Nothing to update"
 msgstr ""
 
@@ -80,127 +84,123 @@ msgid ""
 " the very end and then it will be counted (rewinding is not recommended)."
 msgstr ""
 
-#: templates/index.html:6 templates/localetest.html:4
+#: templates/index.html:7 templates/localetest.html:4
 msgid "Hi"
 msgstr ""
 
-#: templates/index.html:6
+#: templates/index.html:7
 msgid "sign out"
 msgstr ""
 
-#: templates/index.html:45
+#: templates/index.html:47
 msgid "No artwork"
 msgstr ""
 
-#: templates/index.html:56
+#: templates/index.html:58
 msgid "This is your History playlist"
 msgstr ""
 
-#: templates/index.html:63
+#: templates/index.html:65
 msgid "Auto-update History"
 msgstr ""
 
-#: templates/index.html:70
-msgid "View"
-msgstr ""
-
-#: templates/index.html:75
+#: templates/index.html:73
 msgid "Update"
 msgstr ""
 
-#: templates/index.html:91
+#: templates/index.html:89
 msgid "Updated"
 msgstr ""
 
-#: templates/index.html:91
+#: templates/index.html:89
 msgid "min ago"
 msgstr ""
 
-#: templates/index.html:96
+#: templates/index.html:94
 msgid "You don't have attached history playlist"
 msgstr ""
 
-#: templates/index.html:99
+#: templates/index.html:97
 msgid "Create now"
 msgstr ""
 
-#: templates/index.html:103 templates/index.html:142
+#: templates/index.html:101 templates/index.html:140
 msgid "Attach your own playlist"
 msgstr ""
 
-#: templates/index.html:118
+#: templates/index.html:116
 msgid "Warning!"
 msgstr ""
 
-#: templates/index.html:124
+#: templates/index.html:122
 msgid "Are you sure you want to detach the playlist?"
 msgstr ""
 
-#: templates/index.html:129
+#: templates/index.html:127
 msgid "Yes"
 msgstr ""
 
-#: templates/index.html:131
+#: templates/index.html:129
 msgid "No"
 msgstr ""
 
-#: templates/index.html:151
+#: templates/index.html:149
 msgid "Playlist URI"
 msgstr ""
 
-#: templates/index.html:156
+#: templates/index.html:154
 msgid ""
 "If you can't find URI, right-click on your playlist -> Share -> Copy "
 "Spotify URI. Do not confuse with URL!"
 msgstr ""
 
-#: templates/index.html:158
+#: templates/index.html:156
 msgid "Attach"
 msgstr ""
 
-#: templates/index.html:171
+#: templates/index.html:169
 msgid "Settings"
 msgstr ""
 
-#: templates/index.html:182
+#: templates/index.html:180
 msgid "Fixed de-duplicate"
 msgstr ""
 
-#: templates/index.html:195
+#: templates/index.html:193
 msgid "Value must be 50 or more tracks"
 msgstr ""
 
-#: templates/index.html:202
+#: templates/index.html:200
 msgid "Fixed playlist"
 msgstr ""
 
-#: templates/index.html:216
+#: templates/index.html:214
 msgid "Auto-update time"
 msgstr ""
 
-#: templates/index.html:220
+#: templates/index.html:218
 msgid "In minutes"
 msgstr ""
 
-#: templates/index.html:225
-msgid "Integration with LastFM"
+#: templates/index.html:223
+msgid "Integration with Last.fm"
 msgstr ""
 
-#: templates/index.html:232
+#: templates/index.html:233
 msgid "Attention! When integration is enabled, the update will take much longer."
 msgstr ""
 
-#: templates/index.html:237
+#: templates/index.html:238
 msgid "Save"
 msgstr ""
 
-#: templates/index.html:284
+#: templates/index.html:288
 msgid ""
 "When enabled, Spotiboi will check duplicates of the last N tracks of your"
 " History Playlist. This is necessary to speed up the update function"
 msgstr ""
 
-#: templates/index.html:286
+#: templates/index.html:290
 msgid ""
 "When enabled, limits the size of your playlist to the number of tracks "
 "specified in the setting. New tracks will be added, old ones removed."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-10-18 02:27+0500\n"
+"POT-Creation-Date: 2020-10-22 14:52+0500\n"
 "PO-Revision-Date: 2020-09-30 22:31+0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -23,19 +23,23 @@ msgstr ""
 msgid "Recently played tracks"
 msgstr "История"
 
-#: app.py:253 app.py:279 app.py:305
+#: app.py:234 app.py:293 app.py:321
 msgid "Success!"
 msgstr "Успешно!"
 
-#: app.py:255 app.py:281
+#: app.py:272
+msgid "Error! Can't find that last.fm user"
+msgstr "Ошибка! Не могу найти такого юзера в last.fm"
+
+#: app.py:295 app.py:323
 msgid "bruh"
 msgstr "Произошла какая-то ошибка... 🤔"
 
-#: tasks.py:218
+#: tasks.py:232
 msgid "History updated"
 msgstr "История обновлена"
 
-#: tasks.py:222
+#: tasks.py:236
 msgid "Nothing to update"
 msgstr "Нечего добавлять"
 
@@ -56,7 +60,7 @@ msgstr ""
 "href=\"http://smarterplaylists.playlistmachinery.com\">Smarter "
 "playlists</a>. Spotiboi собирает информацию о тех песнях, которые ты уже "
 "прослушал и добавляет их в отдельный плейлист, который называется "
-"'History'После этого вы сможете использовать этот плейлист для создания "
+"'History'. После этого вы сможете использовать этот плейлист для создания "
 "умных плейлистов, в которых прослушанные песни будут исключаться из "
 "треклиста."
 
@@ -90,78 +94,77 @@ msgid ""
 "No. You must listen to the song to the end, or you can rewind the song to"
 " the very end and then it will be counted (rewinding is not recommended)."
 msgstr ""
-"Нет. Вам нужно будет прослушать трек до конца или перемотать его в самый конец, но так делать не рекомендуется, чтобы не сбить рекомендации спотифай."
-"Как альтернативный вариант можно использовать интеграцию с Last.fm в настройках плейлиста spotiboi. Треки в last.fm попадают уже в том случае, если хотя бы дослушаны до половины." 
+"Нет. Вам нужно будет прослушать трек до конца или перемотать его в самый "
+"конец, но так делать не рекомендуется, чтобы не сбить рекомендации "
+"спотифай. Как альтернативный вариант можно использовать интеграцию с "
+"Last.fm в настройках плейлиста spotiboi. Треки в last.fm попадают уже в "
+"том случае, если хотя бы дослушаны до половины."
 
-#: templates/index.html:6 templates/localetest.html:4
+#: templates/index.html:7 templates/localetest.html:4
 msgid "Hi"
 msgstr "Привет"
 
-#: templates/index.html:6
+#: templates/index.html:7
 msgid "sign out"
 msgstr "выйти"
 
-#: templates/index.html:45
+#: templates/index.html:47
 msgid "No artwork"
 msgstr "Нет обложки"
 
-#: templates/index.html:56
+#: templates/index.html:58
 msgid "This is your History playlist"
 msgstr "Это твой плейлист"
 
-#: templates/index.html:63
+#: templates/index.html:65
 msgid "Auto-update History"
 msgstr "Автообновление плейлиста"
 
-#: templates/index.html:70
-msgid "View"
-msgstr "Открыть"
-
-#: templates/index.html:75
+#: templates/index.html:73
 msgid "Update"
 msgstr "Обновить"
 
-#: templates/index.html:91
+#: templates/index.html:89
 msgid "Updated"
 msgstr "Обновлено"
 
-#: templates/index.html:91
+#: templates/index.html:89
 msgid "min ago"
 msgstr "мин. назад"
 
-#: templates/index.html:96
+#: templates/index.html:94
 msgid "You don't have attached history playlist"
 msgstr "У вас нет прикреплённого плейлиста истории"
 
-#: templates/index.html:99
+#: templates/index.html:97
 msgid "Create now"
 msgstr "Создать новый плейлист"
 
-#: templates/index.html:103 templates/index.html:142
+#: templates/index.html:101 templates/index.html:140
 msgid "Attach your own playlist"
 msgstr "Прикрепить свой собственный плейлист"
 
-#: templates/index.html:118
+#: templates/index.html:116
 msgid "Warning!"
 msgstr "Внимание!"
 
-#: templates/index.html:124
+#: templates/index.html:122
 msgid "Are you sure you want to detach the playlist?"
 msgstr "Вы уверены, что хотите открепить плейлист?"
 
-#: templates/index.html:129
+#: templates/index.html:127
 msgid "Yes"
 msgstr "Да"
 
-#: templates/index.html:131
+#: templates/index.html:129
 msgid "No"
 msgstr "Нет"
 
-#: templates/index.html:151
+#: templates/index.html:149
 msgid "Playlist URI"
 msgstr "URI плейлиста"
 
-#: templates/index.html:156
+#: templates/index.html:154
 msgid ""
 "If you can't find URI, right-click on your playlist -> Share -> Copy "
 "Spotify URI. Do not confuse with URL!"
@@ -169,47 +172,49 @@ msgstr ""
 "Если вы не можете найти URI, с ПК версии нажмите правой кнопкой мыши по "
 "плейлисту -> Поделиться -> Копировать Spotify URI.. Не перепутайте с URL!"
 
-#: templates/index.html:158
+#: templates/index.html:156
 msgid "Attach"
 msgstr "Прикрепить"
 
-#: templates/index.html:171
+#: templates/index.html:169
 msgid "Settings"
 msgstr "Настройки"
 
-#: templates/index.html:182
+#: templates/index.html:180
 msgid "Fixed de-duplicate"
 msgstr "Проверять на дубли последние N треков"
 
-#: templates/index.html:195
+#: templates/index.html:193
 msgid "Value must be 50 or more tracks"
 msgstr "Значение должно быть больше 50 треков"
 
-#: templates/index.html:202
+#: templates/index.html:200
 msgid "Fixed playlist"
 msgstr "Фиксированный плейлист"
 
-#: templates/index.html:216
+#: templates/index.html:214
 msgid "Auto-update time"
 msgstr "Время автоматического обновления"
 
-#: templates/index.html:220
+#: templates/index.html:218
 msgid "In minutes"
 msgstr "В минутах"
 
-#: templates/index.html:225
-msgid "Integration with LastFM"
-msgstr "Интеграция с Last.fm"
+#: templates/index.html:223
+msgid "Integration with Last.fm"
+msgstr "Интеграция с last.fm"
 
-#: templates/index.html:232
+#: templates/index.html:233
 msgid "Attention! When integration is enabled, the update will take much longer."
-msgstr "Внимание! Когда интеграция включена, обновление будет занимать намного больше времени."
+msgstr ""
+"Внимание! Когда интеграция включена, обновление будет занимать намного "
+"больше времени."
 
-#: templates/index.html:237
+#: templates/index.html:238
 msgid "Save"
 msgstr "Сохранить"
 
-#: templates/index.html:284
+#: templates/index.html:288
 msgid ""
 "When enabled, Spotiboi will check duplicates of the last N tracks of your"
 " History Playlist. This is necessary to speed up the update function"
@@ -222,7 +227,7 @@ msgstr ""
 "запросы будут обрабатываться дольше, так что отключать не рекомендуется "
 ":)"
 
-#: templates/index.html:286
+#: templates/index.html:290
 msgid ""
 "When enabled, limits the size of your playlist to the number of tracks "
 "specified in the setting. New tracks will be added, old ones removed."
@@ -242,13 +247,3 @@ msgstr "И обновляй его автоматически всего одн�
 #: templates/start.html:8
 msgid "Log in with Spotify"
 msgstr "Войти с помощью Spotify"
-
-#~ msgid "History updated"
-#~ msgstr "История обновлена"
-
-#~ msgid "History updated in "
-#~ msgstr ""
-
-#~ msgid "Are missed songs will be added to the playlist?"
-#~ msgstr ""
-
