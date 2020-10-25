@@ -28,11 +28,14 @@ Session(app)
 
 import tasks
 
+
 # декоратор для авторизации
 def auth(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        auth_manager = spotipy.oauth2.SpotifyOAuth(cache_path=session_cache_path())
+        auth_manager = spotipy.oauth2.SpotifyOAuth(scope='playlist-modify-private user-read-recently-played playlist-modify-public',
+                                               cache_path=session_cache_path(),
+                                               show_dialog=True)
         if not auth_manager.get_cached_token():
             return redirect('/')
         get_user = tasks.UserSettings(auth_manager)
@@ -52,7 +55,7 @@ if os.path.exists(dotenv_path):
 
 
 def session_cache_path():
-    return caches_folder + session.get('uuid')
+    return caches_folder + session['uuid']
 
 
 def db_commit() -> None:
@@ -75,39 +78,40 @@ def get_locale():
 
 @app.route('/', methods=['POST', 'GET'])
 def index():
-    menu = [
-        {'url': url_for('currently_playing'), 'title': gettext('Recently played tracks')},
-        {'url': url_for('faq'), 'title': 'FAQ'},
-    ]
-
     if not session.get('uuid'):
         # Step 1. Visitor is unknown, give random ID
         if request.cookies.get('uuid'):
             session['uuid'] = request.cookies.get('uuid')
         else:
             session['uuid'] = str(uuid.uuid4())
-
+    
     auth_manager = spotipy.oauth2.SpotifyOAuth(scope='playlist-modify-private user-read-recently-played playlist-modify-public',
                                                cache_path=session_cache_path(),
                                                show_dialog=True)
 
     if request.args.get("code"):
         # Step 3. Being redirected from Spotify auth page
-        auth_manager.get_access_token(request.args.get("code"))
+        auth_manager.get_access_token(request.args.get("code"), as_dict=False)
         return redirect('/create_cookie')
     try:
         if not auth_manager.get_cached_token():
             # Step 2. Display sign in link when no token
             auth_url = auth_manager.get_authorize_url()
             app.logger.error('cant get access token')
+            app.logger.error(request.cookies.get('uuid'))
+            app.logger.error('------------------')
             return render_template('start.html', auth_url=auth_url)
     except spotipy.SpotifyException:
         return redirect('/sign_out')
 
     # Step 4. Signed in, display data
-   
+    
+    # ------------------ НАЧАЛО НАСТРОЕК СТРАНИЦЫ ------------------
     UserSettings = tasks.UserSettings(auth_manager)
-    # ЗАПУСК
+    menu = [
+        {'url': url_for('currently_playing'), 'title': gettext('Recently played tracks')},
+        {'url': url_for('faq'), 'title': 'FAQ'},
+    ]
     spotify = UserSettings.spotify
     session_user_id = spotify.current_user()['id']
     

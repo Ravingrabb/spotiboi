@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-10-23 01:33+0500\n"
+"POT-Creation-Date: 2020-10-23 03:41+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,11 +33,11 @@ msgstr ""
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:233
+#: tasks.py:234
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:237
+#: tasks.py:238
 msgid "Nothing to update"
 msgstr ""
 
@@ -55,33 +55,66 @@ msgid ""
 "create smart playlists and exclude songs you've already listened to."
 msgstr ""
 
-#: templates/faq.html:24
+#: templates/faq.html:25
 msgid "Spotiboi adds only 50 songs at a time. Why?"
 msgstr ""
 
-#: templates/faq.html:30
+#: templates/faq.html:31
 msgid "This is an API limitation of Spotify :("
 msgstr ""
 
-#: templates/faq.html:38
+#: templates/faq.html:41
+msgid "What is Spotify API?"
+msgstr ""
+
+#: templates/faq.html:47
+msgid ""
+"This is the link between our service and Spotify. Spotiboy \"knocks\" on "
+"the Spotify service and prompts certain data, such as your listening "
+"history or your playlists."
+msgstr ""
+
+#: templates/faq.html:56
 msgid "Songs are not added to my playlist!"
 msgstr ""
 
-#: templates/faq.html:44
+#: templates/faq.html:62
 msgid ""
 "You should make you History playlist public. Any tracks listened to while"
 " the user had “Private Session” enabled in their client will not be "
 "added. "
 msgstr ""
 
-#: templates/faq.html:52
+#: templates/faq.html:71
 msgid "Are skipped songs will be added to the playlist?"
 msgstr ""
 
-#: templates/faq.html:58
+#: templates/faq.html:77
 msgid ""
 "No. You must listen to the song to the end, or you can rewind the song to"
 " the very end and then it will be counted (rewinding is not recommended)."
+msgstr ""
+
+#: templates/faq.html:86
+msgid "On the History page, group names in Cyrillic are displayed in Latin"
+msgstr ""
+
+#: templates/faq.html:92
+msgid ""
+"Unfortunately, this is a Spotify API 'feature'. Adding tracks to the "
+"playlist will not be affected by this "
+msgstr ""
+
+#: templates/faq.html:102
+msgid "I can't attach a playlist"
+msgstr ""
+
+#: templates/faq.html:108
+msgid ""
+"Check your playlist privacy. You should make your History playlist "
+"public. Any tracks listened to while the user had “Private Session” "
+"enabled in their client will not be added. Also check that your URI is "
+"correct and it's not URL."
 msgstr ""
 
 #: templates/index.html:7 templates/localetest.html:4

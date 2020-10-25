@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+from logging import log
 from flask import session
 import spotipy
 from sqlalchemy.orm import query
@@ -169,7 +170,7 @@ def update_history(user_id, history_id, spotify) -> str:
             spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)
     
     # --------- CODE STARTS HERE ----------
-    
+
     query = User.query.filter_by(spotify_id=user_id).first()
     results_tracks_number = 30
     
@@ -215,9 +216,10 @@ def update_history(user_id, history_id, spotify) -> str:
                     recently_played_uris.insert(0, track)
                 else:
                     continue    
-                  
+        except pylast.WSError:
+            logging.error('Last.fm. Connection to the API failed with HTTP code 500')          
         except Exception as e:
-            logging.error(e + e.args)
+            logging.error(e)
     try:  
         # если есть новые треки для добавления - они добавляются в History
         if recently_played_uris:

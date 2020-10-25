@@ -3,34 +3,52 @@
 {% block body %}
 <div class="accordion" id="accordionExample">
     <div class="card">
-      <div class="card-header" id="headingOne">
+      <div class="card-header" id="heading1">
         <h2 class="mb-0">
-          <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+          <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
             <b>{{_('What is Spotiboi for?')}}</b>
           </button>
         </h2>
       </div>
   
-      <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordionExample">
+      <div id="collapse1" class="collapse" aria-labelledby="heading1" data-parent="#accordionExample">
         <div class="card-body">
             {{_("First of all, Spotiboi was created to work with a <a href=\"http://smarterplaylists.playlistmachinery.com\">Smarter playlists</a> service. Spotiboi collects information about the songs you listened to and moves these songs into a separate playlist called \"History\". In the future, you can use the \"History\" playlist to create smart playlists and exclude songs you've already listened to.")}}
         </div>
       </div>
     </div>
+
     <div class="card">
-      <div class="card-header" id="headingTwo">
+      <div class="card-header" id="heading2">
         <h2 class="mb-0">
-          <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+          <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
             <b>{{_('Spotiboi adds only 50 songs at a time. Why?')}}</b>
           </button>
         </h2>
       </div>
-      <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+      <div id="collapse2" class="collapse" aria-labelledby="heading2" data-parent="#accordionExample">
         <div class="card-body">
             {{_('This is an API limitation of Spotify :(')}}
         </div>
       </div>
     </div>
+
+    <div class="card">
+      <div class="card-header" id="heading_api">
+        <h2 class="mb-0">
+          <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapse_api" 
+          aria-expanded="false" aria-controls="collapse_api">
+              <b>{{_('What is Spotify API?')}}</b>
+          </button>
+        </h2>
+      </div>
+      <div id="collapse_api" class="collapse" aria-labelledby="heading_api" data-parent="#accordionExample">
+          <div class="card-body">
+            {{_("This is the link between our service and Spotify. Spotiboy \"knocks\" on the Spotify service and prompts certain data, such as your listening history or your playlists.")}}            </div>
+      </div>
+    </div>
+
+
     <div class="card">
       <div class="card-header" id="headingThree">
         <h2 class="mb-0">
@@ -45,6 +63,7 @@
         </div>
       </div>
     </div>
+
     <div class="card">
         <div class="card-header" id="heading4">
           <h2 class="mb-0">
@@ -59,5 +78,37 @@
             </div>
         </div>
       </div>
+
+      <div class="card">
+        <div class="card-header" id="heading5">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse" data-target="#collapse5" aria-expanded="false" aria-controls="collapse5">
+                <b>{{_('On the History page, group names in Cyrillic are displayed in Latin')}}</b>
+            </button>
+          </h2>
+        </div>
+        <div id="collapse5" class="collapse" aria-labelledby="heading5" data-parent="#accordionExample">
+            <div class="card-body">
+              {{_("Unfortunately, this is a Spotify API \'feature\'. Adding tracks to the playlist will not be affected by this ")}}
+            </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header" id="heading6">
+          <h2 class="mb-0">
+            <button class="btn btn-link btn-block text-left collapsed" type="button"
+            data-toggle="collapse" data-target="#collapse6" aria-expanded="false" aria-controls="collapse6">
+                <b>{{_('I can\'t attach a playlist')}}</b>
+            </button>
+          </h2>
+        </div>
+        <div id="collapse6" class="collapse" aria-labelledby="heading6" data-parent="#accordionExample">
+            <div class="card-body">
+              {{_("Check your playlist privacy. You should make your History playlist public. Any tracks listened to while the user had “Private Session” enabled in their client will not be added. Also check that your URI is correct and it's not URL.")}}            </div>
+        </div>
+      </div>
+
+
   </div>
 {% endblock body %}
