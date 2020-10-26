@@ -38,7 +38,9 @@ class User(db.Model):
     last_uuid = db.Column(db.String(80), nullable=True)
     fixed_dedup = db.Column(db.Integer, nullable=True, default=100)
     fixed_capacity = db.Column(db.Integer, nullable=True, default=0)
+    dedup_by_name = db.Column(db.Boolean, nullable=False, default=0)
     lastfm_username = db.Column(db.String(80), nullable=True)
+    
 
     def __repr__(self):
         return '<User %r>' % self.id

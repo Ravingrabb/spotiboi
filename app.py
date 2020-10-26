@@ -3,6 +3,9 @@
 # pybabel update -i messages.pot -d translations
 # pybabel compile -d translations
 
+# flask db migrate -m "users table"
+# flask db upgrade
+
 import os
 import uuid
 from requests.cookies import create_cookie

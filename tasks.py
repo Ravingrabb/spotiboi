@@ -7,7 +7,6 @@ from sqlalchemy.orm import query
 from start_settings import db, User, scheduler
 from flask_babel import gettext
 import pylast
-import os
 
 
 class UserSettings():
