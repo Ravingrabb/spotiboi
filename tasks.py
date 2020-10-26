@@ -168,13 +168,14 @@ def update_history(user_id, history_id, spotify) -> str:
                 tracks_to_delete.append(item['track']['uri'])
             spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)
     
-    def eliminate_duplicates(history_playlist, results, dedup_by_name):
-        ''' Функция проверки дубликатов с историей прослушиваний
+    def eliminate_duplicates(history_playlist, results, dedup_by_name) -> list:
+        ''' Функция проверки дубликатов с историей прослушиваний по двум признакам -
+        только по URI или только по названиям и артистам
         TODO: добавить в history_playlist поле name, artist '''
         if not dedup_by_name:
-            def get_names(history_playlist):
+            def get_uris(history_playlist):
                 for name in history_playlist:
-                    yield name['name']
+                    yield name['uri']
                     
             recently_played_uris = [
                 item['track']['uri'] 
@@ -207,7 +208,7 @@ def update_history(user_id, history_id, spotify) -> str:
     #песни сравниваются с историей
     recently_played_uris = [
         item['track']['uri'] 
-        for idx, item in enumerate(results['items']) 
+        for item in results['items'] 
         if item['track']['uri'] not in history_playlist]
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
