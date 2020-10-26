@@ -1,5 +1,11 @@
 # Setting up
-On root directory create ".env" file/ 
+1. Install all requirements
+
+```
+pip install -r requirements.txt
+```
+
+2.In root directory create ".env" file
 Add lines and change values with your Spotify API data:
 
 ```

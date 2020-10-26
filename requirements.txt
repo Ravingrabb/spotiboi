@@ -7,3 +7,4 @@ Flask_Session==0.3.2
 Flask==1.1.2
 Flask_Migrate==2.5.3
 python-dotenv==0.14.0
+pylast==4.0.0
