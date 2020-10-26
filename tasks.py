@@ -172,12 +172,20 @@ def update_history(user_id, history_id, spotify) -> str:
         ''' Функция проверки дубликатов с историей прослушиваний
         TODO: добавить в history_playlist поле name, artist '''
         if not dedup_by_name:
+            def get_names(history_playlist):
+                for name in history_playlist:
+                    yield name['name']
+                    
             recently_played_uris = [
                 item['track']['uri'] 
                 for idx, item in enumerate(results['items']) 
                 if item['track']['uri'] not in history_playlist]
         else:
-             recently_played_uris = [
+            def get_names(history_playlist):
+                for name in history_playlist:
+                    yield name['name']
+                    
+            recently_played_uris = [
                 item['track']['uri'] 
                 for idx, item in enumerate(results['items']) 
                 if item['track']['name'] not in history_playlist]
@@ -226,9 +234,7 @@ def update_history(user_id, history_id, spotify) -> str:
                     last_fm_data_to_uri.append(track)
                 except:
                     continue
-                
-            last_fm_data_to_uri = last_fm_data_to_uri.reverse()
-                   
+            last_fm_data_to_uri.reverse()                       
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
             for track in last_fm_data_to_uri:
                 if track not in recently_played_uris and track not in history_playlist:
@@ -273,10 +279,10 @@ def update_history(user_id, history_id, spotify) -> str:
             
         
 
-def get_current_history_list(playlist_id, sp, query):
+def get_current_history_list(playlist_id: "str", sp, query) -> set:
     """ Функция получения истории прослушиваний """
     
-    def check_len(ar, limit):
+    def check_len(ar, limit) -> bool:
         if len(ar) >= limit:
             return False
         else:
@@ -287,7 +293,7 @@ def get_current_history_list(playlist_id, sp, query):
     if query.fixed_dedup:
         if query.fixed_dedup > 100:
             limit = query.fixed_dedup
-            results = sp.playlist_tracks(playlist_id, fields="items(track(uri)), next")
+            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
             tracks = results['items']
             while results['next'] and check_len(tracks, limit):
                 results = sp.next(results)
@@ -310,5 +316,6 @@ def get_current_history_list(playlist_id, sp, query):
         item['track']['uri']
         for item in tracks
     }  
+    
     return currentPlaylist
 
