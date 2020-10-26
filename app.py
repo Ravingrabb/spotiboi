@@ -173,8 +173,8 @@ def index():
 @app.route('/test')
 @auth
 def test(UserSettings):
-    API_KEY = "b6d8eb5b11e5ea1e81a3f116cfa6169f"
-    API_SECRET = "7108511ff8fee65ba231fba99902a1d5"
+    API_KEY = os.environ['LASTFM_API_KEY']
+    API_SECRET = os.environ['LASTFM_API_SECRET']
     username = "Ravingrabb"
 
     network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,

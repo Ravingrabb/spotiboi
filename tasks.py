@@ -7,6 +7,7 @@ from sqlalchemy.orm import query
 from start_settings import db, User, scheduler
 from flask_babel import gettext
 import pylast
+import os
 
 
 class UserSettings():
@@ -214,10 +215,8 @@ def update_history(user_id, history_id, spotify) -> str:
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
     if (query.lastfm_username):
         try:
-            API_KEY = "b6d8eb5b11e5ea1e81a3f116cfa6169f"
-            API_SECRET = "7108511ff8fee65ba231fba99902a1d5"
             username = query.lastfm_username
-            network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
+            network = pylast.LastFMNetwork(api_key=os.environ['LASTFM_API_KEY'], api_secret=os.environ['LASTFM_API_SECRET'],
                                         username=username)
             result = network.get_user(username).get_recent_tracks(limit=30)
                 

@@ -1,4 +1,5 @@
 .env
+.envlocal
 .spotify_caches/
 .flask_session/
 __pycache__/
