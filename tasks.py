@@ -168,6 +168,24 @@ def update_history(user_id, history_id, spotify) -> str:
                 tracks_to_delete.append(item['track']['uri'])
             spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)
     
+    def eliminate_duplicates(history_playlist, results, dedup_by_name):
+        ''' Функция проверки дубликатов с историей прослушиваний
+        TODO: добавить в history_playlist поле name, artist '''
+        if not dedup_by_name:
+            recently_played_uris = [
+                item['track']['uri'] 
+                for idx, item in enumerate(results['items']) 
+                if item['track']['uri'] not in history_playlist]
+        else:
+             recently_played_uris = [
+                item['track']['uri'] 
+                for idx, item in enumerate(results['items']) 
+                if item['track']['name'] not in history_playlist]
+        
+        return recently_played_uris
+            
+       
+    
     # --------- CODE STARTS HERE ----------
 
     query = User.query.filter_by(spotify_id=user_id).first()
@@ -219,6 +237,7 @@ def update_history(user_id, history_id, spotify) -> str:
             logging.error('Last.fm. Connection to the API failed with HTTP code 500')          
         except Exception as e:
             logging.error(e)
+            
     try:  
         # если есть новые треки для добавления - они добавляются в History
         if recently_played_uris:
