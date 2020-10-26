@@ -226,9 +226,11 @@ def update_history(user_id, history_id, spotify) -> str:
                     last_fm_data_to_uri.append(track)
                 except:
                     continue
-                    
+                
+            last_fm_data_to_uri = last_fm_data_to_uri.reverse()
+                   
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
-            for track in last_fm_data_to_uri.reverse():
+            for track in last_fm_data_to_uri:
                 if track not in recently_played_uris and track not in history_playlist:
                     recently_played_uris.insert(0, track)
                 else:
