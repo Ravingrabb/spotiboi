@@ -160,7 +160,6 @@ def update_history(user_id, history_id, spotify) -> str:
             
     def limit_playlist_size():
         """ Обрезка плейлиста, если стоит настройка фиксированного плейлиста """
-        
         playlist_size = spotify.playlist_tracks(history_id, fields='total')
         if playlist_size['total'] >= query.fixed_capacity:
             result = spotify.playlist_tracks(history_id, fields="items(track(uri,name))", limit=results_tracks_number, offset=query.fixed_capacity)
@@ -211,7 +210,7 @@ def update_history(user_id, history_id, spotify) -> str:
                     continue
                     
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
-            for track in last_fm_data_to_uri:
+            for track in last_fm_data_to_uri.reverse():
                 if track not in recently_played_uris and track not in history_playlist:
                     recently_played_uris.insert(0, track)
                 else:
