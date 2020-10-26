@@ -213,10 +213,11 @@ def update_history(user_id, history_id, spotify) -> str:
         if item['track']['uri'] not in history_playlist]
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
-    if (query.lastfm_username):
+    print ('pre-last')
+    if query.lastfm_username:
         try:
             username = query.lastfm_username
-            network = pylast.LastFMNetwork(api_key=os.environ['LASTFM_API_KEY'], api_secret=os.environ['LASTFM_API_SECRET'],
+            network = pylast.LastFMNetwork(api_key='b6d8eb5b11e5ea1e81a3f116cfa6169f', api_secret="7108511ff8fee65ba231fba99902a1d5",
                                         username=username)
             result = network.get_user(username).get_recent_tracks(limit=30)
                 
@@ -234,7 +235,7 @@ def update_history(user_id, history_id, spotify) -> str:
                     last_fm_data_to_uri.append(track)
                 except:
                     continue
-                
+            print (last_fm_data_to_uri)
             last_fm_data_to_uri.reverse()      
                              
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист

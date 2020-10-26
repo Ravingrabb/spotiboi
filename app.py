@@ -97,9 +97,9 @@ def index():
         if not auth_manager.get_cached_token():
             # Step 2. Display sign in link when no token
             auth_url = auth_manager.get_authorize_url()
-            app.logger.error('cant get access token')
-            app.logger.error(request.cookies.get('uuid'))
-            app.logger.error('------------------')
+            #app.logger.error('cant get access token')
+            #app.logger.error(request.cookies.get('uuid'))
+            #app.logger.error('------------------')
             return render_template('start.html', auth_url=auth_url)
     except spotipy.SpotifyException:
         return redirect('/sign_out')
