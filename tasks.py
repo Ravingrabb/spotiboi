@@ -214,10 +214,9 @@ def update_history(user_id, history_id, spotify) -> str:
     recently_played_uris = [
         item['track']['uri'] 
         for item in results['items'] 
-        if item['track']['uri'] not in get_history_uris()]
+        if item['track']['uri'] not in get_history_uris(history_playlist)]
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
-    print ('pre-last')
     if query.lastfm_username:
         try:
             username = query.lastfm_username
@@ -239,12 +238,11 @@ def update_history(user_id, history_id, spotify) -> str:
                     last_fm_data_to_uri.append(track)
                 except:
                     continue
-            print (last_fm_data_to_uri)
             last_fm_data_to_uri.reverse()      
                              
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
             for track in last_fm_data_to_uri:
-                if track not in recently_played_uris and track not in get_history_uris():
+                if track not in recently_played_uris and track not in get_history_uris(history_playlist):
                     recently_played_uris.insert(0, track)
 
         except pylast.WSError:
@@ -318,10 +316,10 @@ def get_current_history_list(playlist_id: "str", sp, query) -> set:
             results = sp.next(results)
             tracks.extend(results['items'])
             
-    currentPlaylist = {
+    currentPlaylist = (
         item['track']
         for item in tracks
-    }  
+    )
     
     return currentPlaylist
 
