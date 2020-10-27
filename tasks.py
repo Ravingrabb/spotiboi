@@ -12,10 +12,11 @@ import pylast
 class UserSettings():
     
     def __init__(self, auth_manager) -> None:
-        
+        # авторизация и получаем id
         self.spotify = spotipy.Spotify(auth_manager=auth_manager)
         self.user_id = self.spotify.current_user()['id']
         
+        # если юзера не сущестует в БД, то создаётся запись
         if not User.query.filter_by(spotify_id=self.user_id).first():
             db.session.add(User(spotify_id=self.user_id, update=False))
             db.session.commit()
@@ -23,6 +24,7 @@ class UserSettings():
         else:
             self.query = User.query.filter_by(spotify_id=self.user_id).first()
             
+        # template for settings, that will be changed in future. Used only for HTML page
         self.settings = {
             'dedup_status': None,
             'dedup_value': 0,
@@ -30,11 +32,13 @@ class UserSettings():
             'fixed_value': 0,
             'update_time': self.query.update_time,
             'lastfm_status': 0,
-            'lastfm_value': self.query.lastfm_username
+            'lastfm_value': self.query.lastfm_username,
+            'dedup_by_name_status': None
         }
      
         
     def new_query(self):
+        ''' Function to create and return clear and new database query'''
         return User.query.filter_by(spotify_id=self.user_id).first()
 
 
@@ -52,7 +56,7 @@ class UserSettings():
             print(e)
             
             
-    def check_worker_status(self):
+    def check_worker_status(self) -> str:
         """ Функция для проверки работы менеджера расписаний и статуса авто-обновления """
         self.query = User.query.filter_by(spotify_id=self.user_id).first()
         
@@ -106,6 +110,8 @@ class UserSettings():
             self.settings['fixed_value'] = self.query.fixed_capacity
         if self.query.lastfm_username:
             self.settings['lastfm_status'] = 'checked'
+        if self.query.dedup_by_name:
+            self.settings['dedup_by_name_status'] = 'checked'
     
 
     def attach_playlist(self):
@@ -166,34 +172,7 @@ def update_history(user_id, history_id, spotify) -> str:
             tracks_to_delete = []
             for item in result['items']:
                 tracks_to_delete.append(item['track']['uri'])
-            spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)
-    
-    def eliminate_duplicates(history_playlist, results, dedup_by_name) -> list:
-        ''' Функция проверки дубликатов с историей прослушиваний по двум признакам -
-        только по URI или только по названиям и артистам
-        TODO: добавить в history_playlist поле name, artist '''
-        if not dedup_by_name:
-            def get_uris():
-                for name in history_playlist:
-                    yield name['uri']
-                    
-            recently_played_uris = [
-                item['track']['uri'] 
-                for idx, item in enumerate(results['items']) 
-                if item['track']['uri'] not in get_uris()]
-        else:
-            def get_names():
-                for name in history_playlist:
-                    yield name['name']
-                    
-            recently_played_uris = [
-                item['track']['uri'] 
-                for idx, item in enumerate(results['items']) 
-                if item['track']['name'] not in history_playlist]
-        
-        return recently_played_uris
-            
-       
+            spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)   
     
     # --------- CODE STARTS HERE ----------
 
