@@ -173,16 +173,16 @@ def update_history(user_id, history_id, spotify) -> str:
         только по URI или только по названиям и артистам
         TODO: добавить в history_playlist поле name, artist '''
         if not dedup_by_name:
-            def get_uris(history_playlist):
+            def get_uris():
                 for name in history_playlist:
                     yield name['uri']
                     
             recently_played_uris = [
                 item['track']['uri'] 
                 for idx, item in enumerate(results['items']) 
-                if item['track']['uri'] not in history_playlist]
+                if item['track']['uri'] not in get_uris()]
         else:
-            def get_names(history_playlist):
+            def get_names():
                 for name in history_playlist:
                     yield name['name']
                     
@@ -210,7 +210,7 @@ def update_history(user_id, history_id, spotify) -> str:
     def get_history_uris(history_playlist):
             for name in history_playlist:
                 yield name['uri']
-                    
+   
     recently_played_uris = [
         item['track']['uri'] 
         for item in results['items'] 
@@ -231,19 +231,39 @@ def update_history(user_id, history_id, spotify) -> str:
             ]
             
             # переводим эти данные в uri спотифай
-            last_fm_data_to_uri = []
-            for q in last_fm_data:
-                try:
-                    track = spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
-                    last_fm_data_to_uri.append(track)
-                except:
-                    continue
-            last_fm_data_to_uri.reverse()      
+               
                              
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
-            for track in last_fm_data_to_uri:
-                if track not in recently_played_uris and track not in get_history_uris(history_playlist):
-                    recently_played_uris.insert(0, track)
+            if not query.dedup_by_name:
+                last_fm_data_to_uri = []
+                for q in last_fm_data:
+                    try:
+                        track = spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
+                        last_fm_data_to_uri.append(track)
+                    except:
+                        continue
+                last_fm_data_to_uri.reverse()   
+            
+                for track in last_fm_data_to_uri:
+                    if track not in recently_played_uris and track not in get_history_uris(history_playlist):
+                        recently_played_uris.insert(0, track)
+            else:    
+                last_fm_data_to_uri = []
+                for q in last_fm_data:
+                    try:
+                        track = spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
+                        last_fm_data_to_uri.append({"name": q['name'], 'uri': track})
+                    except:
+                        continue
+                last_fm_data_to_uri.reverse()   
+                           
+                def get_names(playlist):
+                    for name in playlist:
+                        yield name['name']
+                    
+                for track in enumerate(last_fm_data_to_uri):
+                    if track['uri'] not in recently_played_uris and track['name'] not in get_names(history_playlist):
+                        recently_played_uris.insert(0, track)
 
         except pylast.WSError:
             logging.error('Last.fm. Connection to the API failed with HTTP code 500')          
@@ -316,10 +336,10 @@ def get_current_history_list(playlist_id: "str", sp, query) -> set:
             results = sp.next(results)
             tracks.extend(results['items'])
             
-    currentPlaylist = (
+    currentPlaylist = [
         item['track']
         for item in tracks
-    )
+    ]
     
     return currentPlaylist
 
