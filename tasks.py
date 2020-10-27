@@ -207,14 +207,14 @@ def update_history(user_id, history_id, spotify) -> str:
     
     #песни сравниваются с историей
     
-    def get_uris(history_playlist):
+    def get_history_uris(history_playlist):
             for name in history_playlist:
                 yield name['uri']
                     
     recently_played_uris = [
         item['track']['uri'] 
         for item in results['items'] 
-        if item['track']['uri'] not in get_uris()]
+        if item['track']['uri'] not in get_history_uris()]
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
     print ('pre-last')
@@ -244,7 +244,7 @@ def update_history(user_id, history_id, spotify) -> str:
                              
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
             for track in last_fm_data_to_uri:
-                if track not in recently_played_uris and track not in history_playlist:
+                if track not in recently_played_uris and track not in get_history_uris():
                     recently_played_uris.insert(0, track)
 
         except pylast.WSError:
