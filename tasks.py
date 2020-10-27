@@ -206,10 +206,15 @@ def update_history(user_id, history_id, spotify) -> str:
     results = spotify.current_user_recently_played(limit=results_tracks_number)
     
     #песни сравниваются с историей
+    
+    def get_uris(history_playlist):
+            for name in history_playlist:
+                yield name['uri']
+                    
     recently_played_uris = [
         item['track']['uri'] 
         for item in results['items'] 
-        if item['track']['uri'] not in history_playlist]
+        if item['track']['uri'] not in get_uris()]
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
     print ('pre-last')
@@ -314,7 +319,7 @@ def get_current_history_list(playlist_id: "str", sp, query) -> set:
             tracks.extend(results['items'])
             
     currentPlaylist = {
-        item['track']['uri']
+        item['track']
         for item in tracks
     }  
     
