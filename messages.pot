@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-10-23 03:41+0500\n"
+"POT-Creation-Date: 2020-10-28 14:35+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,27 +17,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: app.py:79
+#: app.py:115
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:244 app.py:303 app.py:331
+#: app.py:251 app.py:327 app.py:349
 msgid "Success!"
 msgstr ""
 
-#: app.py:282
+#: app.py:289
 msgid "Error! Can't find that last.fm user"
 msgstr ""
 
-#: app.py:305 app.py:333
+#: app.py:329 app.py:351
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:234
+#: tasks.py:257
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:238
+#: tasks.py:261
 msgid "Nothing to update"
 msgstr ""
 
@@ -195,45 +195,49 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: templates/index.html:180
+#: templates/index.html:181
 msgid "Fixed de-duplicate"
 msgstr ""
 
-#: templates/index.html:193
+#: templates/index.html:194
 msgid "Value must be 50 or more tracks"
 msgstr ""
 
-#: templates/index.html:200
+#: templates/index.html:201
+msgid "De-duplicate by track title"
+msgstr ""
+
+#: templates/index.html:209
 msgid "Fixed playlist"
 msgstr ""
 
-#: templates/index.html:214
+#: templates/index.html:224
 msgid "Auto-update time"
 msgstr ""
 
-#: templates/index.html:218
+#: templates/index.html:228
 msgid "In minutes"
 msgstr ""
 
-#: templates/index.html:223
+#: templates/index.html:234
 msgid "Integration with Last.fm"
 msgstr ""
 
-#: templates/index.html:233
+#: templates/index.html:244
 msgid "Attention! When integration is enabled, the update will take much longer."
 msgstr ""
 
-#: templates/index.html:238
+#: templates/index.html:248
 msgid "Save"
 msgstr ""
 
-#: templates/index.html:288
+#: templates/index.html:298
 msgid ""
 "When enabled, Spotiboi will check duplicates of the last N tracks of your"
 " History Playlist. This is necessary to speed up the update function"
 msgstr ""
 
-#: templates/index.html:290
+#: templates/index.html:300
 msgid ""
 "When enabled, limits the size of your playlist to the number of tracks "
 "specified in the setting. New tracks will be added, old ones removed."

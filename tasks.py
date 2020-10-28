@@ -224,8 +224,7 @@ def update_history(user_id, history_id, spotify) -> str:
                 for track in last_fm_data_to_uri:
                     if track['uri'] not in chain_arrays(recently_played_uris, all_history_uris):
                         recently_played_uris.insert(0, track['uri'])
-            else:            
-                print('by name')               
+            else:                    
                 all_history_names = frozenset(item['name'].lower() for item in history_playlist) 
                 
                 recently_played_names = {
