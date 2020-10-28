@@ -233,7 +233,7 @@ def update_history(user_id, history_id, spotify) -> str:
                 if item['track']['uri'] not in all_history_uris}  
                 
                 for track in last_fm_data_to_uri:
-                    if track['name'].lower() not in chain_arrays(recently_played_names, all_history_names):
+                    if track['name'].lower() not in chain_arrays(recently_played_names, all_history_names) and track['uri'] not in chain_arrays(recently_played_uris, all_history_uris):
                         recently_played_uris.insert(0, track['uri'])
         except pylast.WSError:
             logging.error('Last.fm. Connection to the API failed with HTTP code 500')          

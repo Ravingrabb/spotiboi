@@ -195,12 +195,6 @@
                         </small>
                     </div>
 
-                    <!-- NAME DEDUP SWITCH -->
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="nameDedupSwitch" {{settings.dedup_by_name_status}}>
-                        <label class="custom-control-label" for="nameDedupSwitch">{{_('De-duplicate by track title')}}
-                        </label>
-                    </div>
 
                     <!-- FIXED SWITCH -->
                     <div class="custom-control custom-switch">
@@ -242,6 +236,13 @@
                            {% endif %} 
                            >
                         <small class="form-text text-muted">{{_('Attention! When integration is enabled, the update will take much longer.')}}</small>
+                    </div>
+
+                    <!-- NAME DEDUP SWITCH -->
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="nameDedupSwitch" {{settings.dedup_by_name_status}}>
+                        <label class="custom-control-label" for="nameDedupSwitch">{{_('De-duplicate by track title')}}
+                        </label>
                     </div>
 
                     <!-- SUMBIT BUTTON -->
