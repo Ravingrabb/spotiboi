@@ -287,11 +287,28 @@ def update_settings(UserSettings):
                 user.lastfm_username = None
                 db.session.commit()
                 return jsonify({'error': gettext("Error! Can't find that last.fm user")})
-        
+            
+        def return_db_value(var_status, var_value):
+            '''Функция проверяет статус настройки. Если true, то значение переходи в БД.
+            Если false, то в бд присваивается None '''
+            if var_status == "true":
+                return var_value
+            if var_status == 'false':
+                return None 
+            
+        def return_db_value2(var_status, var_value):
+            '''Функция проверяет статус настройки. Если true, то значение переходи в БД.
+            Если false, то в бд присваивается None '''
+            if var_status == "true":
+                return var_value
+            if var_status == 'false':
+                return 0
+    
         # прогоняем все данные из настроек
         user.fixed_dedup = return_db_value(request.form['dedupStatus'], request.form['dedupValue'])
         user.fixed_capacity = return_db_value(request.form['fixedStatus'], request.form['fixedValue'])
         user.lastfm_username = return_db_value(request.form['lastFmStatus'], request.form['lastFmValue'])
+        user.dedup_by_name = return_db_value2(request.form['nameDedupStatus'], True)
         
         if user.lastfm_username:
             check_lastfm_username()
@@ -311,13 +328,7 @@ def update_settings(UserSettings):
     else:
         return jsonify({'response': gettext('bruh')})
 
-def return_db_value(var_status, var_value):
-    '''Функция проверяет статус настройки. Если true, то значение переходи в БД.
-    Если false, то в бд присваивается None '''
-    if var_status == "true":
-        return var_value
-    if var_status == 'false':
-        return None 
+
 
 
 @app.route('/auto_update', methods=['POST'])

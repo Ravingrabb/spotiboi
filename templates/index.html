@@ -173,6 +173,7 @@
             </div>
             <div class="modal-body">
                 <form id='settingsForm'>
+                    <!-- DEDUP SWITCH -->
                     <div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input" name='fixedDedupSwitch'
                             id="fixedDedupSwitch" onchange="checkCheckbox('inputDiv1')" {{settings.dedup_status}}>
@@ -194,6 +195,14 @@
                         </small>
                     </div>
 
+                    <!-- NAME DEDUP SWITCH -->
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="nameDedupSwitch" {{settings.dedup_by_name_status}}>
+                        <label class="custom-control-label" for="nameDedupSwitch">{{_('De-duplicate by track title')}}
+                        </label>
+                    </div>
+
+                    <!-- FIXED SWITCH -->
                     <div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input" id="fixedPlaylistSwitch"
                             onchange="checkCheckbox('inputDiv2')" {{settings.fixed_status}}>
@@ -210,6 +219,7 @@
                             value='{% if settings.fixed_status %}{{settings.fixed_value}}{% else %}100{% endif %}'>
                     </div>
 
+                    <!-- UPDATE TIME -->
                     <label for="updateTimeValue">
                         {{_('Auto-update time')}}
                     </label>
@@ -217,6 +227,7 @@
                         value='{{settings.update_time}}'>
                     <small class="form-text text-muted">{{_('In minutes')}}</small>
 
+                    <!-- LASTFM SWITCH -->
                     <div class="custom-control custom-switch">
                         <input type="checkbox" class="custom-control-input" id="lastFmSwitch"
                         onchange="checkCheckbox('inputDiv3')" {{settings.lastfm_status}}>
@@ -232,7 +243,6 @@
                            >
                         <small class="form-text text-muted">{{_('Attention! When integration is enabled, the update will take much longer.')}}</small>
                     </div>
-                    
 
                     <!-- SUMBIT BUTTON -->
                     <input type="button" style="margin-top: 10px" id='updateSettingsButton' value="{{_('Save')}}"
@@ -327,6 +337,7 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
 
     // settings AJAX
     $('#updateSettingsButton').click(function () {
+        $('#updateSettingsButton').prop('disabled', true);
         inputIds = ['#dedupValue', '#fixedValue', '#updateTimeValue']
         $(inputIds[0]).removeClass('blocked')
         $(inputIds[1]).removeClass('blocked')
@@ -349,10 +360,12 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
                     fixedValue: $('#fixedValue').val(),
                     lastFmStatus: document.getElementById("lastFmSwitch").checked,
                     lastFmValue: $('#lastFmValue').val(),
-                    updateTimeValue: $('#updateTimeValue').val()
+                    updateTimeValue: $('#updateTimeValue').val(),
+                    nameDedupStatus: document.getElementById("nameDedupSwitch").checked
                 },
             })
                 .done(function (data) {
+                    $('#updateSettingsButton').prop('disabled', false);
                     if (data.error){
                         $('#settingsModal .alert-danger').show()
                         $('#settingsModal .alert-danger .alertTextArea').text(data.error)

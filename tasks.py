@@ -7,6 +7,7 @@ from sqlalchemy.orm import query
 from start_settings import db, User, scheduler
 from flask_babel import gettext
 import pylast
+from itertools import chain
 
 
 class UserSettings():
@@ -181,19 +182,15 @@ def update_history(user_id, history_id, spotify) -> str:
     
     # получаем историю прослушиваний (учитывая настройки )
     history_playlist = get_current_history_list(history_id, spotify, query)
+    all_history_uris = frozenset(item['uri'] for item in history_playlist)
     # вытаскиваются последние прослушанные песни
     results = spotify.current_user_recently_played(limit=results_tracks_number)
     
-    #песни сравниваются с историей
-    
-    def get_history_uris(history_playlist):
-            for name in history_playlist:
-                yield name['uri']
-   
+    #песни из recently сравниваются с историей
     recently_played_uris = [
         item['track']['uri'] 
         for item in results['items'] 
-        if item['track']['uri'] not in get_history_uris(history_playlist)]
+        if item['track']['uri'] not in all_history_uris]
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
     if query.lastfm_username:
@@ -209,48 +206,43 @@ def update_history(user_id, history_id, spotify) -> str:
                 for song in result
             ]
             
-            # переводим эти данные в uri спотифай
-               
-                             
+            # переводим эти данные в uri спотифай     
+            last_fm_data_to_uri = []
+            for q in last_fm_data:
+                try:
+                    track = spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
+                    last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': track})
+                except:
+                    continue
+                 
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
-            if not query.dedup_by_name:
-                last_fm_data_to_uri = []
-                for q in last_fm_data:
-                    try:
-                        track = spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
-                        last_fm_data_to_uri.append(track)
-                    except:
-                        continue
-                last_fm_data_to_uri.reverse()   
+            def chain_arrays(array1, array2):
+                ''' Двязать два списка в один словарь '''
+                return frozenset(chain(array1, array2))
             
+            if not query.dedup_by_name:  
                 for track in last_fm_data_to_uri:
-                    if track not in recently_played_uris and track not in get_history_uris(history_playlist):
-                        recently_played_uris.insert(0, track)
-            else:    
-                last_fm_data_to_uri = []
-                for q in last_fm_data:
-                    try:
-                        track = spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
-                        last_fm_data_to_uri.append({"name": q['name'], 'uri': track})
-                    except:
-                        continue
-                last_fm_data_to_uri.reverse()   
-                           
-                def get_names(playlist):
-                    for name in playlist:
-                        yield name['name']
-                    
-                for track in enumerate(last_fm_data_to_uri):
-                    if track['uri'] not in recently_played_uris and track['name'] not in get_names(history_playlist):
-                        recently_played_uris.insert(0, track)
-
+                    if track['uri'] not in chain_arrays(recently_played_uris, all_history_uris):
+                        recently_played_uris.insert(0, track['uri'])
+            else:            
+                print('by name')               
+                all_history_names = frozenset(item['name'].lower() for item in history_playlist) 
+                
+                recently_played_names = {
+                item['track']['name'].lower() 
+                for item in results['items'] 
+                if item['track']['uri'] not in all_history_uris}  
+                
+                for track in last_fm_data_to_uri:
+                    if track['name'].lower() not in chain_arrays(recently_played_names, all_history_names):
+                        recently_played_uris.insert(0, track['uri'])
         except pylast.WSError:
             logging.error('Last.fm. Connection to the API failed with HTTP code 500')          
         except Exception as e:
             logging.error(e)
             
+    # если есть новые треки для добавления - они добавляются в History   
     try:  
-        # если есть новые треки для добавления - они добавляются в History
         if recently_played_uris:
             # убираем дубликаты
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
@@ -266,7 +258,7 @@ def update_history(user_id, history_id, spotify) -> str:
         # иначе пропускаем
         else:
             print(spotify.current_user()['id'] + ": List is empty. Nothing to update.")
-            return (gettext('Nothing to update'))
+            return (gettext('Nothing to update'))       
         
     except spotipy.SpotifyException:
         print("Nothing to add for now")
@@ -281,7 +273,6 @@ def update_history(user_id, history_id, spotify) -> str:
             print(e)
             
         
-
 def get_current_history_list(playlist_id: "str", sp, query) -> set:
     """ Функция получения истории прослушиваний """
     
@@ -293,6 +284,7 @@ def get_current_history_list(playlist_id: "str", sp, query) -> set:
         
     
     # если  FIXED DEDUP ON
+    # TODO: рефактор, сдлелать создание переменной, а потом ебля с ней
     if query.fixed_dedup:
         if query.fixed_dedup > 100:
             limit = query.fixed_dedup
