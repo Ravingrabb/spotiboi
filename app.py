@@ -12,7 +12,6 @@ from requests.cookies import create_cookie
 import spotipy
 import sys
 import pylast
-from urllib.parse import unquote
 
 from start_settings import app, db, scheduler, User
 from flask_migrate import Migrate

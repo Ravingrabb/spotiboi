@@ -8,3 +8,4 @@ Flask==1.1.2
 Flask_Migrate==2.5.3
 python-dotenv==0.14.0
 pylast==4.0.0
+gunicorn==20.0.4
