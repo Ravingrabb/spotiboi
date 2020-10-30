@@ -237,14 +237,6 @@
                            >
                         <small class="form-text text-muted">{{_('Attention! When integration is enabled, the update will take much longer.')}}</small>
                     </div>
-
-                    <!-- NAME DEDUP SWITCH -->
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="nameDedupSwitch" {{settings.dedup_by_name_status}}>
-                        <label class="custom-control-label" for="nameDedupSwitch">{{_('De-duplicate by track title')}}
-                        </label>
-                    </div>
-
                     <!-- SUMBIT BUTTON -->
                     <input type="button" style="margin-top: 10px" id='updateSettingsButton' value="{{_('Save')}}"
                         class="btn btn-sm btn-outline-primary">
@@ -363,7 +355,6 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
                     lastFmStatus: document.getElementById("lastFmSwitch").checked,
                     lastFmValue: $('#lastFmValue').val(),
                     updateTimeValue: $('#updateTimeValue').val(),
-                    nameDedupStatus: document.getElementById("nameDedupSwitch").checked
                 },
             })
                 .done(function (data) {

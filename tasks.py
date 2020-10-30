@@ -34,7 +34,6 @@ class UserSettings():
             'update_time': self.query.update_time,
             'lastfm_status': 0,
             'lastfm_value': self.query.lastfm_username,
-            'dedup_by_name_status': None
         }
      
         
@@ -111,8 +110,7 @@ class UserSettings():
             self.settings['fixed_value'] = self.query.fixed_capacity
         if self.query.lastfm_username:
             self.settings['lastfm_status'] = 'checked'
-        if self.query.dedup_by_name:
-            self.settings['dedup_by_name_status'] = 'checked'
+
     
 
     def attach_playlist(self):
@@ -219,22 +217,17 @@ def update_history(user_id, history_id, spotify) -> str:
             def chain_arrays(array1, array2):
                 ''' Двязать два списка в один словарь '''
                 return frozenset(chain(array1, array2))
+                       
+            all_history_names = frozenset(item['name'].lower() for item in history_playlist) 
             
-            if not query.dedup_by_name:  
-                for track in last_fm_data_to_uri:
-                    if track['uri'] not in chain_arrays(recently_played_uris, all_history_uris):
-                        recently_played_uris.insert(0, track['uri'])
-            else:                    
-                all_history_names = frozenset(item['name'].lower() for item in history_playlist) 
-                
-                recently_played_names = {
-                item['track']['name'].lower() 
-                for item in results['items'] 
-                if item['track']['uri'] not in all_history_uris}  
-                
-                for track in last_fm_data_to_uri:
-                    if track['name'].lower() not in chain_arrays(recently_played_names, all_history_names) and track['uri'] not in chain_arrays(recently_played_uris, all_history_uris):
-                        recently_played_uris.insert(0, track['uri'])
+            recently_played_names = {
+            item['track']['name'].lower() 
+            for item in results['items'] 
+            if item['track']['uri'] not in all_history_uris}  
+            
+            for track in last_fm_data_to_uri:
+                if track['name'].lower() not in chain_arrays(recently_played_names, all_history_names) and track['uri'] not in chain_arrays(recently_played_uris, all_history_uris):
+                    recently_played_uris.insert(0, track['uri'])
         except pylast.WSError:
             logging.error('Last.fm. Connection to the API failed with HTTP code 500')          
         except Exception as e:
