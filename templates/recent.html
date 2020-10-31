@@ -7,7 +7,8 @@
 {% block body %}
 
     {% if bodytext %}
-        <h2>Last 30 tracks</h2>
+        <h2>Your last 30 tracks from Spotify</h2>
+        <small class='mb-3'>Doesn't include last.fm data</small>
         {% for m in bodytext %}
         <div class="songData">
             <div class="d-flex flex-row">
