@@ -207,20 +207,28 @@ def update_history(user_id, history_id, spotify) -> str:
             
             # переводим эти данные в uri спотифай и заодно проверяем на кириллицу  
             last_fm_data_to_uri = []
+                
             for q in last_fm_data:
                 try:
+                    # 1 попытка: проверка как есть
                     track = spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
                     last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': track})
                 except:
-                    tr_name = translit(q['name'], 'ru', reversed=True)
-                    tr_artist = translit(q['artist'], 'ru', reversed=True)
-                    tr_album = translit(q['album'], 'ru', reversed=True)
                     try:
-                        track = UserSettings.spotify.search(tr_name + " artist:" + tr_artist + " album:" + tr_album, limit=1)['tracks']['items'][0]['uri']
-                        last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': track})
-                    except:
-                        pass
-                    continue
+                        print('2')
+                        # 2 попытка: ищем по исполнителям, убирая букву ё и в транслите
+                        q['artist'] = q['artist'].replace('ё', 'е')
+                        tr_artist = translit(q['artist'].lower(), 'ru', reversed=True)
+                        
+                        track = spotify.search(q['name'], limit=20, type='track')['tracks']['items']
+                        
+                        for item in track:
+                            if q['artist'].lower() == item['artists'][0]['name'].lower() or tr_artist == item['artists'][0]['name'].lower():
+                                last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': item['uri']})
+                                break          
+                    except Exception as e:
+                        print(e)
+                        continue
                  
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
             def chain_arrays(array1, array2):

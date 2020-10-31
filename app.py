@@ -182,7 +182,7 @@ def test(UserSettings):
 
     network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
                                username=username)
-    result = network.get_user(username).get_recent_tracks(limit=10)
+    result = network.get_user(username).get_recent_tracks(limit=20)
     
     # достаём данные из lastfm
     last_fm_data = [
@@ -192,22 +192,30 @@ def test(UserSettings):
     # переводим эти данные в uri спотифай
     last_fm_data_to_uri = []
     test = []
+    test2 = []
     for q in last_fm_data:
         try:
+            # 1 попытка: проверка как есть
             track = UserSettings.spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
             last_fm_data_to_uri.append(track)    
+            test.append(q['name'] + ' ' + q['artist'] + ' --- ' + track)
         except:
-            tr_name = translit(q['name'], 'ru', reversed=True)
-            tr_artist = translit(q['artist'], 'ru', reversed=True)
-            tr_album = translit(q['album'], 'ru', reversed=True)
             try:
-                track = UserSettings.spotify.search(tr_name + " artist:" + tr_artist + " album:" + tr_album, limit=1)['tracks']['items'][0]['uri']
-                last_fm_data_to_uri.append(track) 
+                # 2 попытка: ищем по исполнителям, убирая букву ё
+                q['artist'] = q['artist'].replace('ё', 'е')
+                tr_artist = translit(q['artist'].lower(), 'ru', reversed=True)
+                track = UserSettings.spotify.search(q['name'], limit=20, type='track')['tracks']['items']
+                for item in track:
+                    print(q['artist'].lower())
+                    print(item['artists'][0]['name'].lower())
+                    if q['artist'].lower() == item['artists'][0]['name'].lower() or tr_artist == item['artists'][0]['name'].lower():
+                        last_fm_data_to_uri.append(item['uri'])
+                        test.append(q['name'] + ' ' + q['artist'] + ' --- ' + item['uri'])
+                        break          
             except:
-                pass
-            continue
+                continue
     
-    return render_template('test.html', queries=test)
+    return render_template('test.html', queries=test + test2 + last_fm_data_to_uri)
         
     
 @app.route('/faq')
