@@ -20,6 +20,7 @@ from flask import session, request, redirect, render_template, url_for, flash, j
 from flask_babel import Babel, gettext
 from functools import wraps
 from dotenv import load_dotenv
+from transliterate import translit
 
 DEBUG = True
 
@@ -181,7 +182,7 @@ def test(UserSettings):
 
     network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
                                username=username)
-    result = network.get_user(username).get_recent_tracks(limit=5)
+    result = network.get_user(username).get_recent_tracks(limit=10)
     
     # достаём данные из lastfm
     last_fm_data = [
@@ -190,14 +191,23 @@ def test(UserSettings):
     ]
     # переводим эти данные в uri спотифай
     last_fm_data_to_uri = []
+    test = []
     for q in last_fm_data:
         try:
             track = UserSettings.spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
-            last_fm_data_to_uri.append(track)
+            last_fm_data_to_uri.append(track)    
         except:
+            tr_name = translit(q['name'], 'ru', reversed=True)
+            tr_artist = translit(q['artist'], 'ru', reversed=True)
+            tr_album = translit(q['album'], 'ru', reversed=True)
+            try:
+                track = UserSettings.spotify.search(tr_name + " artist:" + tr_artist + " album:" + tr_album, limit=1)['tracks']['items'][0]['uri']
+                last_fm_data_to_uri.append(track) 
+            except:
+                pass
             continue
     
-    return render_template('test.html', queries=last_fm_data_to_uri)
+    return render_template('test.html', queries=test)
         
     
 @app.route('/faq')

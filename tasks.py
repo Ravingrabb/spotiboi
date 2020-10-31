@@ -8,6 +8,7 @@ from start_settings import db, User, scheduler
 from flask_babel import gettext
 import pylast
 from itertools import chain
+from transliterate import translit
 
 
 class UserSettings():
@@ -204,13 +205,21 @@ def update_history(user_id, history_id, spotify) -> str:
                 for song in result
             ]
             
-            # переводим эти данные в uri спотифай     
+            # переводим эти данные в uri спотифай и заодно проверяем на кириллицу  
             last_fm_data_to_uri = []
             for q in last_fm_data:
                 try:
                     track = spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
                     last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': track})
                 except:
+                    tr_name = translit(q['name'], 'ru', reversed=True)
+                    tr_artist = translit(q['artist'], 'ru', reversed=True)
+                    tr_album = translit(q['album'], 'ru', reversed=True)
+                    try:
+                        track = UserSettings.spotify.search(tr_name + " artist:" + tr_artist + " album:" + tr_album, limit=1)['tracks']['items'][0]['uri']
+                        last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': track})
+                    except:
+                        pass
                     continue
                  
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
