@@ -209,8 +209,7 @@ def update_history(user_id, history_id, spotify) -> str:
             ]
             
             # переводим эти данные в uri спотифай и заодно проверяем на кириллицу  
-            last_fm_data_to_uri = []
-                
+            last_fm_data_to_uri = [] 
             for q in last_fm_data:
                 try:
                     # 1 попытка: проверка как есть
@@ -220,6 +219,7 @@ def update_history(user_id, history_id, spotify) -> str:
                     try:
                         # 2 попытка: ищем по исполнителям, убирая букву ё и в транслите
                         q['artist'] = q['artist'].replace('ё', 'е')
+                        
                         tr_artist = translit(q['artist'].lower(), 'ru', reversed=True)
                         
                         track = spotify.search(q['name'], limit=20, type='track')['tracks']['items']
@@ -279,12 +279,9 @@ def update_history(user_id, history_id, spotify) -> str:
         # иначе пропускаем
         else:
             print(spotify.current_user()['id'] + ": List is empty. Nothing to update.")
-            return (gettext('Nothing to update'))       
-        
+            return (gettext('Nothing to update'))          
     except spotipy.SpotifyException:
-        print("Nothing to add for now")
         return ("Nothing to add for now")
-    
     finally:
         query = User.query.filter_by(spotify_id=user_id).first()
         query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
