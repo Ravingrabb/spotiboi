@@ -212,6 +212,7 @@ def test(UserSettings):
                     print(q['artist'].lower())
                     print(tr_artist.lower())
                     print(item['artists'][0]['name'].lower())
+                    print(q['album'])
                     print(item['album']['name'])
                     
                     search_data = item['artists'][0]['name'].lower()
@@ -229,11 +230,11 @@ def test(UserSettings):
                         print('совпадение:')
                         print(st.mean(output))   
                         
-                        if st.mean(output) >= 75 and q['album'] == item['album']['name'] :
+                        if st.mean(output) >= 75 and q['album'].lower() == item['album']['name'].lower() :
                             last_fm_data_to_uri.append(item['uri'])
                             test.append(q['name'] + ' ' + q['artist'] + ' --- ' + item['uri'])
                             break
-  
+                               
             except:
                 continue
     last_fm_data_to_uri = list(dict.fromkeys(last_fm_data_to_uri))

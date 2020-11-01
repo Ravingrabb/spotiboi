@@ -235,15 +235,13 @@ def update_history(user_id, history_id, spotify) -> str:
                                 output=[]
                                 for w1,w2 in zip(sentences[0],sentences[1]):
                                     output.append(fuzz.ratio(w1,w2))
-                                if st.mean(output) >= 75 and q['album'] == item['album']['name']:
+                                if st.mean(output) >= 75 and q['album'].lower() == item['album']['name'].lower():
                                     last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': item['uri']})
                                     break
                     except Exception as e:
                         print(e)
                         continue
-            # удаляем первичные дубли
-            last_fm_data_to_uri = list(dict.fromkeys(last_fm_data_to_uri))
-            
+
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
             def chain_arrays(array1, array2):
                 ''' Двязать два списка в один словарь '''
