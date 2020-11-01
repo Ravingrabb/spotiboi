@@ -6,9 +6,12 @@ import spotipy
 from sqlalchemy.orm import query
 from start_settings import db, User, scheduler
 from flask_babel import gettext
+#for last
 import pylast
 from itertools import chain
 from transliterate import translit
+from fuzzywuzzy import fuzz
+import statistics as st
 
 
 class UserSettings():
@@ -215,7 +218,6 @@ def update_history(user_id, history_id, spotify) -> str:
                     last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': track})
                 except:
                     try:
-                        print('2')
                         # 2 попытка: ищем по исполнителям, убирая букву ё и в транслите
                         q['artist'] = q['artist'].replace('ё', 'е')
                         tr_artist = translit(q['artist'].lower(), 'ru', reversed=True)
@@ -226,6 +228,15 @@ def update_history(user_id, history_id, spotify) -> str:
                             if q['artist'].lower() == item['artists'][0]['name'].lower() or tr_artist == item['artists'][0]['name'].lower():
                                 last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': item['uri']})
                                 break          
+                            else:
+                                # 3 попытка - перебор по буквам. Если совпадение больше 75% - проходит
+                                sentences = tr_artist.split(), item['artists'][0]['name'].lower().split()
+                                output=[]
+                                for w1,w2 in zip(sentences[0],sentences[1]):
+                                    output.append(fuzz.ratio(w1,w2))
+                                if st.mean(output) >= 75:
+                                    last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': item['uri']})
+                                    break
                     except Exception as e:
                         print(e)
                         continue

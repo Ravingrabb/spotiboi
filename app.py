@@ -20,7 +20,11 @@ from flask import session, request, redirect, render_template, url_for, flash, j
 from flask_babel import Babel, gettext
 from functools import wraps
 from dotenv import load_dotenv
+#test
 from transliterate import translit
+from itertools import chain
+from fuzzywuzzy import fuzz
+import statistics as st
 
 DEBUG = True
 
@@ -194,28 +198,44 @@ def test(UserSettings):
     test = []
     test2 = []
     for q in last_fm_data:
+        # 1 попытка: проверка как есть
         try:
-            # 1 попытка: проверка как есть
             track = UserSettings.spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
             last_fm_data_to_uri.append(track)    
             test.append(q['name'] + ' ' + q['artist'] + ' --- ' + track)
         except:
+            # 2 попытка: ищем по исполнителям, убирая букву ё
             try:
-                # 2 попытка: ищем по исполнителям, убирая букву ё
                 q['artist'] = q['artist'].replace('ё', 'е')
                 tr_artist = translit(q['artist'].lower(), 'ru', reversed=True)
                 track = UserSettings.spotify.search(q['name'], limit=20, type='track')['tracks']['items']
                 for item in track:
                     print(q['artist'].lower())
+                    print(tr_artist.lower())
                     print(item['artists'][0]['name'].lower())
-                    if q['artist'].lower() == item['artists'][0]['name'].lower() or tr_artist == item['artists'][0]['name'].lower():
+                    search_data = item['artists'][0]['name'].lower()
+                    if q['artist'].lower() == search_data or tr_artist == search_data:
                         last_fm_data_to_uri.append(item['uri'])
                         test.append(q['name'] + ' ' + q['artist'] + ' --- ' + item['uri'])
-                        break          
+                        break  
+                    else:
+                        # 3 попытка - перебор по буква
+                        sentences = tr_artist.split(), item['artists'][0]['name'].lower().split()
+                        output=[]
+                        for w1,w2 in zip(sentences[0],sentences[1]):
+                            output.append(fuzz.ratio(w1,w2))
+                        print('совпадение:')
+                        print(st.mean(output))   
+                        if st.mean(output) >= 75:
+                            last_fm_data_to_uri.append(item['uri'])
+                            test.append(q['name'] + ' ' + q['artist'] + ' --- ' + item['uri'])
+                            break
+  
             except:
                 continue
-    
-    return render_template('test.html', queries=test + test2 + last_fm_data_to_uri)
+    last_fm_data_to_uri = list(dict.fromkeys(last_fm_data_to_uri))
+    test = list(dict.fromkeys(test))
+    return render_template('test.html', queries=test )
         
     
 @app.route('/faq')
