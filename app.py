@@ -196,7 +196,6 @@ def test(UserSettings):
     # переводим эти данные в uri спотифай
     last_fm_data_to_uri = []
     test = []
-    test2 = []
     for q in last_fm_data:
         # 1 попытка: проверка как есть
         try:
@@ -213,8 +212,10 @@ def test(UserSettings):
                     print(q['artist'].lower())
                     print(tr_artist.lower())
                     print(item['artists'][0]['name'].lower())
+                    print(item['album']['name'])
+                    
                     search_data = item['artists'][0]['name'].lower()
-                    if q['artist'].lower() == search_data or tr_artist == search_data:
+                    if (q['artist'].lower() == search_data or tr_artist == search_data) and q['album'] == item['album']['name']:
                         last_fm_data_to_uri.append(item['uri'])
                         test.append(q['name'] + ' ' + q['artist'] + ' --- ' + item['uri'])
                         break  
@@ -224,9 +225,11 @@ def test(UserSettings):
                         output=[]
                         for w1,w2 in zip(sentences[0],sentences[1]):
                             output.append(fuzz.ratio(w1,w2))
+                            
                         print('совпадение:')
                         print(st.mean(output))   
-                        if st.mean(output) >= 75:
+                        
+                        if st.mean(output) >= 75 and q['album'] == item['album']['name'] :
                             last_fm_data_to_uri.append(item['uri'])
                             test.append(q['name'] + ' ' + q['artist'] + ' --- ' + item['uri'])
                             break

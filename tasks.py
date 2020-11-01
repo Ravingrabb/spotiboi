@@ -225,22 +225,25 @@ def update_history(user_id, history_id, spotify) -> str:
                         track = spotify.search(q['name'], limit=20, type='track')['tracks']['items']
                         
                         for item in track:
-                            if q['artist'].lower() == item['artists'][0]['name'].lower() or tr_artist == item['artists'][0]['name'].lower():
+                            search_data = item['artists'][0]['name'].lower()
+                            if (q['artist'].lower() == search_data or tr_artist == search_data) and q['album'] == item['album']['name']:
                                 last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': item['uri']})
                                 break          
                             else:
                                 # 3 попытка - перебор по буквам. Если совпадение больше 75% - проходит
-                                sentences = tr_artist.split(), item['artists'][0]['name'].lower().split()
+                                sentences = tr_artist.split(), search_data.split()
                                 output=[]
                                 for w1,w2 in zip(sentences[0],sentences[1]):
                                     output.append(fuzz.ratio(w1,w2))
-                                if st.mean(output) >= 75:
+                                if st.mean(output) >= 75 and q['album'] == item['album']['name']:
                                     last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': item['uri']})
                                     break
                     except Exception as e:
                         print(e)
                         continue
-                 
+            # удаляем первичные дубли
+            last_fm_data_to_uri = list(dict.fromkeys(last_fm_data_to_uri))
+            
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
             def chain_arrays(array1, array2):
                 ''' Двязать два списка в один словарь '''
