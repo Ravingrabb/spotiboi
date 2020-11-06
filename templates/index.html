@@ -189,9 +189,9 @@
 
                     <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv1'>
                         <input id="dedupValue" type="number" class="form-control"
-                            value='{% if settings.dedup_status %}{{settings.dedup_value}}{% else %}100{% endif %}'>
+                            value='{% if settings.dedup_status %}{{settings.dedup_value}}{% else %}200{% endif %}'>
                         <small class="form-text text-muted">
-                            {{_('Value must be 50 or more tracks')}}
+                            {{_('Value must be 200 or more tracks')}}
                         </small>
                     </div>
 
@@ -339,8 +339,8 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
         $(inputIds[1]).removeClass('blocked')
         $(inputIds[2]).removeClass('blocked')
 
-        if ($('#dedupValue').val() < 50 || $('#fixedValue').val() < 100 || $('#updateTimeValue').val() <= 0) {
-            if ($('#dedupValue').val() < 50) { $('#dedupValue').addClass('blocked') }
+        if ($('#dedupValue').val() < 200 || $('#fixedValue').val() < 100 || $('#updateTimeValue').val() <= 0) {
+            if ($('#dedupValue').val() < 200) { $('#dedupValue').addClass('blocked') }
             if ($('#fixedValue').val() < 100) { $('#dedupValue').addClass('blocked') }
             if ($('#updateTimeValue').val() <= 0) { $('#updateTimeValue').addClass('blocked') }
         }

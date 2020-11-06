@@ -9,9 +9,6 @@ from flask_babel import gettext
 #for last
 import pylast
 from itertools import chain
-from transliterate import translit
-from fuzzywuzzy import fuzz
-import statistics as st
 
 
 class UserSettings():
@@ -176,15 +173,23 @@ def update_history(user_id, history_id, spotify) -> str:
             for item in result['items']:
                 tracks_to_delete.append(item['track']['uri'])
             spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)   
+            
+    def chain_arrays(array1, array2):
+                ''' Двязать два списка в один словарь '''
+                return frozenset(chain(array1, array2))
+            
     
     # --------- CODE STARTS HERE ----------
 
     query = User.query.filter_by(spotify_id=user_id).first()
-    results_tracks_number = 30
+    results_tracks_number = 45
     
     # получаем историю прослушиваний (учитывая настройки )
     history_playlist = get_current_history_list(history_id, spotify, query)
+    
     all_history_uris = frozenset(item['uri'] for item in history_playlist)
+    all_history_names = frozenset(item['name'].lower() for item in history_playlist) 
+    
     # вытаскиваются последние прослушанные песни
     results = spotify.current_user_recently_played(limit=results_tracks_number)
     
@@ -192,62 +197,37 @@ def update_history(user_id, history_id, spotify) -> str:
     recently_played_uris = [
         item['track']['uri'] 
         for item in results['items'] 
-        if item['track']['uri'] not in all_history_uris]
+        if item['track']['uri'] not in all_history_uris and item['track']['name'].lower() not in all_history_names]
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
     if query.lastfm_username:
         try:
             username = query.lastfm_username
-            network = pylast.LastFMNetwork(api_key='b6d8eb5b11e5ea1e81a3f116cfa6169f', api_secret="7108511ff8fee65ba231fba99902a1d5",
+            network = pylast.LastFMNetwork(api_key='e62b095dc44b53f63137d90bce84117b', api_secret="1e3f4f44e4eae94a9cc8280f11b6fc71",
                                         username=username)
-            result = network.get_user(username).get_recent_tracks(limit=30)
+            result = network.get_user(username).get_recent_tracks(limit=45)
                 
             # достаём данные из lastfm
-            last_fm_data = [
+            data_with_duplicates = [
                 {'name': song[0].title, 'artist': song[0].artist.name, 'album': song.album}
                 for song in result
             ]
+            
+            last_fm_data = []
+            for song in data_with_duplicates:
+                if song not in last_fm_data:
+                    last_fm_data.append(song)
             
             # переводим эти данные в uri спотифай и заодно проверяем на кириллицу  
             last_fm_data_to_uri = [] 
             for q in last_fm_data:
                 try:
-                    # 1 попытка: проверка как есть
-                    track = spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
+                    track = spotify.search(q['name'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
                     last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': track})
                 except:
-                    try:
-                        # 2 попытка: ищем по исполнителям, убирая букву ё и в транслите
-                        q['artist'] = q['artist'].replace('ё', 'е')
-                        
-                        tr_artist = translit(q['artist'].lower(), 'ru', reversed=True)
-                        
-                        track = spotify.search(q['name'], limit=20, type='track')['tracks']['items']
-                        
-                        for item in track:
-                            search_data = item['artists'][0]['name'].lower()
-                            if (q['artist'].lower() == search_data or tr_artist == search_data) and q['album'] == item['album']['name']:
-                                last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': item['uri']})
-                                break          
-                            else:
-                                # 3 попытка - перебор по буквам. Если совпадение больше 75% - проходит
-                                sentences = tr_artist.split(), search_data.split()
-                                output=[]
-                                for w1,w2 in zip(sentences[0],sentences[1]):
-                                    output.append(fuzz.ratio(w1,w2))
-                                if st.mean(output) >= 75 and q['album'].lower() == item['album']['name'].lower():
-                                    last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': item['uri']})
-                                    break
-                    except Exception as e:
-                        print(e)
-                        continue
+                    continue
 
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
-            def chain_arrays(array1, array2):
-                ''' Двязать два списка в один словарь '''
-                return frozenset(chain(array1, array2))
-                       
-            all_history_names = frozenset(item['name'].lower() for item in history_playlist) 
             
             recently_played_names = {
             item['track']['name'].lower() 
@@ -257,6 +237,7 @@ def update_history(user_id, history_id, spotify) -> str:
             for track in last_fm_data_to_uri:
                 if track['name'].lower() not in chain_arrays(recently_played_names, all_history_names) and track['uri'] not in chain_arrays(recently_played_uris, all_history_uris):
                     recently_played_uris.insert(0, track['uri'])
+                    
         except pylast.WSError:
             logging.error('Last.fm. Connection to the API failed with HTTP code 500')          
         except Exception as e:
@@ -331,4 +312,3 @@ def get_current_history_list(playlist_id: "str", sp, query) -> set:
     ]
     
     return currentPlaylist
-

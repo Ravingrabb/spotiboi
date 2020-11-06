@@ -175,7 +175,44 @@ def index():
         time_difference=time_difference,
         settings=UserSettings.settings
     )
+    
+@app.route('/test2')
+@auth
+def test2(UserSettings):
+    API_KEY = os.environ['LASTFM_API_KEY']
+    API_SECRET = os.environ['LASTFM_API_SECRET']
+    username = "Ravingrabb"
 
+    network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
+                               username=username)
+    result = network.get_user(username).get_recent_tracks(limit=20)
+    
+    # достаём данные из lastfm
+    data_with_duplicates = [
+        {'name': song[0].title, 'artist': song[0].artist.name, 'album': song.album}
+        for song in result
+    ]
+    
+    last_fm_data = []
+    for song in data_with_duplicates:
+        if song not in last_fm_data:
+            last_fm_data.append(song)
+    
+    # переводим эти данные в uri спотифай
+    last_fm_data_to_uri = []
+    test = []
+    for q in last_fm_data:
+        # 1 попытка: проверка как есть
+        try:
+            track = UserSettings.spotify.search(q['name'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
+            last_fm_data_to_uri.append(track)    
+            test.append(q['name'] + ' ' + q['artist'] + ' --- ' + track)
+        except Exception as e:
+            test.append(q['name'] + " --- not found")
+            continue
+
+    return render_template('test.html', queries=test)
+    
 
 @app.route('/test')
 @auth
@@ -207,7 +244,7 @@ def test(UserSettings):
             try:
                 q['artist'] = q['artist'].replace('ё', 'е')
                 tr_artist = translit(q['artist'].lower(), 'ru', reversed=True)
-                track = UserSettings.spotify.search(q['name'], limit=20, type='track')['tracks']['items']
+                track = UserSettings.spotify.search(q['name'] + " album:" + q['album'], limit=1, type='track')['tracks']['items']
                 for item in track:
                     print(q['artist'].lower())
                     print(tr_artist.lower())
@@ -216,7 +253,7 @@ def test(UserSettings):
                     print(item['album']['name'])
                     
                     search_data = item['artists'][0]['name'].lower()
-                    if (q['artist'].lower() == search_data or tr_artist == search_data) and q['album'] == item['album']['name']:
+                    if (q['artist'].lower() == search_data or tr_artist == search_data):
                         last_fm_data_to_uri.append(item['uri'])
                         test.append(q['name'] + ' ' + q['artist'] + ' --- ' + item['uri'])
                         break  
