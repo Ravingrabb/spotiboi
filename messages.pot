@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-11-03 22:10+0500\n"
+"POT-Creation-Date: 2020-11-08 20:08+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,27 +17,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: app.py:119
+#: app.py:120
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:292 app.py:359 app.py:381
+#: app.py:333 app.py:400 app.py:422
 msgid "Success!"
 msgstr ""
 
-#: app.py:330
+#: app.py:371
 msgid "Error! Can't find that last.fm user"
 msgstr ""
 
-#: app.py:361 app.py:383
+#: app.py:402 app.py:424
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:282
+#: tasks.py:261
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:286
+#: tasks.py:265
 msgid "Nothing to update"
 msgstr ""
 
@@ -212,7 +212,7 @@ msgid "Auto-update time"
 msgstr ""
 
 #: templates/index.html:222
-msgid "In minutes"
+msgid "In minutes (10 or more)"
 msgstr ""
 
 #: templates/index.html:228
