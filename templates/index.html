@@ -189,9 +189,9 @@
 
                     <div class='inputDiv {% if settings.dedup_status %} reveal {% endif %}' id='inputDiv1'>
                         <input id="dedupValue" type="number" class="form-control"
-                            value='{% if settings.dedup_status %}{{settings.dedup_value}}{% else %}100{% endif %}'>
+                            value='{% if settings.dedup_status %}{{settings.dedup_value}}{% else %}200{% endif %}'>
                         <small class="form-text text-muted">
-                            {{_('Value must be 50 or more tracks')}}
+                            {{_('Value must be 200 or more tracks')}}
                         </small>
                     </div>
 
@@ -219,7 +219,7 @@
                     </label>
                     <input id="updateTimeValue" type="number" class="form-control"
                         value='{{settings.update_time}}'>
-                    <small class="form-text text-muted">{{_('In minutes')}}</small>
+                    <small class="form-text text-muted">{{_('In minutes (10 or more)')}}</small>
 
                     <!-- LASTFM SWITCH -->
                     <div class="custom-control custom-switch">
@@ -333,18 +333,19 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
 
     // settings AJAX
     $('#updateSettingsButton').click(function () {
-        $('#updateSettingsButton').prop('disabled', true);
+        
         inputIds = ['#dedupValue', '#fixedValue', '#updateTimeValue']
-        $(inputIds[0]).removeClass('blocked')
-        $(inputIds[1]).removeClass('blocked')
-        $(inputIds[2]).removeClass('blocked')
+        inputIds.forEach(element => $(element).removeClass('blocked'));
 
-        if ($('#dedupValue').val() < 50 || $('#fixedValue').val() < 100 || $('#updateTimeValue').val() <= 0) {
-            if ($('#dedupValue').val() < 50) { $('#dedupValue').addClass('blocked') }
+        if ($('#dedupValue').val() < 200 || $('#fixedValue').val() < 100 || $('#updateTimeValue').val() < 10) {
+
+            if ($('#dedupValue').val() < 200) { $('#dedupValue').addClass('blocked') }
             if ($('#fixedValue').val() < 100) { $('#dedupValue').addClass('blocked') }
-            if ($('#updateTimeValue').val() <= 0) { $('#updateTimeValue').addClass('blocked') }
+            if ($('#updateTimeValue').val() < 10) { $('#updateTimeValue').addClass('blocked') }
+
         }
         else {
+            $('#updateSettingsButton').prop('disabled', true);
             $.ajax({
                 type: "POST",
                 url: "/update_settings",

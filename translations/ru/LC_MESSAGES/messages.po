@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-10-28 14:35+0500\n"
+"POT-Creation-Date: 2020-11-03 22:10+0500\n"
 "PO-Revision-Date: 2020-09-30 22:31+0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -19,27 +19,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: app.py:115
+#: app.py:119
 msgid "Recently played tracks"
 msgstr "История"
 
-#: app.py:251 app.py:327 app.py:349
+#: app.py:292 app.py:359 app.py:381
 msgid "Success!"
 msgstr "Успешно!"
 
-#: app.py:289
+#: app.py:330
 msgid "Error! Can't find that last.fm user"
 msgstr "Ошибка! Не могу найти такого юзера в last.fm"
 
-#: app.py:329 app.py:351
+#: app.py:361 app.py:383
 msgid "bruh"
 msgstr "Произошла какая-то ошибка... 🤔"
 
-#: tasks.py:257
+#: tasks.py:282
 msgid "History updated"
 msgstr "История обновлена"
 
-#: tasks.py:261
+#: tasks.py:286
 msgid "Nothing to update"
 msgstr "Нечего добавлять"
 
@@ -64,7 +64,7 @@ msgstr ""
 
 #: templates/faq.html:25
 msgid "Spotiboi adds only 50 songs at a time. Why?"
-msgstr "Spotiboi добавляет только 30 последних прослушанных треков. Почему?"
+msgstr "Spotiboi добавляет только 50 последних прослушанных треков. Почему?"
 
 #: templates/faq.html:31
 msgid "This is an API limitation of Spotify :("
@@ -227,40 +227,36 @@ msgid "Fixed de-duplicate"
 msgstr "Проверять на дубли последние N треков"
 
 #: templates/index.html:194
-msgid "Value must be 50 or more tracks"
-msgstr "Значение должно быть больше 50 треков"
+msgid "Value must be 200 or more tracks"
+msgstr "Значение должно быть 200 или более треков"
 
-#: templates/index.html:201
-msgid "De-duplicate by track title"
-msgstr "Проверять дубликаты только по названиям песен"
-
-#: templates/index.html:209
+#: templates/index.html:203
 msgid "Fixed playlist"
 msgstr "Фиксированный плейлист"
 
-#: templates/index.html:224
+#: templates/index.html:218
 msgid "Auto-update time"
 msgstr "Время автоматического обновления"
 
-#: templates/index.html:228
+#: templates/index.html:222
 msgid "In minutes"
 msgstr "В минутах"
 
-#: templates/index.html:234
+#: templates/index.html:228
 msgid "Integration with Last.fm"
 msgstr "Интеграция с last.fm"
 
-#: templates/index.html:244
+#: templates/index.html:238
 msgid "Attention! When integration is enabled, the update will take much longer."
 msgstr ""
 "Внимание! Когда интеграция включена, обновление будет занимать намного "
 "больше времени."
 
-#: templates/index.html:248
+#: templates/index.html:241
 msgid "Save"
 msgstr "Сохранить"
 
-#: templates/index.html:298
+#: templates/index.html:294
 msgid ""
 "When enabled, Spotiboi will check duplicates of the last N tracks of your"
 " History Playlist. This is necessary to speed up the update function"
@@ -269,11 +265,11 @@ msgstr ""
 "укажите кол-во треков, которые будут проверяться. В первую очередь это "
 "нужно для того, чтобы при авто-обновлении в ваш плейлист не добавлялись "
 "одни и те же треки раз за разом. Рекомендуется использовать значение "
-"между 50 и 100 треками. Выключение функции может нагружать сервер и "
+"между 200 и 300 треками. Выключение функции может нагружать сервер и "
 "запросы будут обрабатываться дольше, так что отключать не рекомендуется "
 ":)"
 
-#: templates/index.html:300
+#: templates/index.html:296
 msgid ""
 "When enabled, limits the size of your playlist to the number of tracks "
 "specified in the setting. New tracks will be added, old ones removed."
@@ -293,3 +289,10 @@ msgstr "И обновляй его автоматически всего одн�
 #: templates/start.html:8
 msgid "Log in with Spotify"
 msgstr "Войти с помощью Spotify"
+
+#~ msgid "Value must be 50 or more tracks"
+#~ msgstr "Значение должно быть больше 50 треков"
+
+#~ msgid "De-duplicate by track title"
+#~ msgstr "Проверять дубликаты только по названиям песен"
+

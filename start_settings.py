@@ -36,7 +36,7 @@ class User(db.Model):
     last_update = db.Column(db.String(80), nullable=True)
     job_id = db.Column(db.String(80), nullable=True)
     last_uuid = db.Column(db.String(80), nullable=True)
-    fixed_dedup = db.Column(db.Integer, nullable=True, default=100)
+    fixed_dedup = db.Column(db.Integer, nullable=True, default=200)
     fixed_capacity = db.Column(db.Integer, nullable=True, default=0)
     dedup_by_name = db.Column(db.Boolean, nullable=False, default=0)
     lastfm_username = db.Column(db.String(80), nullable=True)
