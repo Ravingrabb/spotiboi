@@ -25,6 +25,7 @@ from transliterate import translit
 from itertools import chain
 from fuzzywuzzy import fuzz
 import statistics as st
+from transliterate import detect_language
 
 DEBUG = True
 
@@ -185,7 +186,7 @@ def test2(UserSettings):
 
     network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
                                username=username)
-    result = network.get_user(username).get_recent_tracks(limit=20)
+    result = network.get_user(username).get_recent_tracks(limit=45)
     
     # достаём данные из lastfm
     data_with_duplicates = [
@@ -199,17 +200,20 @@ def test2(UserSettings):
             last_fm_data.append(song)
     
     # переводим эти данные в uri спотифай
-    last_fm_data_to_uri = []
     test = []
     for q in last_fm_data:
         # 1 попытка: проверка как есть
+        lang = detect_language(q['artist'])
         try:
-            track = UserSettings.spotify.search(q['name'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
-            last_fm_data_to_uri.append(track)    
-            test.append(q['name'] + ' ' + q['artist'] + ' --- ' + track)
+            if lang != 'ru':
+                track = UserSettings.spotify.search(f"\"{q['name']}\" artist:{q['artist']} album:\"{q['album']}\"", limit=1, type="track")['tracks']['items'][0]
+            else:
+                track = UserSettings.spotify.search(f"\"{q['name']}\" album:\"{q['album']}\"", limit=1, type="track")['tracks']['items'][0]
+            test.append(f"{q['name']} - {q['artist']} - ({q['album']})  ---  {str(track['name'])} - {str(track['artists'][0]['name'])} - ({str(track['album']['name'])})")
         except Exception as e:
-            test.append(q['name'] + " --- not found")
             continue
+            
+    test.append(str(len(test)))
 
     return render_template('test.html', queries=test)
     

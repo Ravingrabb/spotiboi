@@ -9,6 +9,7 @@ from flask_babel import gettext
 #for last
 import pylast
 from itertools import chain
+from transliterate import detect_language
 
 
 class UserSettings():
@@ -115,7 +116,7 @@ class UserSettings():
     
 
     def attach_playlist(self):
-        """ Функция, необходимая только дял отображение плейлиста юзера, данные
+        """ Функция, необходимая только для отображения плейлиста юзера, данные
         которого находятся в базе данных """
         
         # создаётся заготовок пустого плейлиста
@@ -168,21 +169,21 @@ def update_history(user_id, history_id, spotify) -> str:
         """ Обрезка плейлиста, если стоит настройка фиксированного плейлиста """
         playlist_size = spotify.playlist_tracks(history_id, fields='total')
         if playlist_size['total'] >= query.fixed_capacity:
-            result = spotify.playlist_tracks(history_id, fields="items(track(uri,name))", limit=results_tracks_number, offset=query.fixed_capacity)
+            result = spotify.playlist_tracks(history_id, fields="items(track(uri,name))", limit=search_limit, offset=query.fixed_capacity)
             tracks_to_delete = []
             for item in result['items']:
                 tracks_to_delete.append(item['track']['uri'])
             spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)   
             
     def chain_arrays(array1, array2):
-                ''' Двязать два списка в один словарь '''
+                ''' Связать два списка в один словарь '''
                 return frozenset(chain(array1, array2))
             
     
     # --------- CODE STARTS HERE ----------
 
     query = User.query.filter_by(spotify_id=user_id).first()
-    results_tracks_number = 45
+    search_limit = 45
     
     # получаем историю прослушиваний (учитывая настройки )
     history_playlist = get_current_history_list(history_id, spotify, query)
@@ -191,13 +192,12 @@ def update_history(user_id, history_id, spotify) -> str:
     all_history_names = frozenset(item['name'].lower() for item in history_playlist) 
     
     # вытаскиваются последние прослушанные песни
-    results = spotify.current_user_recently_played(limit=results_tracks_number)
+    results = spotify.current_user_recently_played(limit=search_limit)
     
     #песни из recently сравниваются с историей
-    recently_played_uris = [
-        item['track']['uri'] 
-        for item in results['items'] 
-        if item['track']['uri'] not in all_history_uris and item['track']['name'].lower() not in all_history_names]
+    recently_played_uris = [item['track']['uri'] 
+                            for item in results['items'] 
+                            if item['track']['uri'] not in all_history_uris and item['track']['name'].lower() not in all_history_names]
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
     if query.lastfm_username:
@@ -205,7 +205,9 @@ def update_history(user_id, history_id, spotify) -> str:
             username = query.lastfm_username
             network = pylast.LastFMNetwork(api_key='e62b095dc44b53f63137d90bce84117b', api_secret="1e3f4f44e4eae94a9cc8280f11b6fc71",
                                         username=username)
-            result = network.get_user(username).get_recent_tracks(limit=45)
+            result = network.get_user(username).get_recent_tracks(limit=search_limit)
+            
+            recently_played_names = { item['track']['name'].lower() for item in results['items'] if item['track']['uri'] not in all_history_uris}
                 
             # достаём данные из lastfm
             data_with_duplicates = [
@@ -213,33 +215,33 @@ def update_history(user_id, history_id, spotify) -> str:
                 for song in result
             ]
             
+            # создаём оптимизированный список без дубликатов и без треков, которые уже, вероятно, есть в истории
             last_fm_data = []
             for song in data_with_duplicates:
-                if song not in last_fm_data:
+                if song not in last_fm_data and song['name'].lower() not in chain_arrays(all_history_names, recently_played_names):
                     last_fm_data.append(song)
-            
-            # переводим эти данные в uri спотифай и заодно проверяем на кириллицу  
+
+            # переводим эти данные в uri спотифай (SPOTIFY API SEARCH)
             last_fm_data_to_uri = [] 
             for q in last_fm_data:
                 try:
-                    track = spotify.search(q['name'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
+                    
+                    lang = detect_language(q['artist'])
+                    if lang != 'ru':
+                        track = spotify.search(f"\"{q['name']}\" artist:{q['artist']} album:\"{q['album']}\"", limit=1, type="track")['tracks']['items'][0]['uri']
+                    else:
+                        track = spotify.search(f"\"{q['name']}\" album:\"{q['album']}\"", limit=1, type="track")['tracks']['items'][0]['uri']
                     last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': track})
                 except:
                     continue
-
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
-            
-            recently_played_names = {
-            item['track']['name'].lower() 
-            for item in results['items'] 
-            if item['track']['uri'] not in all_history_uris}  
-            
             for track in last_fm_data_to_uri:
-                if track['name'].lower() not in chain_arrays(recently_played_names, all_history_names) and track['uri'] not in chain_arrays(recently_played_uris, all_history_uris):
+                if track['uri'] not in chain_arrays(recently_played_uris, all_history_uris):
                     recently_played_uris.insert(0, track['uri'])
                     
         except pylast.WSError:
-            logging.error('Last.fm. Connection to the API failed with HTTP code 500')          
+            logging.error('Last.fm. Connection to the API failed with HTTP code 500') 
+                     
         except Exception as e:
             logging.error(e)
             
@@ -281,10 +283,11 @@ def get_current_history_list(playlist_id: "str", sp, query) -> set:
         else:
             return True
         
-    
     # если  FIXED DEDUP ON
-    # TODO: рефактор, сдлелать создание переменной, а потом ебля с ней
     if query.fixed_dedup:
+        if query.fixed_dedup <= 100:
+            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri))", limit=query.fixed_dedup)
+            tracks = results['items']
         if query.fixed_dedup > 100:
             limit = query.fixed_dedup
             results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
@@ -295,9 +298,6 @@ def get_current_history_list(playlist_id: "str", sp, query) -> set:
             if not check_len(tracks, limit):
                 diff = len(tracks) - limit
                 tracks = tracks[:len(tracks)-diff]
-        if query.fixed_dedup <= 100:
-            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri))", limit=query.fixed_dedup)
-            tracks = results['items']
     # если FIXED DEDUP OFF, добавляются все треки
     else:
         results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
@@ -306,6 +306,7 @@ def get_current_history_list(playlist_id: "str", sp, query) -> set:
             results = sp.next(results)
             tracks.extend(results['items'])
             
+    #TODO: сделать возвращение frozenset
     currentPlaylist = [
         item['track']
         for item in tracks
