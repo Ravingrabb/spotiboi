@@ -4,7 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
 import logging
 import logging.handlers
-from flask_babel import gettext
 
 app = Flask(__name__)
 

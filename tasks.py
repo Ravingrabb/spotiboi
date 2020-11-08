@@ -225,7 +225,6 @@ def update_history(user_id, history_id, spotify) -> str:
             last_fm_data_to_uri = [] 
             for q in last_fm_data:
                 try:
-                    
                     lang = detect_language(q['artist'])
                     if lang != 'ru':
                         track = spotify.search(f"\"{q['name']}\" artist:{q['artist']} album:\"{q['album']}\"", limit=1, type="track")['tracks']['items'][0]['uri']

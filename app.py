@@ -177,6 +177,39 @@ def index():
         settings=UserSettings.settings
     )
     
+@app.route('/test3')
+@auth
+def index2(UserSettings):
+    
+    # ------------------ НАЧАЛО НАСТРОЕК СТРАНИЦЫ ------------------
+    menu = [
+        {'url': url_for('currently_playing'), 'title': gettext('Recently played tracks')},
+        {'url': url_for('faq'), 'title': 'FAQ'},
+    ]
+    spotify = UserSettings.spotify
+    session_user_id = spotify.current_user()['id']
+    
+    # вычислятор времени
+    time_difference = UserSettings.time_worker()
+
+    # settings
+    UserSettings.settings_worker()
+
+    # поиск плейлиста
+    history_playlist_data = UserSettings.attach_playlist()
+
+    # CRON
+    updateChecked = UserSettings.check_worker_status()
+    return render_template(
+        'index2.html', 
+        username=spotify.me()["display_name"],
+        menu=menu,
+        updateChecked=updateChecked,
+        history_playlist_data=history_playlist_data,
+        time_difference=time_difference,
+        settings=UserSettings.settings
+    )
+    
 @app.route('/test2')
 @auth
 def test2(UserSettings):
