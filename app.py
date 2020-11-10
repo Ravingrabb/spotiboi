@@ -36,12 +36,13 @@ Session(app)
 
 import tasks
 
+auth_scopes = 'playlist-modify-private user-read-recently-played playlist-modify-public user-library-read'
 
 # декоратор для авторизации
 def auth(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        auth_manager = spotipy.oauth2.SpotifyOAuth(scope='playlist-modify-private user-read-recently-played playlist-modify-public',
+        auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
                                                cache_path=session_cache_path(),
                                                show_dialog=True)
         if not auth_manager.get_cached_token():
@@ -93,7 +94,7 @@ def index():
         else:
             session['uuid'] = str(uuid.uuid4())
     
-    auth_manager = spotipy.oauth2.SpotifyOAuth(scope='playlist-modify-private user-read-recently-played playlist-modify-public',
+    auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
                                                cache_path=session_cache_path(),
                                                show_dialog=True)
 
@@ -105,9 +106,6 @@ def index():
         if not auth_manager.get_cached_token():
             # Step 2. Display sign in link when no token
             auth_url = auth_manager.get_authorize_url()
-            #app.logger.error('cant get access token')
-            #app.logger.error(request.cookies.get('uuid'))
-            #app.logger.error('------------------')
             return render_template('start.html', auth_url=auth_url)
     except spotipy.SpotifyException:
         return redirect('/sign_out')
@@ -383,6 +381,13 @@ def make_history(UserSettings):
     return jsonify({'response': response})
 
 
+@app.route('/make_liked', methods=['POST'])
+@auth
+def make_liked(UserSettings):
+    tasks.create_liked_playlist(UserSettings.spotify, UserSettings.user_id)   
+    return jsonify({'response': "OK"})
+
+
 @app.route('/update_settings', methods=['POST'])
 @auth
 def update_settings(UserSettings):
@@ -435,8 +440,6 @@ def update_settings(UserSettings):
         return jsonify({'response': gettext('bruh')})
 
 
-
-
 @app.route('/auto_update', methods=['POST'])
 @auth
 def auto_update(UserSettings):
@@ -455,15 +458,6 @@ def auto_update(UserSettings):
             return jsonify({'response': gettext('Success!')})
         except:
             return jsonify({'response': gettext('bruh')})
-
-
-def get_user_query_by_id(session_user_id):
-    query = User.query.filter_by(spotify_id=session_user_id).first()
-    if not query:
-        db.session.add(User(spotify_id=session_user_id, update=False))
-        db.session.commit()
-        query = User.query.filter_by(spotify_id=session_user_id).first()
-    return query
 
 
 if __name__ == '__main__':

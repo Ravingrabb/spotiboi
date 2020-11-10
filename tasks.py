@@ -161,7 +161,6 @@ class UserSettings():
             return self.history_playlist_data
         
     
-    
 def update_history(user_id, history_id, spotify) -> str:
     """ Функция обновления истории """
             
@@ -207,7 +206,7 @@ def update_history(user_id, history_id, spotify) -> str:
                                         username=username)
             result = network.get_user(username).get_recent_tracks(limit=search_limit)
             
-            recently_played_names = { item['track']['name'].lower() for item in results['items'] if item['track']['uri'] not in all_history_uris}
+            recently_played_names = { item['track']['name'].lower() for item in results['items'] if item['track']['uri'] not in all_history_uris }
                 
             # достаём данные из lastfm
             data_with_duplicates = [
@@ -273,7 +272,7 @@ def update_history(user_id, history_id, spotify) -> str:
             print(e)
             
         
-def get_current_history_list(playlist_id: "str", sp, query) -> set:
+def get_current_history_list(playlist_id: str, sp, query) -> set:
     """ Функция получения истории прослушиваний """
     
     def check_len(ar, limit) -> bool:
@@ -312,3 +311,58 @@ def get_current_history_list(playlist_id: "str", sp, query) -> set:
     ]
     
     return currentPlaylist
+
+
+def convert_playlist(playlist_array) -> list:
+    """ Перевод сырого JSON в формат, более удобный для программы """
+    
+    output = [
+        {'name': item['track']['name'],
+        'uri': item['track']['uri'],
+        'artist': item['track']['artists'][0]['name'],
+        'album': item['track']['album']['name']} 
+        for item in playlist_array['items']]
+    
+    return output
+
+
+def get_every_playlist_track(spotify, raw_playlist):
+    """ Достать абсолютно все треки из плейлиста в обход limit """
+    
+    tracks = convert_playlist(raw_playlist)
+    while raw_playlist['next']:
+        raw_playlist = spotify.next(raw_playlist)
+        tracks.extend(convert_playlist(raw_playlist))
+    return tracks
+
+
+def fill_playlist(sp, playlist_id : str, uris_list : list) -> None:
+    """ Заполнение плейлиста песнями из массива. Так как ограничение
+    на одну итерацию добавления - 100 треков, приходится делать это в несколько
+    итераций """
+    
+    offset = 0
+    while offset < len(uris_list):
+        sp.playlist_add_items(playlist_id, uris_list[offset:offset+99])
+        offset += 100
+
+
+def create_liked_playlist(sp, user_id) -> None:
+    """ Создать новый плейлист, содержащий только лайкнутые треки """
+    results = sp.current_user_saved_tracks(limit=20)
+    
+    sp.user_playlist_create(
+                user=user_id, 
+                name='My Favorite Songs', 
+                description='My public liked tracks. Created by SpotiBoi'
+                )
+    
+    playlists = sp.current_user_playlists()
+    
+    track_uris = [item['uri'] for item in get_every_playlist_track(sp, results)]
+    
+    for item in playlists['items']:
+        if item['name'] == 'My Favorite Songs':
+            fill_playlist(sp, item['id'], track_uris)
+            break
+    

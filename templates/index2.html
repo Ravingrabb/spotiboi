@@ -120,7 +120,7 @@
                                 border-bottom: 1px solid #dee2e6!important;">Create playlist with your favorite songs</p>
                                 
                                 <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" name='updateSwitch' id="customSwitch2"
+                                    <input type="checkbox" class="custom-control-input" name='updateSwitch2' id="customSwitch2"
                                         {{ updateChecked }} onchange="autoUpdateToggle()">
                                     <label class="custom-control-label" style='padding-bottom: 10px;'
                                         for="customSwitch2">
@@ -131,11 +131,9 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="btn-group mt-5">
                                         <button type="button" id='manualUpdate2' class="btn btn-sm btn-outline-secondary">
-                                            <span id="updateSpinner" class="spinner-border spinner-border-sm" role="status"
-                                                aria-hidden="true"></span>
-                                            {{_('Update')}}
+                                            {{_('Create')}}
                                         </button>
-                                        <button type="button" id='manualUpdate2' class="btn btn-sm btn-outline-secondary"
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
                                             data-toggle="modal" data-target="#settingsModal2">
                                             <svg width="21" height="21" viewBox="0 0 16 16" class="bi bi-gear"
                                                 fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -447,6 +445,20 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
                 instance.show()
                 $('#updateSpinner').removeClass('busy')
                 $('#manualUpdate').prop('disabled', false);
+            })
+    });
+
+    //create favorite AJAX
+    $('#manualUpdate2').click(function () {
+        $('#updateSpinner2').addClass('busy');
+        $('#manualUpdate2').prop('disabled', true);
+        $.ajax({
+            type: "POST",
+            url: "/make_liked",
+        })
+            .done(function (data) {
+                $('#updateSpinner2').removeClass('busy')
+                $('#manualUpdate2').prop('disabled', false);
             })
     });
 

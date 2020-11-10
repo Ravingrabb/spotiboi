@@ -57,6 +57,7 @@
                         border-bottom: 1px solid #dee2e6!important;'>
                             {{ _('This is your History playlist') }}
                         </p>
+
                         <div class="custom-control custom-switch">
                             <input type="checkbox" class="custom-control-input" name='updateSwitch' id="customSwitch1"
                                 {{ updateChecked }} onchange="autoUpdateToggle()">
@@ -65,6 +66,7 @@
                                 {{_('Auto-update History')}}
                             </label>
                         </div>
+
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="btn-group mt-3">
                                 <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary">
@@ -104,6 +106,34 @@
                     </div>
                 </div>
             </div>
+
+            <!-- FAVORITE CARD -->
+            <div class="col-lg-4 col-md-6 col-sm-6">
+                <div class="card mb-4 shadow-sm" style='height: 275px'>
+                    <div class="crop">
+                        <img src="static/img/listen.png" class='rounded float-left' width="200px"> 
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row align-items-end">
+                            <div class="col-10">
+                                <h3 class="card-text">Liked songs</h3>
+                                <p class="card-text" style="padding-bottom: 15px;
+                                border-bottom: 1px solid #dee2e6!important;">Create playlist with your favorite songs</p>
+
+                                <div class="d-flex justify-content-between align-items-end" style="height: 116px;">
+                                    <div class="btn-group">
+                                        <button type="button" id='manualUpdate2' class="btn btn-sm btn-outline-secondary">
+                                            <span id="updateSpinner2" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                                            {{_('Create new')}}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
             </div>
         </div>
     </div>
@@ -254,7 +284,7 @@
 </div>
         <div class="container">
             <div class="row mt-3">
-                <div class="col">
+                <div class="col-8">
                     <span class="text-muted">Perfectly works with <a target="blank" href="http://smarterplaylists.playlistmachinery.com">smarterplaylists</a></span>
                 </div>
                 <div class="col">
@@ -395,6 +425,20 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
                 instance.show()
                 $('#updateSpinner').removeClass('busy')
                 $('#manualUpdate').prop('disabled', false);
+            })
+    });
+
+    //create favorite AJAX
+    $('#manualUpdate2').click(function () {
+        $('#updateSpinner2').addClass('busy');
+        $('#manualUpdate2').prop('disabled', true);
+        $.ajax({
+            type: "POST",
+            url: "/make_liked",
+        })
+            .done(function (data) {
+                $('#updateSpinner2').removeClass('busy')
+                $('#manualUpdate2').prop('disabled', false);
             })
     });
 
