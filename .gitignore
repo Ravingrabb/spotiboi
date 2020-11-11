@@ -6,3 +6,4 @@ __pycache__/
 logs.log
 database.db
 .vscode
+test.py
