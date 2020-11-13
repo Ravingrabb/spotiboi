@@ -384,7 +384,7 @@ def make_history(UserSettings):
 @app.route('/make_liked', methods=['POST'])
 @auth
 def make_liked(UserSettings):
-    tasks.create_liked_playlist(UserSettings.spotify, UserSettings.user_id)   
+    tasks.create_liked_playlist(UserSettings)   
     return jsonify({'response': "OK"})
 
 

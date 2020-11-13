@@ -326,43 +326,79 @@ def convert_playlist(playlist_array) -> list:
     return output
 
 
-def get_every_playlist_track(spotify, raw_playlist):
+def get_every_playlist_track(spotify, raw_results):
     """ Достать абсолютно все треки из плейлиста в обход limit """
     
-    tracks = convert_playlist(raw_playlist)
-    while raw_playlist['next']:
-        raw_playlist = spotify.next(raw_playlist)
-        tracks.extend(convert_playlist(raw_playlist))
+    tracks = convert_playlist(raw_results)
+    while raw_results['next']:
+        raw_results = spotify.next(raw_results)
+        tracks.extend(convert_playlist(raw_results))
     return tracks
 
 
-def fill_playlist(sp, playlist_id : str, uris_list : list) -> None:
+def fill_playlist(sp, playlist_id : str, uris_list : list, from_top = False) -> None:
     """ Заполнение плейлиста песнями из массива. Так как ограничение
     на одну итерацию добавления - 100 треков, приходится делать это в несколько
     итераций """
     
     offset = 0
+    
     while offset < len(uris_list):
-        sp.playlist_add_items(playlist_id, uris_list[offset:offset+99])
+        if not from_top:
+            sp.playlist_add_items(playlist_id, uris_list[offset:offset+100])
+        else:
+            sp.playlist_add_items(playlist_id, uris_list[offset:offset+100], position=0)
         offset += 100
 
 
-def create_liked_playlist(sp, user_id) -> None:
+def vibe_check(US):
+    sp = US.spotify
+    user_id = US.user_id
+    query = US.new_query()
+    print(sp.playlist_is_following(query.favorite_playlist, [user_id])[0])
+
+
+def create_liked_playlist(UserSettings) -> None:
     """ Создать новый плейлист, содержащий только лайкнутые треки """
+    sp = UserSettings.spotify
+    user_id = UserSettings.user_id
+    query = UserSettings.new_query()
     results = sp.current_user_saved_tracks(limit=20)
     
-    sp.user_playlist_create(
+    # плейлист добавлен в настройки
+    fav_id = query.favorite_playlist
+
+    if fav_id and sp.playlist_is_following(fav_id, [user_id])[0]:
+        # получаем актуальный список треков из saved
+        new_track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
+        
+        # получаем список песен из плейлиста favorites
+        fav_playlist_results = sp.playlist_tracks(fav_id)
+        fav_playlist_uris = tuple(  item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results) )
+        
+        #добавляем новые треки
+        to_add = [ uri for uri in new_track_uris if uri not in fav_playlist_uris]
+        if to_add: 
+            fill_playlist(sp, fav_id, to_add, from_top=True)
+        
+        #удаляем не акутальные
+        to_delete = [ uri for uri in fav_playlist_uris if uri not in new_track_uris]
+        if to_delete:
+            sp.playlist_remove_all_occurrences_of_items(fav_id, to_delete)
+        
+    # плейлист не добавлен
+    else:
+        sp.user_playlist_create(
                 user=user_id, 
                 name='My Favorite Songs', 
                 description='My public liked tracks. Created by SpotiBoi'
                 )
-    
-    playlists = sp.current_user_playlists()
-    
-    track_uris = [item['uri'] for item in get_every_playlist_track(sp, results)]
-    
-    for item in playlists['items']:
-        if item['name'] == 'My Favorite Songs':
-            fill_playlist(sp, item['id'], track_uris)
-            break
-    
+        
+        playlists = sp.current_user_playlists()
+        track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
+        for item in playlists['items']:
+            if item['name'] == 'My Favorite Songs':
+                query.favorite_playlist = item['id']
+                db.session.commit()
+                fill_playlist(sp, item['id'], track_uris)
+                break
