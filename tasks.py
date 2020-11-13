@@ -185,7 +185,7 @@ def update_history(user_id, history_id, spotify) -> str:
       
     def get_items(array, search_key: str) -> str:
         for item in array:
-            for key, value in item:
+            for key, value in item.items():
                 if key == search_key:
                     yield value
         
@@ -199,7 +199,7 @@ def update_history(user_id, history_id, spotify) -> str:
     history_playlist = get_current_history_list(history_id, spotify, query)
     
     all_history_uris = frozenset(item['uri'] for item in history_playlist)
-    all_history_names = frozenset(item['name'].lower() for item in history_playlist) 
+    all_history_names = frozenset(item['name'] for item in history_playlist) 
     
     # вытаскиваются последние прослушанные песни
     results = spotify.current_user_recently_played(limit=search_limit)
@@ -207,7 +207,9 @@ def update_history(user_id, history_id, spotify) -> str:
     #песни из recently сравниваются с историей
     recently_played_uris = [item['track']['uri'] 
                             for item in results['items'] 
-                            if item['track']['uri'] not in all_history_uris and item['track']['name'].lower() not in all_history_names]
+                            if item['track']['uri'] not in get_items(history_playlist, 'uri') 
+                            and item['track']['name'].lower() not in get_items(history_playlist, 'name') ]
+
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
     if query.lastfm_username:
@@ -217,7 +219,7 @@ def update_history(user_id, history_id, spotify) -> str:
                                         username=username)
             result = network.get_user(username).get_recent_tracks(limit=search_limit)
             
-            recently_played_names = { item['track']['name'].lower() for item in results['items'] if item['track']['uri'] not in all_history_uris }
+            recently_played_names = { item['track']['name'].lower() for item in results['items'] if item['track']['uri'] not in get_items(history_playlist, 'uri') }
                 
             # достаём данные из lastfm
             data_with_duplicates = [
