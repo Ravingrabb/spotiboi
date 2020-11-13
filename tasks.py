@@ -182,7 +182,14 @@ def update_history(user_id, history_id, spotify) -> str:
                 ''' Связать два списка в один словарь '''
                 return frozenset(chain(array1, array2))
             
-    
+      
+    def get_items(array, search_key: str) -> str:
+        for item in array:
+            for key, value in item:
+                if key == search_key:
+                    yield value
+        
+        
     # --------- CODE STARTS HERE ----------
 
     query = User.query.filter_by(spotify_id=user_id).first()
@@ -275,62 +282,20 @@ def update_history(user_id, history_id, spotify) -> str:
         except Exception as e:
             print(e)
             
-        
-def get_current_history_list(playlist_id: str, sp, query) -> set:
-    """ Функция получения истории прослушиваний """
-    
-    def check_len(ar, limit) -> bool:
-        if len(ar) >= limit:
-            return False
-        else:
-            return True
-        
-    # если  FIXED DEDUP ON
-    if query.fixed_dedup:
-        if query.fixed_dedup <= 100:
-            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri))", limit=query.fixed_dedup)
-            tracks = results['items']
-        if query.fixed_dedup > 100:
-            limit = query.fixed_dedup
-            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
-            tracks = results['items']
-            while results['next'] and check_len(tracks, limit):
-                results = sp.next(results)
-                tracks.extend(results['items'])
-            if not check_len(tracks, limit):
-                diff = len(tracks) - limit
-                tracks = tracks[:len(tracks)-diff]
-    # если FIXED DEDUP OFF, добавляются все треки
-    else:
-        results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri)), next")
-        tracks = results['items']
-        while results['next']:
-            results = sp.next(results)
-            tracks.extend(results['items'])
-            
-    #TODO: сделать возвращение frozenset
-    currentPlaylist = [
-        item['track']
-        for item in tracks
-    ]
-    
-    return currentPlaylist
-
-
+ 
 def convert_playlist(playlist_array) -> list:
     """ Перевод сырого JSON в формат, более удобный для программы """
     
     output = [
-        {'name': item['track']['name'],
+        {'name': item['track']['name'].lower(),
         'uri': item['track']['uri'],
-        'artist': item['track']['artists'][0]['name'],
-        'album': item['track']['album']['name']} 
+        'artist': item['track']['artists'][0]['name'].lower(),
+        'album': item['track']['album']['name'].lower()} 
         for item in playlist_array['items']]
-    
     return output
 
 
-def get_every_playlist_track(spotify, raw_results):
+def get_every_playlist_track(spotify, raw_results: list) -> list:
     """ Достать абсолютно все треки из плейлиста в обход limit """
     
     tracks = convert_playlist(raw_results)
@@ -338,6 +303,45 @@ def get_every_playlist_track(spotify, raw_results):
         raw_results = spotify.next(raw_results)
         tracks.extend(convert_playlist(raw_results))
     return tracks
+
+
+def get_limited_playlist_track(spotify, raw_results, limit) -> list:
+    
+    def is_reached_limit(array, limit) -> bool:
+            if len(array) >= limit:
+                return True
+            else:
+                return False
+            
+    tracks = convert_playlist(raw_results)
+    
+    while raw_results['next'] and not is_reached_limit(tracks, limit):
+        raw_results = spotify.next(raw_results)
+        tracks.extend(convert_playlist(raw_results))  
+        
+    if is_reached_limit(tracks, limit):
+        tracks = tracks[:limit] 
+        
+    return tracks
+ 
+        
+def get_current_history_list(playlist_id: str, sp, query) -> tuple:
+    """ Функция получения истории прослушиваний """
+        
+    def get_tracks():
+        limit = query.fixed_dedup
+        
+        results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
+                  
+        if limit:
+            return get_limited_playlist_track(sp, results, limit)
+        else:
+            return get_every_playlist_track(sp, results)
+    
+    tracks = get_tracks()
+    
+    return tuple(item for item in tracks)
+
 
 
 def fill_playlist(sp, playlist_id : str, uris_list : list, from_top = False) -> None:
@@ -355,12 +359,6 @@ def fill_playlist(sp, playlist_id : str, uris_list : list, from_top = False) -> 
         offset += 100
 
 
-def vibe_check(US):
-    sp = US.spotify
-    user_id = US.user_id
-    query = US.new_query()
-    print(sp.playlist_is_following(query.favorite_playlist, [user_id])[0])
-
 
 def create_liked_playlist(UserSettings) -> None:
     """ Создать новый плейлист, содержащий только лайкнутые треки """
@@ -368,7 +366,7 @@ def create_liked_playlist(UserSettings) -> None:
     user_id = UserSettings.user_id
     query = UserSettings.new_query()
     results = sp.current_user_saved_tracks(limit=20)
-    
+        
     # плейлист добавлен в настройки
     fav_id = query.favorite_playlist
 
@@ -378,7 +376,7 @@ def create_liked_playlist(UserSettings) -> None:
         
         # получаем список песен из плейлиста favorites
         fav_playlist_results = sp.playlist_tracks(fav_id)
-        fav_playlist_uris = tuple(  item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results) )
+        fav_playlist_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results) )
         
         #добавляем новые треки
         to_add = [ uri for uri in new_track_uris if uri not in fav_playlist_uris]
