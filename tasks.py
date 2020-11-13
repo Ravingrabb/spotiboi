@@ -27,7 +27,7 @@ class UserSettings():
         else:
             self.query = User.query.filter_by(spotify_id=self.user_id).first()
             
-        # template for settings, that will be changed in future. Used only for HTML page
+        # Used only for HTML page. Template for settings, that will be changed in future. 
         self.settings = {
             'dedup_status': None,
             'dedup_value': 0,
@@ -36,9 +36,25 @@ class UserSettings():
             'update_time': self.query.update_time,
             'lastfm_status': 0,
             'lastfm_value': self.query.lastfm_username,
+            'fav_playlist': False
         }
      
-        
+    def settings_worker(self) -> None:
+        if self.query.fixed_dedup and self.query.fixed_dedup > 0:
+            self.settings['dedup_status'] = 'checked'
+            self.settings['dedup_value'] = self.query.fixed_dedup
+            
+        if self.query.fixed_capacity and self.query.fixed_capacity > 0:
+            self.settings['fixed_status'] = 'checked'
+            self.settings['fixed_value'] = self.query.fixed_capacity
+            
+        if self.query.lastfm_username:
+            self.settings['lastfm_status'] = 'checked'
+            
+        if self.query.favorite_playlist and self.spotify.playlist_is_following(self.query.favorite_playlist, [self.query.spotify_id])[0]:
+            self.settings['fav_playlist'] = True
+            
+            
     def new_query(self):
         ''' Function to create and return clear and new database query'''
         return User.query.filter_by(spotify_id=self.user_id).first()
@@ -101,19 +117,7 @@ class UserSettings():
             return self.time_difference
         else:
             return None
-        
 
-    def settings_worker(self) -> None:
-        if self.query.fixed_dedup and self.query.fixed_dedup > 0:
-            self.settings['dedup_status'] = 'checked'
-            self.settings['dedup_value'] = self.query.fixed_dedup
-        if self.query.fixed_capacity and self.query.fixed_capacity > 0:
-            self.settings['fixed_status'] = 'checked'
-            self.settings['fixed_value'] = self.query.fixed_capacity
-        if self.query.lastfm_username:
-            self.settings['lastfm_status'] = 'checked'
-
-    
 
     def attach_playlist(self):
         """ Функция, необходимая только для отображения плейлиста юзера, данные

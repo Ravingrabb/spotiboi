@@ -125,7 +125,13 @@
                                     <div class="btn-group">
                                         <button type="button" id='manualUpdate2' class="btn btn-sm btn-outline-secondary">
                                             <span id="updateSpinner2" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-                                            {{_('Create new')}}
+                                            
+                                            {% if settings.fav_playlist %}
+                                                {{_('Update')}}
+                                            {% else %}
+                                                {{_('Create new')}}
+                                            {% endif %}
+                                            
                                         </button>
                                     </div>
                                 </div>
