@@ -1,7 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from logging import log
 from flask import session
+from flask.globals import request
+import json
 import spotipy
 from sqlalchemy.orm import query
 from start_settings import db, User, scheduler
@@ -167,7 +169,7 @@ class UserSettings():
     
 def update_history(user_id, history_id, spotify) -> str:
     """ Функция обновления истории """
-            
+               
     def limit_playlist_size():
         """ Обрезка плейлиста, если стоит настройка фиксированного плейлиста """
         playlist_size = spotify.playlist_tracks(history_id, fields='total')
@@ -177,12 +179,8 @@ def update_history(user_id, history_id, spotify) -> str:
             for item in result['items']:
                 tracks_to_delete.append(item['track']['uri'])
             spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)   
-            
-    def chain_arrays(array1, array2):
-                ''' Связать два списка в один словарь '''
-                return frozenset(chain(array1, array2))
-            
-      
+                     
+                        
     def get_items(array, search_key: str) -> str:
         for item in array:
             for key, value in item.items():
@@ -197,9 +195,6 @@ def update_history(user_id, history_id, spotify) -> str:
     
     # получаем историю прослушиваний (учитывая настройки )
     history_playlist = get_current_history_list(history_id, spotify, query)
-    
-    all_history_uris = frozenset(item['uri'] for item in history_playlist)
-    all_history_names = frozenset(item['name'] for item in history_playlist) 
     
     # вытаскиваются последние прослушанные песни
     results = spotify.current_user_recently_played(limit=search_limit)
@@ -230,7 +225,7 @@ def update_history(user_id, history_id, spotify) -> str:
             # создаём оптимизированный список без дубликатов и без треков, которые уже, вероятно, есть в истории
             last_fm_data = []
             for song in data_with_duplicates:
-                if song not in last_fm_data and song['name'].lower() not in chain_arrays(all_history_names, recently_played_names):
+                if song not in last_fm_data and song['name'].lower() not in recently_played_names and song['name'].lower() not in get_items(history_playlist, 'name'):
                     last_fm_data.append(song)
 
             # переводим эти данные в uri спотифай (SPOTIFY API SEARCH)
@@ -245,9 +240,10 @@ def update_history(user_id, history_id, spotify) -> str:
                     last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': track})
                 except:
                     continue
+                
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
             for track in last_fm_data_to_uri:
-                if track['uri'] not in chain_arrays(recently_played_uris, all_history_uris):
+                if track['uri'] not in recently_played_uris and track['uri'] not in get_items(history_playlist, 'uri'):
                     recently_played_uris.insert(0, track['uri'])
                     
         except pylast.WSError:
@@ -279,10 +275,7 @@ def update_history(user_id, history_id, spotify) -> str:
     finally:
         query = User.query.filter_by(spotify_id=user_id).first()
         query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
-        try:
-            db.session.commit()
-        except Exception as e:
-            print(e)
+        db.session.commit()
             
  
 def convert_playlist(playlist_array) -> list:
@@ -332,13 +325,18 @@ def get_current_history_list(playlist_id: str, sp, query) -> tuple:
         
     def get_tracks():
         limit = query.fixed_dedup
-        
-        results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
-                  
-        if limit:
-            return get_limited_playlist_track(sp, results, limit)
-        else:
-            return get_every_playlist_track(sp, results)
+        try:
+            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
+                    
+            if limit:
+                return get_limited_playlist_track(sp, results, limit)
+            else:
+                return get_every_playlist_track(sp, results)
+        except sp.requests.exceptions.ReadTimeout:
+            print("Нет подключения к серверам Spotify. Переподключение через 5 минут")
+            time = datetime.now() + timedelta(minutes=5)
+            query.last_update = datetime.strftime(time, "%H:%M:%S")
+            db.session.commit()
     
     tracks = get_tracks()
     
@@ -368,8 +366,6 @@ def create_liked_playlist(UserSettings) -> None:
     user_id = UserSettings.user_id
     query = UserSettings.new_query()
     results = sp.current_user_saved_tracks(limit=20)
-        
-    # плейлист добавлен в настройки
     fav_id = query.favorite_playlist
 
     if fav_id and sp.playlist_is_following(fav_id, [user_id])[0]:
