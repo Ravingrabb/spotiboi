@@ -53,8 +53,10 @@ class UserSettings():
         if self.query.lastfm_username:
             self.settings['lastfm_status'] = 'checked'
             
-        if self.query.favorite_playlist and self.spotify.playlist_is_following(self.query.favorite_playlist, [self.query.spotify_id])[0]:
-            self.settings['fav_playlist'] = True
+        if self.query.favorite_playlist:
+            self.fav_id = json.loads(self.query.favorite_playlist)['id']
+            if self.spotify.playlist_is_following(self.fav_id, [self.query.spotify_id])[0]:
+                self.settings['fav_playlist'] = True
             
             
     def new_query(self):
@@ -366,25 +368,26 @@ def create_liked_playlist(UserSettings) -> None:
     user_id = UserSettings.user_id
     query = UserSettings.new_query()
     results = sp.current_user_saved_tracks(limit=20)
-    fav_id = query.favorite_playlist
-
-    if fav_id and sp.playlist_is_following(fav_id, [user_id])[0]:
-        # получаем актуальный список треков из saved
-        new_track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
-        
-        # получаем список песен из плейлиста favorites
-        fav_playlist_results = sp.playlist_tracks(fav_id)
-        fav_playlist_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results) )
-        
-        #добавляем новые треки
-        to_add = [ uri for uri in new_track_uris if uri not in fav_playlist_uris]
-        if to_add: 
-            fill_playlist(sp, fav_id, to_add, from_top=True)
-        
-        #удаляем не акутальные
-        to_delete = [ uri for uri in fav_playlist_uris if uri not in new_track_uris]
-        if to_delete:
-            sp.playlist_remove_all_occurrences_of_items(fav_id, to_delete)
+    
+    if query.favorite_playlist:
+        fav_id = json.loads(query.favorite_playlist)['id']
+        if sp.playlist_is_following(fav_id, [user_id])[0]:
+            # получаем актуальный список треков из saved
+            new_track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
+            
+            # получаем список песен из плейлиста favorites
+            fav_playlist_results = sp.playlist_tracks(fav_id)
+            fav_playlist_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results) )
+            
+            #добавляем новые треки
+            to_add = [ uri for uri in new_track_uris if uri not in fav_playlist_uris]
+            if to_add: 
+                fill_playlist(sp, fav_id, to_add, from_top=True)
+            
+            #удаляем не акутальные
+            to_delete = [ uri for uri in fav_playlist_uris if uri not in new_track_uris]
+            if to_delete:
+                sp.playlist_remove_all_occurrences_of_items(fav_id, to_delete)
         
     # плейлист не добавлен
     else:
@@ -398,7 +401,8 @@ def create_liked_playlist(UserSettings) -> None:
         track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
         for item in playlists['items']:
             if item['name'] == 'My Favorite Songs':
-                query.favorite_playlist = item['id']
+                data = {"id" : item['id'], "update": False}
+                query.favorite_playlist = json.dumps(data)
                 db.session.commit()
                 fill_playlist(sp, item['id'], track_uris)
                 break
