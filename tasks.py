@@ -110,21 +110,24 @@ class UserSettings():
             return None
         
         
-    def check_worker_status2(self, update: bool, playlist_id: str, job_id: str) -> str:
+    def check_worker_status2(self, update: bool, playlist_id: str, job_id: str, func) -> str:
         """ Функция для проверки работы менеджера расписаний и статуса авто-обновления """
+        
         # если autoupdate = ON
         if update == True and playlist_id:
             # если работа не задана или она не в расписании
             if not job_id or job_id not in scheduler:
+                print("not in scheduler")
                 try:
-                    self.create_job()
+                    func()
                 except Exception as e:
                     print (e)
             # если работа работается, но uuid не совпадает
             if job_id in scheduler and self.query.last_uuid != session.get('uuid'):
+                print("uuid not eq")
                 try:
                     scheduler.cancel(job_id)
-                    self.create_job()
+                    func()
                     self.query.last_uuid = session.get('uuid')
                     db.session.commit()
                 except Exception as e:
@@ -138,7 +141,7 @@ class UserSettings():
             except Exception as e:
                 print(e)
             return None
-
+        
 
     def time_worker(self) -> int:
         self.query = self.new_query()
@@ -364,7 +367,7 @@ def get_current_history_list(playlist_id: str, sp, query) -> tuple:
                 return get_limited_playlist_track(sp, results, limit)
             else:
                 return get_every_playlist_track(sp, results)
-        except sp.requests.exceptions.ReadTimeout:
+        except:
             print("Нет подключения к серверам Spotify. Переподключение через 5 минут")
             time = datetime.now() + timedelta(minutes=5)
             query.last_update = datetime.strftime(time, "%H:%M:%S")

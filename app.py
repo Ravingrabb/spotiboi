@@ -12,6 +12,7 @@ from requests.cookies import create_cookie
 import spotipy
 import sys
 import pylast
+from sqlalchemy.orm import query
 
 from start_settings import app, db, scheduler, User
 from flask_migrate import Migrate
@@ -120,9 +121,6 @@ def index():
     ]
     spotify = UserSettings.spotify
     session_user_id = spotify.current_user()['id']
-    
-    # вычислятор времени
-    time_difference = UserSettings.time_worker()
 
     # settings
     UserSettings.settings_worker()
@@ -164,8 +162,11 @@ def index():
     history_playlist_data = UserSettings.attach_playlist()
 
     # CRON
-    query = UserSettings.query
-    updateChecked = UserSettings.check_worker_status2(query.update, query.history_id, query.job_id)
+    updateChecked = UserSettings.check_worker_status()
+    
+    # вычислятор времени
+    time_difference = UserSettings.time_worker()
+    
     return render_template(
         'index.html', 
         username=spotify.me()["display_name"],
@@ -186,7 +187,6 @@ def index2(UserSettings):
         {'url': url_for('faq'), 'title': 'FAQ'},
     ]
     spotify = UserSettings.spotify
-    session_user_id = spotify.current_user()['id']
     
     # вычислятор времени
     time_difference = UserSettings.time_worker()
@@ -198,7 +198,9 @@ def index2(UserSettings):
     history_playlist_data = UserSettings.attach_playlist()
 
     # CRON
-    updateChecked = UserSettings.check_worker_status()
+    query = UserSettings.query
+    updateChecked = UserSettings.check_worker_status2(query.update, query.history_id, query.job_id, UserSettings.create_job)
+    
     return render_template(
         'index2.html', 
         username=spotify.me()["display_name"],
