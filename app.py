@@ -164,7 +164,8 @@ def index():
     history_playlist_data = UserSettings.attach_playlist()
 
     # CRON
-    updateChecked = UserSettings.check_worker_status()
+    query = UserSettings.query
+    updateChecked = UserSettings.check_worker_status2(query.update, query.history_id, query.job_id)
     return render_template(
         'index.html', 
         username=spotify.me()["display_name"],

@@ -108,6 +108,36 @@ class UserSettings():
             except Exception as e:
                 print(e)
             return None
+        
+        
+    def check_worker_status2(self, update: bool, playlist_id: str, job_id: str) -> str:
+        """ Функция для проверки работы менеджера расписаний и статуса авто-обновления """
+        # если autoupdate = ON
+        if update == True and playlist_id:
+            # если работа не задана или она не в расписании
+            if not job_id or job_id not in scheduler:
+                try:
+                    self.create_job()
+                except Exception as e:
+                    print (e)
+            # если работа работается, но uuid не совпадает
+            if job_id in scheduler and self.query.last_uuid != session.get('uuid'):
+                try:
+                    scheduler.cancel(job_id)
+                    self.create_job()
+                    self.query.last_uuid = session.get('uuid')
+                    db.session.commit()
+                except Exception as e:
+                    print (e)
+            return "checked"
+        # если autoupdate = OFF
+        else:
+            try:
+                if job_id in scheduler:
+                    scheduler.cancel(job_id)
+            except Exception as e:
+                print(e)
+            return None
 
 
     def time_worker(self) -> int:

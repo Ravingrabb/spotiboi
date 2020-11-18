@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-11-08 20:08+0500\n"
+"POT-Creation-Date: 2020-11-18 15:53+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,27 +17,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: app.py:120
+#: app.py:118 app.py:185
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:333 app.py:400 app.py:422
+#: app.py:365 app.py:439 app.py:459
 msgid "Success!"
 msgstr ""
 
-#: app.py:371
+#: app.py:410
 msgid "Error! Can't find that last.fm user"
 msgstr ""
 
-#: app.py:402 app.py:424
+#: app.py:441 app.py:461
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:261
+#: tasks.py:300
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:265
+#: tasks.py:304
 msgid "Nothing to update"
 msgstr ""
 
@@ -117,126 +117,143 @@ msgid ""
 "correct and it's not URL."
 msgstr ""
 
-#: templates/index.html:7 templates/localetest.html:4
+#: templates/index.html:7 templates/index2.html:7 templates/localetest.html:4
 msgid "Hi"
 msgstr ""
 
-#: templates/index.html:7
+#: templates/index.html:7 templates/index2.html:7
 msgid "sign out"
 msgstr ""
 
-#: templates/index.html:47
+#: templates/index.html:47 templates/index2.html:47
 msgid "No artwork"
 msgstr ""
 
-#: templates/index.html:58
+#: templates/index.html:58 templates/index2.html:58
 msgid "This is your History playlist"
 msgstr ""
 
-#: templates/index.html:65
+#: templates/index.html:66 templates/index2.html:66
 msgid "Auto-update History"
 msgstr ""
 
-#: templates/index.html:73
+#: templates/index.html:75 templates/index.html:130 templates/index2.html:75
 msgid "Update"
 msgstr ""
 
-#: templates/index.html:89
+#: templates/index.html:91 templates/index2.html:91
 msgid "Updated"
 msgstr ""
 
-#: templates/index.html:89
+#: templates/index.html:91 templates/index2.html:91
 msgid "min ago"
 msgstr ""
 
-#: templates/index.html:94
+#: templates/index.html:96 templates/index2.html:96
 msgid "You don't have attached history playlist"
 msgstr ""
 
-#: templates/index.html:97
+#: templates/index.html:99 templates/index2.html:99
 msgid "Create now"
 msgstr ""
 
-#: templates/index.html:101 templates/index.html:140
+#: templates/index.html:103 templates/index.html:177 templates/index2.html:103
+#: templates/index2.html:191
 msgid "Attach your own playlist"
 msgstr ""
 
-#: templates/index.html:116
-msgid "Warning!"
+#: templates/index.html:120
+msgid "Liked songs"
 msgstr ""
 
 #: templates/index.html:122
+msgid "Create playlist with your favorite songs"
+msgstr ""
+
+#: templates/index.html:132
+msgid "Create new"
+msgstr ""
+
+#: templates/index.html:153 templates/index2.html:167
+msgid "Warning!"
+msgstr ""
+
+#: templates/index.html:159 templates/index2.html:173
 msgid "Are you sure you want to detach the playlist?"
 msgstr ""
 
-#: templates/index.html:127
+#: templates/index.html:164 templates/index2.html:178
 msgid "Yes"
 msgstr ""
 
-#: templates/index.html:129
+#: templates/index.html:166 templates/index2.html:180
 msgid "No"
 msgstr ""
 
-#: templates/index.html:149
+#: templates/index.html:186 templates/index2.html:200
 msgid "Playlist URI"
 msgstr ""
 
-#: templates/index.html:154
+#: templates/index.html:191 templates/index2.html:205
 msgid ""
 "If you can't find URI, right-click on your playlist -> Share -> Copy "
 "Spotify URI. Do not confuse with URL!"
 msgstr ""
 
-#: templates/index.html:156
+#: templates/index.html:193 templates/index2.html:207
 msgid "Attach"
 msgstr ""
 
-#: templates/index.html:169
+#: templates/index.html:206 templates/index2.html:220
 msgid "Settings"
 msgstr ""
 
-#: templates/index.html:181
+#: templates/index.html:218 templates/index2.html:232
 msgid "Fixed de-duplicate"
 msgstr ""
 
-#: templates/index.html:194
+#: templates/index.html:231 templates/index2.html:245
 msgid "Value must be 200 or more tracks"
 msgstr ""
 
-#: templates/index.html:203
+#: templates/index.html:240 templates/index2.html:254
 msgid "Fixed playlist"
 msgstr ""
 
-#: templates/index.html:218
+#: templates/index.html:255 templates/index2.html:269
 msgid "Auto-update time"
 msgstr ""
 
-#: templates/index.html:222
+#: templates/index.html:259 templates/index2.html:273
 msgid "In minutes (10 or more)"
 msgstr ""
 
-#: templates/index.html:228
+#: templates/index.html:265 templates/index2.html:279
 msgid "Integration with Last.fm"
 msgstr ""
 
-#: templates/index.html:238
+#: templates/index.html:275 templates/index2.html:289
 msgid "Attention! When integration is enabled, the update will take much longer."
 msgstr ""
 
-#: templates/index.html:241
+#: templates/index.html:278 templates/index2.html:292
 msgid "Save"
 msgstr ""
 
-#: templates/index.html:294
+#: templates/index.html:331 templates/index2.html:345
 msgid ""
 "When enabled, Spotiboi will check duplicates of the last N tracks of your"
 " History Playlist. This is necessary to speed up the update function"
 msgstr ""
 
-#: templates/index.html:296
+#: templates/index.html:333 templates/index2.html:347
 msgid ""
 "When enabled, limits the size of your playlist to the number of tracks "
 "specified in the setting. New tracks will be added, old ones removed."
+msgstr ""
+
+#: templates/index2.html:134
+msgid "Create"
 msgstr ""
 
 #: templates/start.html:6
