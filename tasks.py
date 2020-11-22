@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
 import logging
 from logging import log
+from urllib.parse import uses_query
 from flask import session
 from flask.globals import request
 import json
 import spotipy
 from sqlalchemy.orm import query
-from start_settings import db, User, scheduler
+from start_settings import HistoryPlaylist, db, User, HistoryPlaylist, FavoritePlaylist, scheduler_h, scheduler_f
 from flask_babel import gettext
 #for last
 import pylast
@@ -21,13 +22,16 @@ class UserSettings():
         self.spotify = spotipy.Spotify(auth_manager=auth_manager)
         self.user_id = self.spotify.current_user()['id']
         
-        # если юзера не сущестует в БД, то создаётся запись
+        # если юзера не сущестует в БД, то создаётся запись. Тут же создаётся запись дял плейлиста
         if not User.query.filter_by(spotify_id=self.user_id).first():
-            db.session.add(User(spotify_id=self.user_id, update=False))
+            db.session.add(User(spotify_id=self.user_id))
+            db.session.add(HistoryPlaylist(user_id=self.user_id))
+            db.session.add(FavoritePlaylist(user_id=self.user_id))
             db.session.commit()
-            self.query = User.query.filter_by(spotify_id=self.user_id).first()
-        else:
-            self.query = User.query.filter_by(spotify_id=self.user_id).first()
+
+        self.user_query = User.query.filter_by(spotify_id=self.user_id).first()
+        self.history_query = HistoryPlaylist.query.filter_by(user_id=self.user_id).first()
+        self.favorite_query = FavoritePlaylist.query.filter_by(user_id=self.user_id).first()
             
         # Used only for HTML page. Template for settings, that will be changed in future. 
         self.settings = {
@@ -35,118 +39,32 @@ class UserSettings():
             'dedup_value': 0,
             'fixed_status': None,
             'fixed_value': 0,
-            'update_time': self.query.update_time,
+            'update_time': self.history_query.update_time,
             'lastfm_status': 0,
-            'lastfm_value': self.query.lastfm_username,
+            'lastfm_value': self.user_query.lastfm_username,
             'fav_playlist': False
         }
      
     def settings_worker(self) -> None:
-        if self.query.fixed_dedup and self.query.fixed_dedup > 0:
+        if self.history_query.fixed_dedup and self.history_query.fixed_dedup > 0:
             self.settings['dedup_status'] = 'checked'
-            self.settings['dedup_value'] = self.query.fixed_dedup
+            self.settings['dedup_value'] = self.history_query.fixed_dedup
             
-        if self.query.fixed_capacity and self.query.fixed_capacity > 0:
+        if self.history_query.fixed_capacity and self.history_query.fixed_capacity > 0:
             self.settings['fixed_status'] = 'checked'
-            self.settings['fixed_value'] = self.query.fixed_capacity
+            self.settings['fixed_value'] = self.history_query.fixed_capacity
             
-        if self.query.lastfm_username:
+        if self.user_query.lastfm_username:
             self.settings['lastfm_status'] = 'checked'
             
-        if self.query.favorite_playlist:
-            self.fav_id = json.loads(self.query.favorite_playlist)['id']
-            if self.spotify.playlist_is_following(self.fav_id, [self.query.spotify_id])[0]:
+        if self.favorite_query.playlist_id:
+            if self.spotify.playlist_is_following(self.favorite_query.playlist_id, [self.user_query.spotify_id])[0]:
                 self.settings['fav_playlist'] = True
-            
-            
-    def new_query(self):
-        ''' Function to create and return clear and new database query'''
-        return User.query.filter_by(spotify_id=self.user_id).first()
 
-
-    def create_job(self, job_time=30) -> None:
-        if self.query.update_time:
-            job_time = int(self.query.update_time)
-        self.job_time = job_time * 60
-        try:
-            self.job = scheduler.schedule(datetime.utcnow(), update_history, args=[
-                                    self.query.spotify_id, self.query.history_id, self.spotify], interval=self.job_time, repeat=None)
-            scheduler.enqueue_job(self.job)
-            self.query.job_id = self.job.id
-            db.session.commit()
-        except Exception as e:
-            print(e)
-            
-            
-    def check_worker_status(self) -> str:
-        """ Функция для проверки работы менеджера расписаний и статуса авто-обновления """
-        self.query = User.query.filter_by(spotify_id=self.user_id).first()
-        
-        # если autoupdate = ON
-        if self.query.update == True and self.query.history_id:
-            # если работа не задана или она не в расписании
-            if not self.query.job_id or self.query.job_id not in scheduler:
-                try:
-                    self.create_job()
-                except Exception as e:
-                    print (e)
-            # если работа работается, но uuid не совпадает
-            if self.query.job_id in scheduler and self.query.last_uuid != session.get('uuid'):
-                try:
-                    scheduler.cancel(self.query.job_id)
-                    self.create_job()
-                    self.query.last_uuid = session.get('uuid')
-                    db.session.commit()
-                except Exception as e:
-                    print (e)
-            return "checked"
-        # если autoupdate = OFF
-        else:
-            try:
-                if self.query.job_id in scheduler:
-                    scheduler.cancel(self.query.job_id)
-            except Exception as e:
-                print(e)
-            return None
-        
-        
-    def check_worker_status2(self, update: bool, playlist_id: str, job_id: str, func) -> str:
-        """ Функция для проверки работы менеджера расписаний и статуса авто-обновления """
-        
-        # если autoupdate = ON
-        if update == True and playlist_id:
-            # если работа не задана или она не в расписании
-            if not job_id or job_id not in scheduler:
-                print("not in scheduler")
-                try:
-                    func()
-                except Exception as e:
-                    print (e)
-            # если работа работается, но uuid не совпадает
-            if job_id in scheduler and self.query.last_uuid != session.get('uuid'):
-                print("uuid not eq")
-                try:
-                    scheduler.cancel(job_id)
-                    func()
-                    self.query.last_uuid = session.get('uuid')
-                    db.session.commit()
-                except Exception as e:
-                    print (e)
-            return "checked"
-        # если autoupdate = OFF
-        else:
-            try:
-                if job_id in scheduler:
-                    scheduler.cancel(job_id)
-            except Exception as e:
-                print(e)
-            return None
-        
 
     def time_worker(self) -> int:
-        self.query = self.new_query()
-        if self.query.last_update:
-            self.time_past = self.query.last_update
+        if self.history_query.last_update:
+            self.time_past = self.history_query.last_update
             self.time_now = datetime.now()
             self.FMT = '%H:%M:%S'
             self.duration = self.time_now - datetime.strptime(self.time_past, self.FMT)
@@ -172,18 +90,18 @@ class UserSettings():
             # сморим все плейлисты
             self.playlists = self.spotify.current_user_playlists()
             # если привязан ID плейлиста и юзер подписан на него, то выводим инфу
-            if self.query.history_id and self.spotify.playlist_is_following(self.query.history_id, [self.query.spotify_id])[0]:
+            if self.history_query.playlist_id and self.spotify.playlist_is_following(self.history_query.playlist_id, [self.user_query.spotify_id])[0]:
                 self.current_playlist = self.spotify.playlist(
-                    self.query.history_id, fields="name, id, images")
+                    self.history_query.playlist_id, fields="name, id, images")
                 self.history_playlist_data['name'] = self.current_playlist['name']
                 self.history_playlist_data['id'] = self.current_playlist['id']
                 self.history_playlist_data['images'] = self.current_playlist['images'][0]['url']
             # если ID плейлиста привязан, но юзер не подписан на плейлист
-            elif self.query.history_id and not self.spotify.playlist_is_following(self.query.history_id, [self.query.spotify_id])[0]:
-                self.query.history_id = None
+            elif self.history_query.playlist_id and not self.spotify.playlist_is_following(self.history_query.playlist_id, [self.user_query.spotify_id])[0]:
+                self.history_query.playlist_id = None
                 db.session.commit()
             # если ID плейлиста не привязан, например если только что создали плейлист History через спотибой
-            elif not self.query.history_id:
+            elif not self.history_query.playlist_id:
                 for idx, item in enumerate(self.playlists['items']):
                     if item['name'] == "History (fresh!)":
                         self.history_playlist_data['name'] = "History"
@@ -191,25 +109,68 @@ class UserSettings():
                         self.image_item = item['images']
                     if self.image_item:
                         self.history_playlist_data['images'] = self.image_item[0]['url']
-                self.query.history_id = self.history_playlist_data['id']
+                self.history_query.playlist_id = self.history_playlist_data['id']
                 db.session.commit()
                 self.spotify.playlist_change_details(
                     self.history_playlist_data['id'], name="History")
-        except:
-            print(self.query.spotify_id +
-                            ': Плейлист не прикреплён, нечего показывать')
+        except Exception as e:
+            print(e)
         finally:
             return self.history_playlist_data
         
+        
+def create_job(UserSettings, playlist_query, func, scheduler, job_time=30) -> None:
+    if playlist_query.update_time:
+        job_time = int(playlist_query.update_time)
+    job_time = job_time * 60
+    try:
+        job = scheduler.schedule(datetime.utcnow(), func, args=[UserSettings.user_id, UserSettings], interval=job_time, repeat=None)
+        scheduler.enqueue_job(job)
+        playlist_query.job_id = job.id
+        db.session.commit()
+    except Exception as e:
+        print(e)
+            
+
+def check_worker_status(UserSettings, playlist_query, func, scheduler) -> str:
+    """ Функция для проверки работы менеджера расписаний и статуса авто-обновления """
+    user_query = UserSettings.user_query
+    # если autoupdate = ON
+    if playlist_query.update == True and playlist_query.playlist_id and UserSettings.spotify.playlist_is_following(playlist_query.playlist_id, [UserSettings.user_id])[0]:
+        # если работа не задана или она не в расписании
+        if not playlist_query.job_id or playlist_query.job_id not in scheduler:
+            try:
+                create_job(UserSettings, playlist_query, func, scheduler)
+            except Exception as e:
+                print (e)
+        # если работа работается, но uuid не совпадает
+        if playlist_query.job_id in scheduler and user_query.last_uuid != session.get('uuid'):
+            try:
+                scheduler.cancel(playlist_query.job_id)
+                create_job(UserSettings, playlist_query, func, scheduler)
+                user_query.last_uuid = session.get('uuid')
+                db.session.commit()
+            except Exception as e:
+                print (e)
+        return "checked"
+    # если autoupdate = OFF
+    else:
+        try:
+            if playlist_query.job_id in scheduler:
+                scheduler.cancel(playlist_query.job_id)
+        except Exception as e:
+            print(e)
+        return None
+        
     
-def update_history(user_id, history_id, spotify) -> str:
+def update_history(user_id, UserSettings) -> str:
     """ Функция обновления истории """
-               
+
     def limit_playlist_size():
         """ Обрезка плейлиста, если стоит настройка фиксированного плейлиста """
         playlist_size = spotify.playlist_tracks(history_id, fields='total')
-        if playlist_size['total'] >= query.fixed_capacity:
-            result = spotify.playlist_tracks(history_id, fields="items(track(uri,name))", limit=search_limit, offset=query.fixed_capacity)
+        if playlist_size['total'] >= history_query.fixed_capacity:
+            result = spotify.playlist_tracks(history_id, fields="items(track(uri,name))", limit=search_limit, offset=history_query.fixed_capacity)
             tracks_to_delete = []
             for item in result['items']:
                 tracks_to_delete.append(item['track']['uri'])
@@ -223,13 +184,15 @@ def update_history(user_id, history_id, spotify) -> str:
                     yield value
         
         
-    # --------- CODE STARTS HERE ----------
+    spotify = UserSettings.spotify
+    history_query = UserSettings.history_query
+    history_id = history_query.playlist_id
+    user_query = UserSettings.user_query
 
-    query = User.query.filter_by(spotify_id=user_id).first()
     search_limit = 45
     
     # получаем историю прослушиваний (учитывая настройки )
-    history_playlist = get_current_history_list(history_id, spotify, query)
+    history_playlist = get_current_history_list(UserSettings)
     
     # вытаскиваются последние прослушанные песни
     results = spotify.current_user_recently_played(limit=search_limit)
@@ -242,9 +205,9 @@ def update_history(user_id, history_id, spotify) -> str:
 
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
-    if query.lastfm_username:
+    if user_query.lastfm_username:
         try:
-            username = query.lastfm_username
+            username = user_query.lastfm_username
             network = pylast.LastFMNetwork(api_key='e62b095dc44b53f63137d90bce84117b', api_secret="1e3f4f44e4eae94a9cc8280f11b6fc71",
                                         username=username)
             result = network.get_user(username).get_recent_tracks(limit=search_limit)
@@ -296,7 +259,7 @@ def update_history(user_id, history_id, spotify) -> str:
             spotify.playlist_add_items(history_id, recently_played_uris, position=0)
             
             # если стоит настройка ограничения плейлиста по размеру
-            if query.fixed_capacity:
+            if history_query.fixed_capacity:
                 limit_playlist_size()
             
             print(spotify.current_user()['id'] + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
@@ -308,11 +271,11 @@ def update_history(user_id, history_id, spotify) -> str:
     except spotipy.SpotifyException:
         return ("Nothing to add for now")
     finally:
-        query = User.query.filter_by(spotify_id=user_id).first()
-        query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
+        history_query = HistoryPlaylist.query.filter_by(user_id=user_id).first()
+        history_query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
         db.session.commit()
-            
- 
+
+
 def convert_playlist(playlist_array) -> list:
     """ Перевод сырого JSON в формат, более удобный для программы """
     
@@ -355,25 +318,26 @@ def get_limited_playlist_track(spotify, raw_results, limit) -> list:
     return tracks
  
         
-def get_current_history_list(playlist_id: str, sp, query) -> tuple:
+def get_current_history_list(UserSettings) -> tuple:
     """ Функция получения истории прослушиваний """
         
-    def get_tracks():
-        limit = query.fixed_dedup
-        try:
-            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
-                    
-            if limit:
-                return get_limited_playlist_track(sp, results, limit)
-            else:
-                return get_every_playlist_track(sp, results)
-        except:
-            print("Нет подключения к серверам Spotify. Переподключение через 5 минут")
-            time = datetime.now() + timedelta(minutes=5)
-            query.last_update = datetime.strftime(time, "%H:%M:%S")
-            db.session.commit()
+    history_query = UserSettings.history_query
+    sp = UserSettings.spotify
+    playlist_id = history_query.playlist_id
     
-    tracks = get_tracks()
+    limit = history_query.fixed_dedup
+    try:
+        results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
+                
+        if limit:
+            tracks = get_limited_playlist_track(sp, results, limit)
+        else:
+            tracks = get_every_playlist_track(sp, results)
+    except:
+        print("Нет подключения к серверам Spotify. Переподключение через 5 минут")
+        time = datetime.now() + timedelta(minutes=5)
+        history_query.last_update = datetime.strftime(time, "%H:%M:%S")
+        db.session.commit()
     
     return tuple(item for item in tracks)
 
@@ -394,33 +358,32 @@ def fill_playlist(sp, playlist_id : str, uris_list : list, from_top = False) -> 
         offset += 100
 
 
-
-def create_liked_playlist(UserSettings) -> None:
+def update_favorite_playlist(user_id, UserSettings) -> None:
     """ Создать новый плейлист, содержащий только лайкнутые треки """
+    
     sp = UserSettings.spotify
-    user_id = UserSettings.user_id
-    query = UserSettings.new_query()
+    favorite_query = UserSettings.favorite_query
     results = sp.current_user_saved_tracks(limit=20)
     
-    if query.favorite_playlist:
-        fav_id = json.loads(query.favorite_playlist)['id']
-        if sp.playlist_is_following(fav_id, [user_id])[0]:
-            # получаем актуальный список треков из saved
-            new_track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
-            
-            # получаем список песен из плейлиста favorites
-            fav_playlist_results = sp.playlist_tracks(fav_id)
-            fav_playlist_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results) )
-            
-            #добавляем новые треки
-            to_add = [ uri for uri in new_track_uris if uri not in fav_playlist_uris]
-            if to_add: 
-                fill_playlist(sp, fav_id, to_add, from_top=True)
-            
-            #удаляем не акутальные
-            to_delete = [ uri for uri in fav_playlist_uris if uri not in new_track_uris]
-            if to_delete:
-                sp.playlist_remove_all_occurrences_of_items(fav_id, to_delete)
+    # если плейлист добавлен, то просто обновляем
+    if favorite_query.playlist_id and sp.playlist_is_following(favorite_query.playlist_id, [user_id])[0]:
+        # получаем актуальный список треков из saved
+        new_track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
+        
+        # получаем список песен из плейлиста favorites
+        fav_playlist_results = sp.playlist_tracks(favorite_query.playlist_id)
+        fav_playlist_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results) )
+        
+        #добавляем новые треки
+        to_add = [uri for uri in new_track_uris if uri not in fav_playlist_uris]
+        if to_add: 
+            fill_playlist(sp, favorite_query.playlist_id, to_add, from_top=True)
+        
+        #удаляем не акутальные
+        to_delete = [ uri for uri in fav_playlist_uris if uri not in new_track_uris]
+        if to_delete:
+            sp.playlist_remove_all_occurrences_of_items(favorite_query.playlist_id, to_delete)
+                
         
     # плейлист не добавлен
     else:
@@ -434,8 +397,9 @@ def create_liked_playlist(UserSettings) -> None:
         track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
         for item in playlists['items']:
             if item['name'] == 'My Favorite Songs':
-                data = {"id" : item['id'], "update": False}
-                query.favorite_playlist = json.dumps(data)
+                favorite_query.playlist_id = item['id']
+                favorite_query.update = False
                 db.session.commit()
                 fill_playlist(sp, item['id'], track_uris)
                 break
+        

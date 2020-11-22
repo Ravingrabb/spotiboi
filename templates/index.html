@@ -60,7 +60,7 @@
 
                         <div class="custom-control custom-switch">
                             <input type="checkbox" class="custom-control-input" name='updateSwitch' id="customSwitch1"
-                                {{ updateChecked }} onchange="autoUpdateToggle()">
+                                {{ history_checked }} onchange="autoUpdateToggle()">
                             <label class="custom-control-label" style='padding-bottom: 10px;'
                                 for="customSwitch1">
                                 {{_('Auto-update History')}}
@@ -110,36 +110,40 @@
             <!-- FAVORITE CARD -->
             <div class="col-lg-4 col-md-6 col-sm-6">
                 <div class="card mb-4 shadow-sm" style='height: 275px'>
-                    <div class="crop">
+                    <div class="crop" style="z-index: 99;">
                         <img src="static/img/listen.png" class='rounded float-left' width="200px"> 
                     </div>
 
                     <div class="card-body">
                         <div class="row align-items-end">
-                            <div class="col-10">
+                            <div class="col-11 col-lg-10">
                                 <h3 class="card-text">{{_('Liked songs')}}</h3>
                                 <p class="card-text" style="padding-bottom: 15px;
                                 border-bottom: 1px solid #dee2e6!important;">{{_('Create playlist with your favorite songs')}}</p>
-
-                                <div class="d-flex justify-content-between align-items-end" style="height: 116px;">
-                                    <div class="btn-group">
-                                        <button type="button" id='manualUpdate2' class="btn btn-sm btn-outline-secondary">
-                                            <span id="updateSpinner2" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-                                            
-                                            {% if settings.fav_playlist %}
-                                                {{_('Update')}}
-                                            {% else %}
-                                                {{_('Create new')}}
-                                            {% endif %}
-                                            
-                                        </button>
-                                    </div>
+                                {% if settings.fav_playlist%}
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" name='favoriteSwitch' id="customSwitch2"
+                                        {{ favorite_checked }} onchange="autoUpdateToggle2()">
+                                    <label class="custom-control-label" style='padding-bottom: 10px;'
+                                        for="customSwitch2">
+                                        {{_('Auto-update')}}
+                                    </label>
                                 </div>
+                                {% endif %}
+
                             </div>
                         </div>
+
+                        <button type="button" id='manualUpdate2' class="btn btn-sm btn-outline-secondary" style="position: absolute; bottom: 13px">
+                            <span id="updateSpinner2" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                            {% if settings.fav_playlist %}
+                                {{_('Update')}}
+                            {% else %}
+                                {{_('Create new')}}
+                            {% endif %}
+                        </button>
                     </div>
-                </div>
-                
+                </div> 
             </div>
         </div>
     </div>
@@ -448,12 +452,27 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
             })
     });
 
+    // TODO: сделать общий интерфейс для объектов
     //Auto-update
     function autoUpdateToggle() {
         console.log(document.getElementById(event.target.id).checked)
         $.ajax({
             type: "POST",
             url: "/auto_update",
+            data: { update: document.getElementById(event.target.id).checked },
+        })
+            .done(function (data) {
+                $('#successAlert').show()
+                $('#alertTextArea').text(data.response)
+                $('#successAlert').delay(5000).fadeOut("slow")
+            })
+    }
+
+    function autoUpdateToggle2() {
+        console.log(document.getElementById(event.target.id).checked)
+        $.ajax({
+            type: "POST",
+            url: "/auto_update_favorite",
             data: { update: document.getElementById(event.target.id).checked },
         })
             .done(function (data) {

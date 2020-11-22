@@ -14,8 +14,8 @@ import sys
 import pylast
 from sqlalchemy.orm import query
 
-from start_settings import app, db, scheduler, User
-from flask_migrate import Migrate
+from start_settings import app, db, scheduler_h, scheduler_f
+from flask_migrate import Migrate, history
 from flask_session import Session
 from flask import session, request, redirect, render_template, url_for, flash, jsonify, json, make_response
 from flask_babel import Babel, gettext
@@ -120,7 +120,6 @@ def index():
         {'url': url_for('faq'), 'title': 'FAQ'},
     ]
     spotify = UserSettings.spotify
-    session_user_id = spotify.current_user()['id']
 
     # settings
     UserSettings.settings_worker()
@@ -128,20 +127,23 @@ def index():
     # POST запросы
     if request.method == "POST":
         if 'create_playlist' in request.form:
-            spotify.user_playlist_create(
-                user=session_user_id, 
-                name='History (fresh!)', 
-                description='Listening history. Created by SpotiBoi'
-                )
+            if not UserSettings.history_query.playlist_id:
+                spotify.user_playlist_create(
+                    user=UserSettings.user_id, 
+                    name='History (fresh!)', 
+                    description='Listening history. Created by SpotiBoi'
+                    )
+
 
         if 'detach_playlist' in request.form:
-            query = UserSettings.new_query()
-            query.history_id = None
-            query.update = False
-            db_commit()
+            history_query = UserSettings.history_query
+            history_query.playlist_id = None
+            history_query.update = False
+            db.session.commit()
 
         if 'uriInput' in request.form:
-            query = UserSettings.new_query()
+            history_query = UserSettings.history_query
+            user_query = UserSettings.user_query
             data = request.form.get('uriInput')
             # если рандом текст какой-то
             if "spotify:playlist:" not in data:
@@ -150,8 +152,8 @@ def index():
                 data = data.replace('spotify:playlist:', '')
                 if ' ' in data:
                     data = data.replace(' ', '')
-                if spotify.playlist_is_following(data, [query.spotify_id])[0]:
-                    query.history_id = data
+                if spotify.playlist_is_following(data, [user_query.spotify_id])[0]:
+                    history_query.playlist_id = data
                     db.session.commit()
                     flash('Success!', category='alert-success')
                 else:
@@ -160,56 +162,27 @@ def index():
 
     # поиск плейлиста
     history_playlist_data = UserSettings.attach_playlist()
-
-    # CRON
-    updateChecked = UserSettings.check_worker_status()
     
+    # CRON
+    history_checked = tasks.check_worker_status(UserSettings, UserSettings.history_query, tasks.update_history, scheduler_h)
+    favorite_checked = tasks.check_worker_status(UserSettings, UserSettings.favorite_query, tasks.update_favorite_playlist, scheduler_f)
     # вычислятор времени
     time_difference = UserSettings.time_worker()
+    
+    
+
     
     return render_template(
         'index.html', 
         username=spotify.me()["display_name"],
         menu=menu,
-        updateChecked=updateChecked,
-        history_playlist_data=history_playlist_data,
-        time_difference=time_difference,
-        settings=UserSettings.settings
+        history_checked = history_checked,
+        favorite_checked = favorite_checked,
+        history_playlist_data = history_playlist_data,
+        time_difference = time_difference,
+        settings = UserSettings.settings
     )
     
-@app.route('/test3')
-@auth
-def index2(UserSettings):
-    
-    # ------------------ НАЧАЛО НАСТРОЕК СТРАНИЦЫ ------------------
-    menu = [
-        {'url': url_for('currently_playing'), 'title': gettext('Recently played tracks')},
-        {'url': url_for('faq'), 'title': 'FAQ'},
-    ]
-    spotify = UserSettings.spotify
-    
-    # вычислятор времени
-    time_difference = UserSettings.time_worker()
-
-    # settings
-    UserSettings.settings_worker()
-
-    # поиск плейлиста
-    history_playlist_data = UserSettings.attach_playlist()
-
-    # CRON
-    query = UserSettings.query
-    updateChecked = UserSettings.check_worker_status2(query.update, query.history_id, query.job_id, UserSettings.create_job)
-    
-    return render_template(
-        'index2.html', 
-        username=spotify.me()["display_name"],
-        menu=menu,
-        updateChecked=updateChecked,
-        history_playlist_data=history_playlist_data,
-        time_difference=time_difference,
-        settings=UserSettings.settings
-    )
     
 @app.route('/test2')
 @auth
@@ -379,15 +352,14 @@ def create_cookie():
 @app.route('/make_history', methods=['POST'])
 @auth
 def make_history(UserSettings):
-    user = UserSettings.new_query()
-    response = tasks.update_history(user.spotify_id, user.history_id, UserSettings.spotify)
+    response = tasks.update_history(UserSettings.user_id, UserSettings)
     return jsonify({'response': response})
 
 
 @app.route('/make_liked', methods=['POST'])
 @auth
 def make_liked(UserSettings):
-    tasks.create_liked_playlist(UserSettings)   
+    tasks.update_favorite_playlist(UserSettings.user_id, UserSettings)   
     return jsonify({'response': "OK"})
 
 
@@ -395,19 +367,20 @@ def make_liked(UserSettings):
 @auth
 def update_settings(UserSettings):
     if request.method == "POST":
-        user = UserSettings.new_query()
+        user_query = UserSettings.user_query
+        history_query = UserSettings.history_query
         
         def check_lastfm_username():
             API_KEY = "b6d8eb5b11e5ea1e81a3f116cfa6169f"
             API_SECRET = "7108511ff8fee65ba231fba99902a1d5"
             network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
-                               username=user.lastfm_username)
+                               username=user_query.lastfm_username)
             
             try:
-                lastfm_user = network.get_user(user.lastfm_username)
+                lastfm_user = network.get_user(user_query.lastfm_username)
                 lastfm_user.get_name(properly_capitalized=True)
             except:
-                user.lastfm_username = None
+                user_query.lastfm_username = None
                 db.session.commit()
                 return jsonify({'error': gettext("Error! Can't find that last.fm user")})
             
@@ -420,21 +393,21 @@ def update_settings(UserSettings):
                 return None 
     
         # прогоняем все данные из настроек
-        user.fixed_dedup = return_db_value(request.form['dedupStatus'], request.form['dedupValue'])
-        user.fixed_capacity = return_db_value(request.form['fixedStatus'], request.form['fixedValue'])
-        user.lastfm_username = return_db_value(request.form['lastFmStatus'], request.form['lastFmValue'])
+        history_query.fixed_dedup = return_db_value(request.form['dedupStatus'], request.form['dedupValue'])
+        history_query.fixed_capacity = return_db_value(request.form['fixedStatus'], request.form['fixedValue'])
+        user_query.lastfm_username = return_db_value(request.form['lastFmStatus'], request.form['lastFmValue'])
         
-        if user.lastfm_username:
+        if user_query.lastfm_username:
             check_lastfm_username()
             
             
-        if user.update_time != request.form['updateTimeValue']:
-            user.update_time = request.form['updateTimeValue']
+        if history_query.update_time != request.form['updateTimeValue']:
+            history_query.update_time = request.form['updateTimeValue']
             # если работа работается, но uuid не совпадает
-            if user.job_id in scheduler:
-                scheduler.cancel(user.job_id)
+            if history_query.job_id in scheduler_h:
+                scheduler_h.cancel(history_query.job_id)
                 db.session.commit()
-                UserSettings.create_job()
+                tasks.create_job(UserSettings, history_query, tasks.update_history, scheduler_h)
             else:
                 db.session.commit()
 
@@ -446,17 +419,36 @@ def update_settings(UserSettings):
 @app.route('/auto_update', methods=['POST'])
 @auth
 def auto_update(UserSettings):
-        user = UserSettings.new_query()
-
+        history_query = UserSettings.history_query
         try:
             if request.form['update'] == 'true':
-                user.update = True
-                if not user.job_id or user.job_id not in scheduler:
-                    UserSettings.create_job()
+                history_query.update = True
+                if not history_query.job_id or history_query.job_id not in scheduler_h:
+                    tasks.create_job(UserSettings, history_query, tasks.update_history, scheduler_h)
             elif request.form['update'] == 'false':
-                user.update = False
-                if user.job_id in scheduler:
-                    scheduler.cancel(user.job_id)
+                history_query.update = False
+                if history_query.job_id in scheduler_h:
+                    scheduler_h.cancel(history_query.job_id)
+            db.session.commit()
+            return jsonify({'response': gettext('Success!')})
+        except:
+            return jsonify({'response': gettext('bruh')})
+        
+        
+@app.route('/auto_update_favorite', methods=['POST'])
+@auth
+def auto_update_favorite(UserSettings):
+        favorite_query = UserSettings.favorite_query
+        
+        try:
+            if request.form['update'] == 'true':
+                favorite_query.update = True
+                if not favorite_query.job_id or favorite_query.job_id not in scheduler_f:
+                    tasks.create_job(UserSettings, favorite_query, tasks.update_favorite_playlist, scheduler_f)
+            elif request.form['update'] == 'false':
+                favorite_query.update = False
+                if favorite_query.job_id in scheduler_f:
+                    scheduler_f.cancel(favorite_query.job_id)
             db.session.commit()
             return jsonify({'response': gettext('Success!')})
         except:
@@ -464,4 +456,4 @@ def auto_update(UserSettings):
 
 
 if __name__ == '__main__':
-    app.run(threaded=True, debug=DEBUG, host='0.0.0.0')
+    app.run(threaded=True, debug=DEBUG, host='0.0.0.0', port='5000')
