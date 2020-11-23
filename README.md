@@ -1,4 +1,4 @@
-# Setting up
+# SpotiBoi
 1. Install all requirements
 
 ```
