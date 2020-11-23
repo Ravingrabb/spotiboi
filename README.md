@@ -15,3 +15,9 @@ export SPOTIPY_REDIRECT_URI='YOUR_REDIRECT_URL_HERE'
 export LASTFM_API_KEY = "YOUR_LASTFM_API"
 export LASTFM_API_SECRET = "YOUR_LASTFM_SECRET"
 ```
+
+3. Create new database in bash
+```
+>> from start_settings import db
+>> db.create_all()
+```
