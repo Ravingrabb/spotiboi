@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-11-03 22:10+0500\n"
+"POT-Creation-Date: 2020-11-23 20:57+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,23 +21,23 @@ msgstr ""
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:292 app.py:359 app.py:381
+#: app.py:340 app.py:414 app.py:433 app.py:453
 msgid "Success!"
 msgstr ""
 
-#: app.py:330
+#: app.py:385
 msgid "Error! Can't find that last.fm user"
 msgstr ""
 
-#: app.py:361 app.py:383
+#: app.py:416 app.py:435 app.py:455
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:282
+#: tasks.py:273
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:286
+#: tasks.py:277
 msgid "Nothing to update"
 msgstr ""
 
@@ -133,107 +133,127 @@ msgstr ""
 msgid "This is your History playlist"
 msgstr ""
 
-#: templates/index.html:65
+#: templates/index.html:66
 msgid "Auto-update History"
 msgstr ""
 
-#: templates/index.html:73
+#: templates/index.html:75 templates/index.html:140
 msgid "Update"
 msgstr ""
 
-#: templates/index.html:89
+#: templates/index.html:91
 msgid "Updated"
 msgstr ""
 
-#: templates/index.html:89
+#: templates/index.html:91
 msgid "min ago"
 msgstr ""
 
-#: templates/index.html:94
+#: templates/index.html:96
 msgid "You don't have attached history playlist"
 msgstr ""
 
-#: templates/index.html:97
+#: templates/index.html:99
 msgid "Create now"
 msgstr ""
 
-#: templates/index.html:101 templates/index.html:140
+#: templates/index.html:103 templates/index.html:181
 msgid "Attach your own playlist"
 msgstr ""
 
-#: templates/index.html:116
-msgid "Warning!"
+#: templates/index.html:120
+msgid "Liked songs"
 msgstr ""
 
 #: templates/index.html:122
-msgid "Are you sure you want to detach the playlist?"
-msgstr ""
-
-#: templates/index.html:127
-msgid "Yes"
+msgid "Create playlist with your favorite songs"
 msgstr ""
 
 #: templates/index.html:129
+msgid "Auto-update"
+msgstr ""
+
+#: templates/index.html:142
+msgid "Create new"
+msgstr ""
+
+#: templates/index.html:157
+msgid "Warning!"
+msgstr ""
+
+#: templates/index.html:163
+msgid "Are you sure you want to detach the playlist?"
+msgstr ""
+
+#: templates/index.html:168
+msgid "Yes"
+msgstr ""
+
+#: templates/index.html:170
 msgid "No"
 msgstr ""
 
-#: templates/index.html:149
+#: templates/index.html:190
 msgid "Playlist URI"
 msgstr ""
 
-#: templates/index.html:154
+#: templates/index.html:195
 msgid ""
 "If you can't find URI, right-click on your playlist -> Share -> Copy "
 "Spotify URI. Do not confuse with URL!"
 msgstr ""
 
-#: templates/index.html:156
+#: templates/index.html:197
 msgid "Attach"
 msgstr ""
 
-#: templates/index.html:169
+#: templates/index.html:210
 msgid "Settings"
 msgstr ""
 
-#: templates/index.html:181
+#: templates/index.html:222
 msgid "Fixed de-duplicate"
 msgstr ""
 
-#: templates/index.html:194
+#: templates/index.html:235
 msgid "Value must be 200 or more tracks"
 msgstr ""
 
-#: templates/index.html:203
+#: templates/index.html:244
 msgid "Fixed playlist"
 msgstr ""
 
-#: templates/index.html:218
+#: templates/index.html:258
+msgid "Must be 100 or more tracks"
+msgstr ""
+
+#: templates/index.html:263
 msgid "Auto-update time"
 msgstr ""
 
-#: templates/index.html:222
-msgid "In minutes"
+#: templates/index.html:267
+msgid "In minutes (10 or more)"
 msgstr ""
 
-#: templates/index.html:228
+#: templates/index.html:273
 msgid "Integration with Last.fm"
 msgstr ""
 
-#: templates/index.html:238
+#: templates/index.html:283
 msgid "Attention! When integration is enabled, the update will take much longer."
 msgstr ""
 
-#: templates/index.html:241
+#: templates/index.html:286
 msgid "Save"
 msgstr ""
 
-#: templates/index.html:294
+#: templates/index.html:339
 msgid ""
 "When enabled, Spotiboi will check duplicates of the last N tracks of your"
 " History Playlist. This is necessary to speed up the update function"
 msgstr ""
 
-#: templates/index.html:296
+#: templates/index.html:341
 msgid ""
 "When enabled, limits the size of your playlist to the number of tracks "
 "specified in the setting. New tracks will be added, old ones removed."
