@@ -73,7 +73,14 @@ class UserSettings():
         else:
             return None
 
-
+    def new_user_query(self):
+        return User.query.filter_by(spotify_id=self.user_id).first()
+    
+    
+    def new_history_query(self):
+        return HistoryPlaylist.query.filter_by(user_id=self.user_id).first()
+    
+        
     def attach_playlist(self):
         """ Функция, необходимая только для отображения плейлиста юзера, данные
         которого находятся в базе данных """
@@ -187,7 +194,7 @@ def update_history(user_id, UserSettings) -> str:
     spotify = UserSettings.spotify
     history_query = UserSettings.history_query
     history_id = history_query.playlist_id
-    user_query = UserSettings.user_query
+    user_query = UserSettings.new_user_query()
 
     search_limit = 45
     
