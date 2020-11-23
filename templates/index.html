@@ -87,7 +87,7 @@
                             </div>
                         </div>
                         {% if time_difference != None %}
-                        <small class="text-muted">
+                        <small class="text-muted current-time">
                             {{_("Updated")}} {{ time_difference }} {{_('min ago')}}
                         </small>
                         {% endif %}
@@ -339,7 +339,24 @@
 value="{{_('When enabled, Spotiboi will check duplicates of the last N tracks of your History Playlist. This is necessary to speed up the update function')}}">
 <input type="hidden" id="dedupFixedText" 
 value="{{_('When enabled, limits the size of your playlist to the number of tracks specified in the setting. New tracks will be added, old ones removed.')}}">
+
+<!-- SCRIPTS -->
 <script>
+    async function updateTime() {
+        $.ajax({
+            type: "POST",
+            url: "/get_time"
+        })
+            .done(function (data) {
+                var r = /\d+/;
+                var s = $('.current-time').text();
+                $('.current-time').text(s.replace(r, data.response))
+            })
+   }
+
+   setInterval(updateTime, 60000);
+
+
     const instance = tippy(document.querySelector('#testTippy'),{
         trigger: 'manual',
         arrow: false,

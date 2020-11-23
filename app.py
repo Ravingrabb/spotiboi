@@ -455,5 +455,14 @@ def auto_update_favorite(UserSettings):
             return jsonify({'response': gettext('bruh')})
 
 
+@app.route('/get_time', methods=['POST'])
+@auth
+def get_time(UserSettings):
+    try:
+        return jsonify({'response': UserSettings.time_worker()})
+    except:
+        return jsonify({'response': gettext('bruh')})
+
+
 if __name__ == '__main__':
     app.run(threaded=True, debug=DEBUG, host='0.0.0.0', port='5000')
