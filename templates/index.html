@@ -378,14 +378,21 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
 
     // settings AJAX
     $('#updateSettingsButton').click(function () {
-        
-        inputIds = ['#dedupValue', '#fixedValue', '#updateTimeValue']
-        inputIds.forEach(element => $(element).removeClass('blocked'));
+        var gotErrors = false
 
-        if ($('#dedupValue').val() < 200 || $('#fixedValue').val() < 100 || $('#updateTimeValue').val() < 10) {
-            if ($('#dedupValue').val() < 200) { $('#dedupValue').addClass('blocked') }
-            if ($('#fixedValue').val() < 100) { $('#fixedValue').addClass('blocked') }
-            if ($('#updateTimeValue').val() < 10) { $('#updateTimeValue').addClass('blocked') }
+        function checkInputs(item) {
+            if ( $(item[0]).val() < item[1] ){
+                $(item[0]).addClass('blocked')
+                gotErrors = true
+            }
+        }
+
+        inputIds = [['#dedupValue', 200], ['#fixedValue', 100], ['#updateTimeValue', 10]]
+        inputIds.forEach(element => $(element[0]).removeClass('blocked'));
+        inputIds.forEach(checkInputs)
+
+        if (gotErrors) {
+            console.log('some errors in settings')
         }
         else {
             $('#updateSettingsButton').prop('disabled', true);
@@ -447,8 +454,12 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
         $.ajax({
             type: "POST",
             url: "/make_liked",
+            data: { update: true },
         })
             .done(function (data) {
+                $('#successAlert').show()
+                $('#alertTextArea').text(data.response)
+                $('#successAlert').delay(5000).fadeOut("slow")
                 $('#updateSpinner2').removeClass('busy')
                 $('#manualUpdate2').prop('disabled', false);
             })
