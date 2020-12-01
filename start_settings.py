@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from redis import Redis
 import logging
 import logging.handlers
+# memory leak finder
+# import tracemalloc
 
 app = Flask(__name__)
 
@@ -13,16 +15,18 @@ db = SQLAlchemy(app)
 scheduler_h = Scheduler(connection=Redis(), queue_name="history_update")
 scheduler_f = Scheduler(connection=Redis(), queue_name="favorite_update")
 
-#logging.basicConfig(filename='logs.log', level=logging.ERROR)
-handler = logging.handlers.RotatingFileHandler(
-        'logs.log',
-        maxBytes=1024 * 1024)
-handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
-logging.getLogger('werkzeug').setLevel(logging.ERROR)
-logging.getLogger('werkzeug').addHandler(handler)
-app.logger.setLevel(logging.ERROR)
-app.logger.addHandler(handler)
+
+
+logging.basicConfig(filename='logs.log', level=logging.ERROR)
+#handler = logging.handlers.RotatingFileHandler(
+#        'logs.log',
+#        maxBytes=1024 * 1024)
+#handler.setFormatter(logging.Formatter(
+#        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+#logging.getLogger('werkzeug').setLevel(logging.ERROR)
+#logging.getLogger('werkzeug').addHandler(handler)
+#app.logger.setLevel(logging.ERROR)
+#app.logger.addHandler(handler)
 
 
 # flask db migrate -m "users table"
