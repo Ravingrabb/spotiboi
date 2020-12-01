@@ -18,6 +18,7 @@ export LASTFM_API_SECRET = "YOUR_LASTFM_SECRET"
 
 3. Create new database in bash
 ```
+&& python
 >> from start_settings import db
 >> db.create_all()
 ```
