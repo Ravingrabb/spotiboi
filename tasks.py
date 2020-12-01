@@ -1,18 +1,16 @@
 from datetime import datetime, timedelta
 import logging
-from logging import log
-from urllib.parse import uses_query
 from flask import session
 from flask.globals import request
-import json
 import spotipy
 from sqlalchemy.orm import query
-from start_settings import HistoryPlaylist, db, User, HistoryPlaylist, FavoritePlaylist, scheduler_h, scheduler_f
+from start_settings import HistoryPlaylist, db, User, HistoryPlaylist, FavoritePlaylist
 from flask_babel import gettext
+import gc
 #for last
 import pylast
-from itertools import chain
 from transliterate import detect_language
+
 
 
 class UserSettings():
@@ -175,12 +173,12 @@ def update_history(user_id, UserSettings) -> str:
 
     def limit_playlist_size():
         """ Обрезка плейлиста, если стоит настройка фиксированного плейлиста """
+        # поулчаем кол-во треков
         playlist_size = spotify.playlist_tracks(history_id, fields='total')
+        
         if playlist_size['total'] >= history_query.fixed_capacity:
-            result = spotify.playlist_tracks(history_id, fields="items(track(uri,name))", limit=search_limit, offset=history_query.fixed_capacity)
-            tracks_to_delete = []
-            for item in result['items']:
-                tracks_to_delete.append(item['track']['uri'])
+            result = spotify.playlist_tracks(history_id, fields="items(track(uri,name))", limit=len(recently_played_uris), offset=history_query.fixed_capacity)
+            tracks_to_delete = [item['track']['uri'] for item in result['items']]
             spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)   
                      
                         
@@ -200,6 +198,10 @@ def update_history(user_id, UserSettings) -> str:
     
     # получаем историю прослушиваний (учитывая настройки )
     history_playlist = get_current_history_list(UserSettings)
+    
+    # если вернутся None из-за ошибки, то выдаём ошибку
+    if not history_playlist:
+        return (gettext('Can\'t connect to Spotify server'))
     
     # вытаскиваются последние прослушанные песни
     results = spotify.current_user_recently_played(limit=search_limit)
@@ -264,16 +266,15 @@ def update_history(user_id, UserSettings) -> str:
             recently_played_uris = list(dict.fromkeys(recently_played_uris))
             
             spotify.playlist_add_items(history_id, recently_played_uris, position=0)
-            
             # если стоит настройка ограничения плейлиста по размеру
             if history_query.fixed_capacity:
                 limit_playlist_size()
             
-            print(spotify.current_user()['id'] + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
+            # print(spotify.current_user()['id'] + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
             return (gettext('History updated'))
         # иначе пропускаем
         else:
-            print(spotify.current_user()['id'] + ": List is empty. Nothing to update.")
+            # print(spotify.current_user()['id'] + ": List is empty. Nothing to update.")
             return (gettext('Nothing to update'))          
     except spotipy.SpotifyException:
         return ("Nothing to add for now")
@@ -281,6 +282,7 @@ def update_history(user_id, UserSettings) -> str:
         history_query = HistoryPlaylist.query.filter_by(user_id=user_id).first()
         history_query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
         db.session.commit()
+        gc.collect()
 
 
 def convert_playlist(playlist_array) -> list:
@@ -340,13 +342,15 @@ def get_current_history_list(UserSettings) -> tuple:
             tracks = get_limited_playlist_track(sp, results, limit)
         else:
             tracks = get_every_playlist_track(sp, results)
+        return tuple(item for item in tracks)
+    
     except:
         print("Нет подключения к серверам Spotify. Переподключение через 5 минут")
         time = datetime.now() + timedelta(minutes=5)
         history_query.last_update = datetime.strftime(time, "%H:%M:%S")
         db.session.commit()
+        return None
     
-    return tuple(item for item in tracks)
 
 
 

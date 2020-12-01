@@ -15,18 +15,16 @@ import pylast
 from sqlalchemy.orm import query
 
 from start_settings import app, db, scheduler_h, scheduler_f
-from flask_migrate import Migrate, history
+from flask_migrate import Migrate
 from flask_session import Session
-from flask import session, request, redirect, render_template, url_for, flash, jsonify, json, make_response
+from flask import session, request, redirect, render_template, url_for, flash, jsonify, make_response
 from flask_babel import Babel, gettext
 from functools import wraps
 from dotenv import load_dotenv
-#test
-from transliterate import translit
-from itertools import chain
-from fuzzywuzzy import fuzz
-import statistics as st
+# test
 from transliterate import detect_language
+import objgraph
+import gc
 
 DEBUG = True
 
@@ -40,18 +38,13 @@ import tasks
 auth_scopes = 'playlist-modify-private user-read-recently-played playlist-modify-public user-library-read'
 
 # декоратор для авторизации
-def auth(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
-                                               cache_path=session_cache_path(),
-                                               show_dialog=True)
-        if not auth_manager.get_cached_token():
-            return redirect('/')
-        get_user = tasks.UserSettings(auth_manager)
-        return func(UserSettings = get_user)
-    return wrapper
 
+def session_cache_path():
+    try:
+        return caches_folder + session['uuid']
+    except:
+        return caches_folder + request.cookies.get('uuid')
+    
 
 # создание кэша для авторизации
 caches_folder = './.spotify_caches/'
@@ -62,10 +55,6 @@ if not os.path.exists(caches_folder):
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
-
-
-def session_cache_path():
-    return caches_folder + session['uuid']
 
 
 def db_commit() -> None:
@@ -96,7 +85,7 @@ def index():
             session['uuid'] = str(uuid.uuid4())
     
     auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
-                                               cache_path=session_cache_path(),
+                                               cache_path=caches_folder + session['uuid'],
                                                show_dialog=True)
 
     if request.args.get("code"):
@@ -169,6 +158,7 @@ def index():
     # вычислятор времени
     time_difference = UserSettings.time_worker()
     
+    gc.collect()
     
 
     
@@ -183,6 +173,18 @@ def index():
         settings = UserSettings.settings
     )
     
+def auth(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
+                                               cache_path=session_cache_path(),
+                                               show_dialog=True)
+        if not auth_manager.get_cached_token():
+            return redirect('/')
+        get_user = tasks.UserSettings(auth_manager)
+        return func(UserSettings = get_user)
+    return wrapper
+
     
 @app.route('/test2')
 @auth
@@ -223,76 +225,18 @@ def test2(UserSettings):
     test.append(str(len(test)))
 
     return render_template('test.html', queries=test)
-    
-
-@app.route('/test')
-@auth
-def test(UserSettings):
-    API_KEY = os.environ['LASTFM_API_KEY']
-    API_SECRET = os.environ['LASTFM_API_SECRET']
-    username = "Ravingrabb"
-
-    network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
-                               username=username)
-    result = network.get_user(username).get_recent_tracks(limit=20)
-    
-    # достаём данные из lastfm
-    last_fm_data = [
-        {'name': song[0].title, 'artist': song[0].artist.name, 'album': song.album}
-        for song in result
-    ]
-    # переводим эти данные в uri спотифай
-    last_fm_data_to_uri = []
-    test = []
-    for q in last_fm_data:
-        # 1 попытка: проверка как есть
-        try:
-            track = UserSettings.spotify.search(q['name'] + " artist:" + q['artist'] + " album:" + q['album'], limit=1)['tracks']['items'][0]['uri']
-            last_fm_data_to_uri.append(track)    
-            test.append(q['name'] + ' ' + q['artist'] + ' --- ' + track)
-        except:
-            # 2 попытка: ищем по исполнителям, убирая букву ё
-            try:
-                q['artist'] = q['artist'].replace('ё', 'е')
-                tr_artist = translit(q['artist'].lower(), 'ru', reversed=True)
-                track = UserSettings.spotify.search(q['name'] + " album:" + q['album'], limit=1, type='track')['tracks']['items']
-                for item in track:
-                    print(q['artist'].lower())
-                    print(tr_artist.lower())
-                    print(item['artists'][0]['name'].lower())
-                    print(q['album'])
-                    print(item['album']['name'])
-                    
-                    search_data = item['artists'][0]['name'].lower()
-                    if (q['artist'].lower() == search_data or tr_artist == search_data):
-                        last_fm_data_to_uri.append(item['uri'])
-                        test.append(q['name'] + ' ' + q['artist'] + ' --- ' + item['uri'])
-                        break  
-                    else:
-                        # 3 попытка - перебор по буква
-                        sentences = tr_artist.split(), item['artists'][0]['name'].lower().split()
-                        output=[]
-                        for w1,w2 in zip(sentences[0],sentences[1]):
-                            output.append(fuzz.ratio(w1,w2))
-                            
-                        print('совпадение:')
-                        print(st.mean(output))   
-                        
-                        if st.mean(output) >= 75 and q['album'].lower() == item['album']['name'].lower() :
-                            last_fm_data_to_uri.append(item['uri'])
-                            test.append(q['name'] + ' ' + q['artist'] + ' --- ' + item['uri'])
-                            break
-                               
-            except:
-                continue
-    last_fm_data_to_uri = list(dict.fromkeys(last_fm_data_to_uri))
-    test = list(dict.fromkeys(test))
-    return render_template('test.html', queries=test )
         
     
 @app.route('/faq')
 def faq():
     return render_template('faq.html')
+
+@app.route('/leak')
+def leak():
+    objgraph.show_most_common_types(limit=5)
+    print (objgraph.by_type('function')[0])
+    print('________________')
+    return "pizdec"
 
 
 @app.route('/sign_out')
@@ -465,4 +409,4 @@ def get_time(UserSettings):
 
 
 if __name__ == '__main__':
-    app.run(threaded=True, debug=DEBUG, host='0.0.0.0', port='5000')
+    app.run(threaded=True, debug=DEBUG, host='0.0.0.0')

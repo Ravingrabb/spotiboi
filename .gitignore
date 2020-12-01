@@ -6,7 +6,6 @@ __pycache__/
 logs.log
 database.db
 .vscode
-test.py
 migrations
 database_old.db
-db_worker.py
+misc/
