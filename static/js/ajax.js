@@ -14,9 +14,39 @@ async function updateTime() {
 
 setInterval(updateTime, 60000);
 
+function checkCheckbox(inputId) {
+    isChecked = document.getElementById(event.target.id).checked;
+    if (isChecked) {
+        $('#' + inputId).addClass('reveal')
+    }
+    if (!isChecked) {
+        $('#' + inputId).removeClass('reveal')
+    }
+}
+
 // tippy instances
 // название плейлиста -> обновить плейлист
+
+function tippyShowAndHide(inst, output){
+    inst.setProps({
+        content: output,
+        });
+    inst.show();
+    setTimeout(inst.hide, 3000);
+}
+
 const instance = tippy(document.querySelector('#testTippy'),{
+    trigger: 'manual',
+    arrow: false,
+    offset: [0, 10],
+    placement: 'right-end',
+    duration: [100, 200],
+    theme: "spotigreen",
+    animation: 'scale',
+    inertia: true,
+});
+
+const tippySettings = tippy(document.querySelector('#manualUpdateSettings'),{
     trigger: 'manual',
     arrow: false,
     offset: [0, 10],
@@ -43,14 +73,10 @@ tippy(document.querySelector('#dedupFixed'),{
 });
 
 
-function checkCheckbox(inputId) {
-    isChecked = document.getElementById(event.target.id).checked;
-    if (isChecked) {
-        $('#' + inputId).addClass('reveal')
-    }
-    if (!isChecked) {
-        $('#' + inputId).removeClass('reveal')
-    }
+function showAlert(modalQuery, output){
+    $(modalQuery).show()
+    $('#alertTextArea').text(output)
+    $(modalQuery).delay(3000).fadeOut("slow")
 }
 
 // settings AJAX
@@ -96,10 +122,8 @@ $('#updateSettingsButton').click(function () {
                 }
                 else {
                     $('#settingsModal').modal('hide')
-                    $('#settingsModal .alert-success').show()
-                    $('#settingsModal .alert-success .alertTextArea').text(data.response)
-                    $('#settingsModal .alert-success').delay(3000).fadeOut("slow")
-                    updateTime()
+                    setTimeout(tippyShowAndHide, 1000, tippySettings, data.response)
+                    setTimeout(updateTime, 2000)
                 }
             })
     }
@@ -117,11 +141,8 @@ $('#manualUpdate').click(function () {
         data: { update: true },
     })
         .done(function (data) {
-            instance.setProps({
-                content: data.response,
-                });
-            instance.show()
-            $('#updateSpinner').removeClass('busy')
+            tippyShowAndHide(instance, data.response);
+            $('#updateSpinner').removeClass('busy');
             $('#manualUpdate').prop('disabled', false);
         })
 });
@@ -154,9 +175,7 @@ function autoUpdateToggle() {
         data: { update: document.getElementById(event.target.id).checked },
     })
         .done(function (data) {
-            $('#successAlert').show()
-            $('#alertTextArea').text(data.response)
-            $('#successAlert').delay(5000).fadeOut("slow")
+            showAlert('#successAlert', data.response)
         })
 }
 
@@ -168,8 +187,6 @@ function autoUpdateToggle2() {
         data: { update: document.getElementById(event.target.id).checked },
     })
         .done(function (data) {
-            $('#successAlert').show()
-            $('#alertTextArea').text(data.response)
-            $('#successAlert').delay(5000).fadeOut("slow")
+            showAlert('#successAlert', data.response)
         })
 }

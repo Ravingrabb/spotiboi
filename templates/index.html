@@ -74,7 +74,7 @@
                                         aria-hidden="true"></span>
                                     {{_('Update')}}
                                 </button>
-                                <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary"
+                                <button type="button" id='manualUpdateSettings' class="btn btn-sm btn-outline-secondary"
                                     data-toggle="modal" data-target="#settingsModal">
                                     <svg width="21" height="21" viewBox="0 0 16 16" class="bi bi-gear"
                                         fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -110,7 +110,7 @@
             <!-- FAVORITE CARD -->
             <div class="col-lg-4 col-md-6 col-sm-6">
                 <div class="card mb-4 shadow-sm" style='height: 275px'>
-                    <div class="crop" style="z-index: 99;">
+                    <div class="crop" style="z-index: 30;">
                         <img src="static/img/listen.png" class='rounded float-left' width="200px"> 
                     </div>
 
@@ -324,13 +324,26 @@
     {{msg}}
 </div>
 {% endfor %}
-  
-<div id='successAlert' class="alert alert-success collapse" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-    <div id='alertTextArea'></div>
+<div  style="z-index:99; position: fixed; bottom: 0px; left: 0px; width: 100%">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+            </div>
+            <div class="col-12">
+                <div id='successAlert' class="alert alert-success collapse" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <div id='alertTextArea'></div>
+                </div>    
+            </div>
+            <div class="col">
+            </div>
+        </div>
+    </div>
 </div>
+
+    
 
 <script src="https://unpkg.com/@popperjs/core@2"></script>
 <script src="https://unpkg.com/tippy.js@6"></script>
