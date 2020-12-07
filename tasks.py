@@ -1,12 +1,15 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from flask import session
 from flask.globals import request
 import spotipy
 from sqlalchemy.orm import query
-from start_settings import HistoryPlaylist, db, User, HistoryPlaylist, FavoritePlaylist
+from start_settings import db, User, HistoryPlaylist, FavoritePlaylist, SmartPlaylist, UsedPlaylist
 from flask_babel import gettext
 import gc
+import random
+from sys import exc_info
+from traceback import extract_tb
 #for last
 import pylast
 from transliterate import detect_language
@@ -25,14 +28,17 @@ class UserSettings():
             db.session.add(User(spotify_id=self.user_id))
             db.session.add(HistoryPlaylist(user_id=self.user_id))
             db.session.add(FavoritePlaylist(user_id=self.user_id))
+            db.session.add(SmartPlaylist(user_id=self.user_id))
             db.session.commit()
 
         self.user_query = User.query.filter_by(spotify_id=self.user_id).first()
         self.history_query = HistoryPlaylist.query.filter_by(user_id=self.user_id).first()
         self.favorite_query = FavoritePlaylist.query.filter_by(user_id=self.user_id).first()
+        self.smart_query = SmartPlaylist.query.filter_by(user_id=self.user_id, max_tracks = 100).first()
             
         # Used only for HTML page. Template for settings, that will be changed in future. 
         self.settings = {
+            # history playlist
             'dedup_status': None,
             'dedup_value': 0,
             'fixed_status': None,
@@ -40,7 +46,13 @@ class UserSettings():
             'update_time': self.history_query.update_time,
             'lastfm_status': 0,
             'lastfm_value': self.user_query.lastfm_username,
-            'fav_playlist': False
+            # fav playlist
+            'fav_playlist': False,
+            # smart playlist
+            'max_tracks': self.smart_query.max_tracks,
+            'exclude_history': self.smart_query.exclude_history,
+            'exclude_favorite': self.smart_query.exclude_favorite,
+            'smart_update_time' : round(self.smart_query.update_time / 1440)
         }
      
     def settings_worker(self) -> None:
@@ -58,6 +70,12 @@ class UserSettings():
         if self.favorite_query.playlist_id:
             if self.spotify.playlist_is_following(self.favorite_query.playlist_id, [self.user_query.spotify_id])[0]:
                 self.settings['fav_playlist'] = True
+        
+        if self.settings['exclude_history']:
+            self.settings['exclude_history'] = 'checked'
+            
+        if self.settings['exclude_favorite']:
+            self.settings['exclude_favorite'] = 'checked'
 
 
     def time_worker(self) -> int:
@@ -78,52 +96,88 @@ class UserSettings():
     def new_history_query(self):
         return HistoryPlaylist.query.filter_by(user_id=self.user_id).first()
     
+    
+    def get_several_playlists_data(self, playlist_ids: list):
+        output = tuple(self.spotify.playlist(playlist.playlist_id, fields="name, images, external_urls, id") for playlist in playlist_ids)
+        return output
+    
+    
+    def get_user_playlists(self):
         
-    def attach_playlist(self):
-        """ Функция, необходимая только для отображения плейлиста юзера, данные
-        которого находятся в базе данных """
+            playlists = self.spotify.current_user_playlists()
+            
+            def get_image(image):
+                if image:
+                    return image[0]['url']
+                else:
+                    return None
+                
+            playlists_to_dict = [
+                {
+                'name': playlist['name'],
+                'id': playlist['id'],
+                'images': get_image(playlist['images']),
+                'url' : playlist['external_urls']['spotify'],
+                'owner' : playlist['owner']['display_name']
+                }
+                for playlist in playlists['items']]
+            
+            return playlists_to_dict
+
         
-        # создаётся заготовок пустого плейлиста
-        self.history_playlist_data = {
-            'name': None,
-            'id': None,
-            'images': None
-        }
+    def attach_playlist(self, query, scheduler):
+            """ Функция, необходимая только для отображения плейлиста юзера, данные
+            которого находятся в базе данных """
+            
+            # создаётся заготовок пустого плейлиста
+            self.playlist_data = {
+                'name': None,
+                'id': None,
+                'images': None
+            }
+            
+            # посмотреть все плейлисты юзера
+            try:
+                # сморим все плейлисты
+                self.playlists = self.spotify.current_user_playlists()
+                # если привязан ID плейлиста и юзер подписан на него, то выводим инфу
+                if query.playlist_id and self.spotify.playlist_is_following(query.playlist_id, [self.user_query.spotify_id])[0]:
+                    self.current_playlist = self.spotify.playlist(
+                        query.playlist_id, fields="name, id, images")
+                    self.playlist_data['name'] = self.current_playlist['name']
+                    self.playlist_data['id'] = self.current_playlist['id']
+                    self.playlist_data['images'] = self.current_playlist['images'][0]['url']
+                # если ID плейлиста привязан, но юзер не подписан на плейлист
+                elif query.playlist_id and not self.spotify.playlist_is_following(query.playlist_id, [self.user_query.spotify_id])[0]:
+                    query.playlist_id = None
+                    db.session.commit()
+                    # TODO: сделать в будущем защиту, чтобы все абсолютно отмены работы были функцией, как ниже
+                    if query.job_id in scheduler:
+                        scheduler.cancel(query.job_id)         
+            except Exception as e:
+                print(extract_tb(exc_info()[2])[0][1])
+                print(e)
+            finally:
+                return self.playlist_data    
+               
+               
+def restart_job_with_new_settings(query, scheduler, UserSettings):
+    if query.job_id in scheduler:
+        scheduler.cancel(query.job_id)
+        create_job(UserSettings, query, update_history, scheduler)
+            
+
+
+def decode_to_bool(text):
+    words = {'on', 'true'}
+    if text.lower() in words:
+        return True
+    else:
+        return False
         
-        # посмотреть все плейлисты юзера
-        try:
-            # сморим все плейлисты
-            self.playlists = self.spotify.current_user_playlists()
-            # если привязан ID плейлиста и юзер подписан на него, то выводим инфу
-            if self.history_query.playlist_id and self.spotify.playlist_is_following(self.history_query.playlist_id, [self.user_query.spotify_id])[0]:
-                self.current_playlist = self.spotify.playlist(
-                    self.history_query.playlist_id, fields="name, id, images")
-                self.history_playlist_data['name'] = self.current_playlist['name']
-                self.history_playlist_data['id'] = self.current_playlist['id']
-                self.history_playlist_data['images'] = self.current_playlist['images'][0]['url']
-            # если ID плейлиста привязан, но юзер не подписан на плейлист
-            elif self.history_query.playlist_id and not self.spotify.playlist_is_following(self.history_query.playlist_id, [self.user_query.spotify_id])[0]:
-                self.history_query.playlist_id = None
-                db.session.commit()
-            # если ID плейлиста не привязан, например если только что создали плейлист History через спотибой
-            elif not self.history_query.playlist_id:
-                for idx, item in enumerate(self.playlists['items']):
-                    if item['name'] == "History (fresh!)":
-                        self.history_playlist_data['name'] = "History"
-                        self.history_playlist_data['id'] = item['id']
-                        self.image_item = item['images']
-                    if self.image_item:
-                        self.history_playlist_data['images'] = self.image_item[0]['url']
-                self.history_query.playlist_id = self.history_playlist_data['id']
-                db.session.commit()
-                self.spotify.playlist_change_details(
-                    self.history_playlist_data['id'], name="History")
-        except Exception as e:
-            print(e)
-        finally:
-            return self.history_playlist_data
-        
-        
+def days_to_minutes(number_string):
+    return int(number_string) * 1440
+
 def create_job(UserSettings, playlist_query, func, scheduler, job_time=30) -> None:
     if playlist_query.update_time:
         job_time = int(playlist_query.update_time)
@@ -134,6 +188,7 @@ def create_job(UserSettings, playlist_query, func, scheduler, job_time=30) -> No
         playlist_query.job_id = job.id
         db.session.commit()
     except Exception as e:
+        print(extract_tb(exc_info()[2])[0][1])
         print(e)
             
 
@@ -164,9 +219,17 @@ def check_worker_status(UserSettings, playlist_query, func, scheduler) -> str:
             if playlist_query.job_id in scheduler:
                 scheduler.cancel(playlist_query.job_id)
         except Exception as e:
+            print(extract_tb(exc_info()[2])[0][1])
             print(e)
         return None
-        
+    
+    
+def get_items_by_key(array, search_key: str) -> str:
+    for item in array:
+        for key, value in item.items():
+            if key == search_key:
+                yield value
+    
     
 def update_history(user_id, UserSettings) -> str:
     """ Функция обновления истории """
@@ -181,14 +244,7 @@ def update_history(user_id, UserSettings) -> str:
             tracks_to_delete = [item['track']['uri'] for item in result['items']]
             spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)   
                      
-                        
-    def get_items(array, search_key: str) -> str:
-        for item in array:
-            for key, value in item.items():
-                if key == search_key:
-                    yield value
-        
-        
+                     
     spotify = UserSettings.spotify
     history_query = UserSettings.history_query
     history_id = history_query.playlist_id
@@ -197,10 +253,10 @@ def update_history(user_id, UserSettings) -> str:
     search_limit = 45
     
     # получаем историю прослушиваний (учитывая настройки )
-    history_playlist = get_current_history_list(UserSettings)
+    history_playlist = get_current_history_list(UserSettings, history_query.fixed_dedup)
     
     # если вернутся None из-за ошибки, то выдаём ошибку
-    if not history_playlist:
+    if history_playlist == None:
         return (gettext('Can\'t connect to Spotify server'))
     
     # вытаскиваются последние прослушанные песни
@@ -209,8 +265,8 @@ def update_history(user_id, UserSettings) -> str:
     #песни из recently сравниваются с историей
     recently_played_uris = [item['track']['uri'] 
                             for item in results['items'] 
-                            if item['track']['uri'] not in get_items(history_playlist, 'uri') 
-                            and item['track']['name'].lower() not in get_items(history_playlist, 'name') ]
+                            if item['track']['uri'] not in get_items_by_key(history_playlist, 'uri') 
+                            and item['track']['name'].lower() not in get_items_by_key(history_playlist, 'name') ]
 
  
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
@@ -221,7 +277,7 @@ def update_history(user_id, UserSettings) -> str:
                                         username=username)
             result = network.get_user(username).get_recent_tracks(limit=search_limit)
             
-            recently_played_names = { item['track']['name'].lower() for item in results['items'] if item['track']['uri'] not in get_items(history_playlist, 'uri') }
+            recently_played_names = { item['track']['name'].lower() for item in results['items'] if item['track']['uri'] not in get_items_by_key(history_playlist, 'uri') }
                 
             # достаём данные из lastfm
             data_with_duplicates = [
@@ -232,7 +288,7 @@ def update_history(user_id, UserSettings) -> str:
             # создаём оптимизированный список без дубликатов и без треков, которые уже, вероятно, есть в истории
             last_fm_data = []
             for song in data_with_duplicates:
-                if song not in last_fm_data and song['name'].lower() not in recently_played_names and song['name'].lower() not in get_items(history_playlist, 'name'):
+                if song not in last_fm_data and song['name'].lower() not in recently_played_names and song['name'].lower() not in get_items_by_key(history_playlist, 'name'):
                     last_fm_data.append(song)
 
             # переводим эти данные в uri спотифай (SPOTIFY API SEARCH)
@@ -250,7 +306,7 @@ def update_history(user_id, UserSettings) -> str:
                 
             # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
             for track in last_fm_data_to_uri:
-                if track['uri'] not in recently_played_uris and track['uri'] not in get_items(history_playlist, 'uri'):
+                if track['uri'] not in recently_played_uris and track['uri'] not in get_items_by_key(history_playlist, 'uri'):
                     recently_played_uris.insert(0, track['uri'])
                     
         except pylast.WSError:
@@ -270,11 +326,9 @@ def update_history(user_id, UserSettings) -> str:
             if history_query.fixed_capacity:
                 limit_playlist_size()
             
-            # print(spotify.current_user()['id'] + ": History updated in " + datetime.strftime(datetime.now(), "%H:%M:%S"))
             return (gettext('History updated'))
         # иначе пропускаем
         else:
-            # print(spotify.current_user()['id'] + ": List is empty. Nothing to update.")
             return (gettext('Nothing to update'))          
     except spotipy.SpotifyException:
         return ("Nothing to add for now")
@@ -287,23 +341,24 @@ def update_history(user_id, UserSettings) -> str:
 
 def convert_playlist(playlist_array) -> list:
     """ Перевод сырого JSON в формат, более удобный для программы """
-    
     output = [
         {'name': item['track']['name'].lower(),
         'uri': item['track']['uri'],
         'artist': item['track']['artists'][0]['name'].lower(),
-        'album': item['track']['album']['name'].lower()} 
-        for item in playlist_array['items']]
+        'album': item['track']['album']['name'].lower()}
+        for item in playlist_array['items']
+        if item['track']
+        ]
     return output
 
 
 def get_every_playlist_track(spotify, raw_results: list) -> list:
     """ Достать абсолютно все треки из плейлиста в обход limit """
-    
     tracks = convert_playlist(raw_results)
     while raw_results['next']:
         raw_results = spotify.next(raw_results)
         tracks.extend(convert_playlist(raw_results))
+
     return tracks
 
 
@@ -327,14 +382,13 @@ def get_limited_playlist_track(spotify, raw_results, limit) -> list:
     return tracks
  
         
-def get_current_history_list(UserSettings) -> tuple:
+def get_current_history_list(UserSettings, limit = None) -> tuple:
     """ Функция получения истории прослушиваний """
         
-    history_query = UserSettings.history_query
+    history_query = UserSettings.new_history_query()
     sp = UserSettings.spotify
     playlist_id = history_query.playlist_id
     
-    limit = history_query.fixed_dedup
     try:
         results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
                 
@@ -346,13 +400,8 @@ def get_current_history_list(UserSettings) -> tuple:
     
     except:
         print("Нет подключения к серверам Spotify. Переподключение через 5 минут")
-        time = datetime.now() + timedelta(minutes=5)
-        history_query.last_update = datetime.strftime(time, "%H:%M:%S")
-        db.session.commit()
         return None
     
-
-
 
 def fill_playlist(sp, playlist_id : str, uris_list : list, from_top = False) -> None:
     """ Заполнение плейлиста песнями из массива. Так как ограничение
@@ -366,6 +415,19 @@ def fill_playlist(sp, playlist_id : str, uris_list : list, from_top = False) -> 
             sp.playlist_add_items(playlist_id, uris_list[offset:offset+100])
         else:
             sp.playlist_add_items(playlist_id, uris_list[offset:offset+100], position=0)
+        offset += 100
+        
+def fill_playlist_with_replace(sp, user_id: str, playlist_id : str, uris_list : list) -> None:
+    """ Почти то же самое, что и fill playlist, только он заменяет песни, а не добавляет. Нужно для smart плейлиста""" 
+    offset = 0
+    once = True
+    while offset < len(uris_list):
+        # TODO: очищать плейлист и добавлять новые песни
+        if once:
+            sp.user_playlist_replace_tracks(user_id, playlist_id, uris_list[offset:offset+100])
+            once = False
+        else:
+            sp.playlist_add_items(playlist_id, uris_list[offset:offset+100])
         offset += 100
 
 
@@ -393,9 +455,7 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
         #удаляем не акутальные
         to_delete = [ uri for uri in fav_playlist_uris if uri not in new_track_uris]
         if to_delete:
-            sp.playlist_remove_all_occurrences_of_items(favorite_query.playlist_id, to_delete)
-                
-        
+            sp.playlist_remove_all_occurrences_of_items(favorite_query.playlist_id, to_delete)   
     # плейлист не добавлен
     else:
         sp.user_playlist_create(
@@ -414,3 +474,65 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
                 fill_playlist(sp, item['id'], track_uris)
                 break
         
+        
+def update_smart_playlist(user_id, UserSettings):
+    sp = UserSettings.spotify
+    used_playlists_ids = UsedPlaylist.query.filter_by(user_id=user_id).all()
+    smart_query = SmartPlaylist.query.filter_by(user_id=user_id).first()
+    playlist_size = smart_query.max_tracks
+    
+    check_by_names = True
+    
+    def fillup(excluded_list, key):  
+        if smart_query.exclude_history:
+            history_playlist = get_current_history_list(UserSettings)
+            hp = frozenset(item[key] for item in history_playlist)
+            excluded_list.update(hp)
+            
+        if smart_query.exclude_favorite:
+            favorite_playlist = get_every_playlist_track(sp, sp.current_user_saved_tracks(limit=20))
+            fp = frozenset(item[key] for item in favorite_playlist)
+            excluded_list.update(fp)
+            
+    def appender(results, excluded_list, key):
+        for item in results:
+            if item[key] not in excluded_list:
+                all_uris.append(item['uri'])              
+    try:
+        # существует ли smart в базе данных
+        if smart_query.playlist_id:
+            
+            # если включена проверка имён - создаём ещё один список с ними
+            excluded_list = set()
+            check_key = 'uri'
+            
+            if check_by_names:
+                fillup(excluded_list, 'name')
+                check_key = 'name'
+            else:
+                fillup(excluded_list, 'uri')
+                check_key = 'uri'
+                
+            # собираем все треки из приклеплённых плейлистов в used playlists
+            all_uris = []
+            for id in used_playlists_ids:
+                raw_results = sp.playlist_tracks(id.playlist_id, fields="items(track(name, uri, artists, album)), next")
+                results = get_every_playlist_track(sp, raw_results)
+                appender(results, excluded_list, check_key)
+
+            # перемешиваем
+            random.shuffle(all_uris)
+            
+            #обрезка плейлиста, если кол-во песен из all_uris меньше, чем требуемое
+            if playlist_size > len(all_uris):
+                playlist_size = len(all_uris)
+            
+            output_tracks = tuple(all_uris[i] for i in range(playlist_size))
+            fill_playlist_with_replace(sp, user_id, smart_query.playlist_id, output_tracks)
+            return 'OK!'
+        else:
+            return 'You unfollowed this playlist. Please, refresh your page'
+    except Exception as e:
+        print(e)
+    finally:
+        gc.collect()

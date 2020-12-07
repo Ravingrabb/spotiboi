@@ -66,10 +66,9 @@
 .card .crop {
     max-width: 80%;
     position: absolute;
-    right: -48px !important;
+    right: -26px !important;
     top: 128px;
     height: 145px;
-    width: 200px;
     overflow: hidden;
 }
 
@@ -87,3 +86,39 @@
     fill: white
 }
 
+.toBeAdded {
+    border: 1px solid #c5c5c5;
+    padding: 10px;
+    border-radius: 20px;
+}
+
+.trashBucket {
+    background: white;
+    top: -7px;
+    right: 9px;
+    position: absolute;
+    cursor: pointer;
+}
+
+.selected-playlist {
+    top: -15px;
+    right: -1px;
+    position: absolute;
+    font-size: 20px;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.bottom-border {
+    padding-bottom: 5px;
+    padding-top: 15px;
+    border-bottom: 1px solid #dee2e6!important;
+}
+
+.playlist-title {
+    line-height: 1.2;
+    text-align: center;
+    padding-top: 2px;
+}

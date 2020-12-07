@@ -157,6 +157,9 @@ $('#manualUpdate2').click(function () {
         data: { update: true },
     })
         .done(function (data) {
+            if ( $('#manualUpdate2').text().replace(/\s/g, '') == "Создать" || $('#manualUpdate2').text().replace(/\s/g, '') == "Create new" ) {
+                location.reload()
+            }
             $('#successAlert').show()
             $('#alertTextArea').text(data.response)
             $('#successAlert').delay(5000).fadeOut("slow")
@@ -165,10 +168,27 @@ $('#manualUpdate2').click(function () {
         })
 });
 
+// create smart AJAX
+$('#manualUpdate3').click(function () {
+    $('#updateSpinner3').addClass('busy');
+    $('#manualUpdate3').prop('disabled', true);
+    $.ajax({
+        type: "POST",
+        url: "/make_smart",
+        data: { update: true },
+    })
+        .done(function (data) {
+            $('#successAlert').show()
+            $('#alertTextArea').text(data.response)
+            $('#successAlert').delay(5000).fadeOut("slow")
+            $('#updateSpinner3').removeClass('busy')
+            $('#manualUpdate3').prop('disabled', false);
+        })
+});
+
 // TODO: сделать общий интерфейс для объектов
 // Auto-update
 function autoUpdateToggle() {
-    console.log(document.getElementById(event.target.id).checked)
     $.ajax({
         type: "POST",
         url: "/auto_update",
@@ -184,6 +204,18 @@ function autoUpdateToggle2() {
     $.ajax({
         type: "POST",
         url: "/auto_update_favorite",
+        data: { update: document.getElementById(event.target.id).checked },
+    })
+        .done(function (data) {
+            showAlert('#successAlert', data.response)
+        })
+}
+// 
+function autoUpdateToggle3() {
+    console.log(document.getElementById(event.target.id).checked)
+    $.ajax({
+        type: "POST",
+        url: "/auto_update_smart",
         data: { update: document.getElementById(event.target.id).checked },
     })
         .done(function (data) {

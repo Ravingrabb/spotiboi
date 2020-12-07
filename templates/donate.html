@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+<h3>{{_('Support project')}} </h3>
+
+<p> {{_('I have always dreamed of making money on what I create. At the same time, 
+    I respect free software, so your best option in this case would be your voluntary support.')}} </p>
+<p>{{_('The main funds will go to pay for the server and the annual payment for domains. 
+    The rest will keep me motivated to continue working on the project :) The development of the project directly depends on this.')}} </p>
+<p>{{_('You can become a subscriber and support me every month, or make a one-time donation by clicking on the button below')}} </p>  
+
+<p>Подписаться:</p>
+<a class="btn btn-warning mb-2" href="https://boosty.to/spotiboi" role="button">Поддержать на Boosty.to</a>
+<p>Поблагодарить:</p>
+<iframe src="https://yoomoney.ru/quickpay/button-widget?targets=SpotiBoi%20Support&default-sum=100&button-text=14&yoomoney-payment-type=on&button-size=m&button-color=orange&successURL=https%3A%2F%2Fspotiboi.ru&quickpay=small&account=41001390591459&" width="250" height="36" frameborder="0" allowtransparency="true" scrolling="no"></iframe>
+<p> Подписаться или побладогарить с помощью PayPal:</p>
+<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="Spotiboi" data-color="#1e7e34" data-emoji="💪"  data-font="Poppins" data-text="Support SpotiBoi" data-outline-color="#ffffff" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
+<p>{{_('Thanks a lot in advance! ')}} </p>
+
+{% endblock body %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{_('- Create a playlist')}}
+{% endblock title %}
+
+{% block body %}
+
+    <h2>{{_('Create a new smart playlist')}}</h2>
+    
+    {% include 'playlist_template.html' %}
+
+    <div class="mt-5">
+        <button id="submitButton" onclick='createPlaylist()' type="button" class="btn btn-success btn-lg mb-3">
+        <span id="createSpinner" class="spinner-border spinner-border-sm" style="display: none;" role="status" aria-hidden="true"></span>
+        {{_('Create playlist')}}</button>
+        
+    </div>
+
+    <script>
+        function createPlaylist() {
+            $('#createSpinner').addClass('busy');
+            $('#submitButton').prop('disabled', true);
+            urls = $('.urlInput')
+            arr = []
+            for (let i = 0; i < urls.length; i++) { 
+                url = $(urls[i]).children().val()
+                if (url){
+                    arr.push(url)
+                }
+              }
+            output = arr.join(';')
+            $.ajax({
+                type: "POST",
+                url: "/playlist_worker",
+                data: { urlArray : output },
+            })
+            .done(function (data) {
+                document.location.href = '/'
+            })
+        }
+    </script>
+{% endblock body %}
+
