@@ -99,6 +99,7 @@ class UserSettings():
     
     
     def get_several_playlists_data(self, playlist_ids: list):
+        ''' Возвращает сырые данные плейлиста '''
         output = tuple(self.spotify.playlist(playlist.playlist_id, fields="name, images, external_urls, id") for playlist in playlist_ids)
         return output
     
@@ -347,6 +348,10 @@ def update_history(user_id, UserSettings) -> str:
         db.session.commit()
         gc.collect()
 
+def get_playlist_raw_tracks(sp, playlist_id):
+    return sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
+    
+
 
 def convert_playlist(playlist_array) -> list:
     """ Перевод сырого JSON в формат, более удобный для программы """
@@ -362,23 +367,21 @@ def convert_playlist(playlist_array) -> list:
 
 
 def get_every_playlist_track(spotify, raw_results: list) -> list:
-    """ Достать абсолютно все треки из плейлиста в обход limit """
+    """ Достать абсолютно все треки из плейлиста в обход limit c конвертацией в удобную форму для доступа.
+    Лимит есть абсолютно у всех плейлистов """
     tracks = convert_playlist(raw_results)
     while raw_results['next']:
         raw_results = spotify.next(raw_results)
         tracks.extend(convert_playlist(raw_results))
-
     return tracks
 
 
 def get_limited_playlist_track(spotify, raw_results, limit) -> list:
-    
     def is_reached_limit(array, limit) -> bool:
             if len(array) >= limit:
                 return True
             else:
                 return False
-            
     tracks = convert_playlist(raw_results)
     
     while raw_results['next'] and not is_reached_limit(tracks, limit):
@@ -486,11 +489,13 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
         
 def update_smart_playlist(user_id, UserSettings):
     sp = UserSettings.spotify
-    used_playlists_ids = UsedPlaylist.query.filter_by(user_id=user_id).all()
+    used_playlists_ids = UsedPlaylist.query.filter_by(user_id=user_id, exclude = False, exclude_artists = False).all()
+    excluded_artists_playlists = UsedPlaylist.query.filter_by(user_id=user_id, exclude_artists = True).all()
     smart_query = SmartPlaylist.query.filter_by(user_id=user_id).first()
     playlist_size = smart_query.max_tracks
     
     check_by_names = True
+    
     
     def fillup(excluded_list, key):  
         if smart_query.exclude_history:
@@ -505,16 +510,19 @@ def update_smart_playlist(user_id, UserSettings):
             
     def appender(results, excluded_list, key):
         for item in results:
-            if item[key] not in excluded_list:
-                all_uris.append(item['uri'])              
+            if not excluded_artists_playlists:
+                if item[key] not in excluded_list:
+                    all_uris.append(item['uri'])
+            else:
+                if item[key] not in excluded_list and item['artist'] not in excluded_artists:
+                    all_uris.append(item['uri'])
+                            
     try:
         # существует ли smart в базе данных
         if smart_query.playlist_id:
-            
-            # если включена проверка имён - создаём ещё один список с ними
             excluded_list = set()
             check_key = 'uri'
-            
+            # лист заполняется в зависимости от выбранного типа проверки 
             if check_by_names:
                 fillup(excluded_list, 'name')
                 check_key = 'name'
@@ -522,10 +530,18 @@ def update_smart_playlist(user_id, UserSettings):
                 fillup(excluded_list, 'uri')
                 check_key = 'uri'
                 
+            if excluded_artists_playlists:
+                excluded_artists = set()
+                for playlist in excluded_artists_playlists:
+                    raw_results = get_playlist_raw_tracks(sp, playlist.playlist_id)
+                    results = get_every_playlist_track(sp, raw_results)
+                    output = frozenset(item['artist'] for item in results)
+                    excluded_artists.update(output)
+            
             # собираем все треки из приклеплённых плейлистов в used playlists
             all_uris = []
-            for id in used_playlists_ids:
-                raw_results = sp.playlist_tracks(id.playlist_id, fields="items(track(name, uri, artists, album)), next")
+            for playlist in used_playlists_ids:
+                raw_results = sp.playlist_tracks(playlist.playlist_id, fields="items(track(name, uri, artists, album)), next")
                 results = get_every_playlist_track(sp, raw_results)
                 appender(results, excluded_list, check_key)
 

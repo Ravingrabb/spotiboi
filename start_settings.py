@@ -75,6 +75,8 @@ class UsedPlaylist(db.Model):
     attached_playlist_id = db.Column(db.String(80), db.ForeignKey('smart_playlist.id'))
     playlist_id = db.Column(db.String(80))
     user_id = db.Column(db.String(80), db.ForeignKey('user.spotify_id'))
+    exclude = db.Column(db.Boolean, default=False)
+    exclude_artists = db.Column(db.Boolean, default=False)
     
     def __repr__(self):
             return '<UsedPlaylist %r>' % self.playlist_id

@@ -110,7 +110,7 @@ def index():
                     name = 'History', 
                     description = 'Listening history. Created by SpotiBoi'
                     )
-                UserSettings.history_query = data['id']
+                UserSettings.history_query.playlist_id = data['id']
                 db.session.commit()
 
         # TODO: проверить и перенести на отдельную страницу
@@ -183,6 +183,11 @@ def test2():
     test = [1,2,3]
     test.pop(3)
     return render_template('test.html')
+
+@app.route('/debug')
+@auth
+def debug(UserSettings):
+    return UserSettings.user_id
         
 @app.route('/donate')
 def donate():
@@ -302,8 +307,8 @@ def smart_settings(UserSettings):
             db.session.commit()
             return redirect('/')
     
-        # сбор уже прикреплённых плейлистов    
-        pl_ids = UsedPlaylist.query.filter_by(user_id = UserSettings.user_id).all()
+        # сбор уже прикреплённых плейлистов на добавление  
+        pl_ids = UsedPlaylist.query.filter_by(user_id = UserSettings.user_id, exclude = False, exclude_artists = False).all()
         playlist_data = UserSettings.get_several_playlists_data(pl_ids)
         
         # сбор инфы об оставшихся, не прикреплённых плейлистах
