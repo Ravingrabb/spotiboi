@@ -308,13 +308,10 @@
                 <form action="/" method="post">
                     <div class="form-group">
                         <label for="uriInput">
-                            {{_('Playlist URI')}}
+                            {{_('Playlist URL or URI')}}
                         </label>
                         <input name='uriInput' type="text" class="form-control" id="uriInput" aria-describedby="uri"
-                            placeholder="URI">
-                        <small id="uriHelp" class="form-text text-muted">
-                            {{_('If you can\'t find URI, right-click on your playlist -> Share -> Copy Spotify URI. Do not confuse with URL!')}}
-                        </small>
+                            placeholder="URL or URI">
                     </div>
                     <input type="submit" class="btn btn-primary" value="{{_('Attach')}}">
                 </form>

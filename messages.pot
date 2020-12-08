@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-12-07 17:33+0500\n"
+"POT-Creation-Date: 2020-12-08 19:08+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,31 +17,39 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: app.py:109
+#: app.py:96
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:294 app.py:443 app.py:462 app.py:482 app.py:502
+#: app.py:135 app.py:401 app.py:420 app.py:440 app.py:460
 msgid "Success!"
 msgstr ""
 
-#: app.py:415
+#: app.py:137
+msgid "You are not playlist creator or you are not following it"
+msgstr ""
+
+#: app.py:139
+msgid "Wrong URI"
+msgstr ""
+
+#: app.py:373
 msgid "Error! Can't find that last.fm user"
 msgstr ""
 
-#: app.py:445 app.py:464 app.py:484 app.py:504 app.py:513
+#: app.py:403 app.py:422 app.py:442 app.py:462 app.py:471
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:260
+#: tasks.py:270
 msgid "Can't connect to Spotify server"
 msgstr ""
 
-#: tasks.py:329
+#: tasks.py:339
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:332
+#: tasks.py:342
 msgid "Nothing to update"
 msgstr ""
 
@@ -83,11 +91,7 @@ msgid ""
 "time donation by clicking on the button below"
 msgstr ""
 
-#: templates/donate.html:13
-msgid "Or make a donation here :)"
-msgstr ""
-
-#: templates/donate.html:16
+#: templates/donate.html:19
 msgid "Thanks a lot in advance! "
 msgstr ""
 
@@ -176,7 +180,7 @@ msgid "sign out"
 msgstr ""
 
 #: templates/index.html:35 templates/index.html:122
-#: templates/smart_settings.html:105
+#: templates/smart_settings.html:109
 msgid "Detach playlist"
 msgstr ""
 
@@ -249,80 +253,74 @@ msgid "Are you sure you want to detach the playlist?"
 msgstr ""
 
 #: templates/index.html:265 templates/index.html:289
-#: templates/smart_settings.html:115
+#: templates/smart_settings.html:119
 msgid "Yes"
 msgstr ""
 
 #: templates/index.html:267 templates/index.html:291
-#: templates/smart_settings.html:114
+#: templates/smart_settings.html:118
 msgid "No"
 msgstr ""
 
 #: templates/index.html:311
-msgid "Playlist URI"
+msgid "Playlist URL or URI"
 msgstr ""
 
 #: templates/index.html:316
-msgid ""
-"If you can't find URI, right-click on your playlist -> Share -> Copy "
-"Spotify URI. Do not confuse with URL!"
-msgstr ""
-
-#: templates/index.html:319
 msgid "Attach"
 msgstr ""
 
-#: templates/index.html:331 templates/smart_settings.html:3
+#: templates/index.html:328 templates/smart_settings.html:3
 msgid "Settings"
 msgstr ""
 
-#: templates/index.html:343
+#: templates/index.html:340
 msgid "Fixed de-duplicate"
 msgstr ""
 
-#: templates/index.html:356
+#: templates/index.html:353
 msgid "Value must be 200 or more tracks"
 msgstr ""
 
-#: templates/index.html:365
+#: templates/index.html:362
 msgid "Fixed playlist"
 msgstr ""
 
-#: templates/index.html:379
+#: templates/index.html:376
 msgid "Must be 100 or more tracks"
 msgstr ""
 
-#: templates/index.html:384
+#: templates/index.html:381
 msgid "Auto-update time"
 msgstr ""
 
-#: templates/index.html:388
+#: templates/index.html:385
 msgid "In minutes (10 or more)"
 msgstr ""
 
-#: templates/index.html:394
+#: templates/index.html:391
 msgid "Integration with Last.fm"
 msgstr ""
 
-#: templates/index.html:404
+#: templates/index.html:401
 msgid "Attention! When integration is enabled, the update will take much longer."
 msgstr ""
 
-#: templates/index.html:407
+#: templates/index.html:404
 msgid "Save"
 msgstr ""
 
-#: templates/index.html:423
+#: templates/index.html:420
 msgid "Support project:"
 msgstr ""
 
-#: templates/index.html:473
+#: templates/index.html:453
 msgid ""
 "When enabled, Spotiboi will check duplicates of the last N tracks of your"
 " History Playlist. This is necessary to speed up the update function"
 msgstr ""
 
-#: templates/index.html:475
+#: templates/index.html:455
 msgid ""
 "When enabled, limits the size of your playlist to the number of tracks "
 "specified in the setting. New tracks will be added, old ones removed."
@@ -352,51 +350,51 @@ msgstr ""
 msgid "Attached playlists"
 msgstr ""
 
-#: templates/smart_settings.html:43
+#: templates/smart_settings.html:49
 msgid "You don't have attached playlists"
 msgstr ""
 
-#: templates/smart_settings.html:47
+#: templates/smart_settings.html:53
 msgid "Add playlists"
 msgstr ""
 
-#: templates/smart_settings.html:51
+#: templates/smart_settings.html:57
 msgid "Add"
 msgstr ""
 
-#: templates/smart_settings.html:56
+#: templates/smart_settings.html:62
 msgid "Playlist settings"
 msgstr ""
 
-#: templates/smart_settings.html:61
+#: templates/smart_settings.html:67
 msgid "Maximum tracks in playlist"
 msgstr ""
 
-#: templates/smart_settings.html:66
+#: templates/smart_settings.html:72
 msgid "Update time"
 msgstr ""
 
-#: templates/smart_settings.html:68
+#: templates/smart_settings.html:74
 msgid "In days"
 msgstr ""
 
-#: templates/smart_settings.html:76
+#: templates/smart_settings.html:80
 msgid "Exclude History"
 msgstr ""
 
-#: templates/smart_settings.html:78 templates/smart_settings.html:89
+#: templates/smart_settings.html:82 templates/smart_settings.html:93
 msgid "This setting slows down the update of the playlist"
 msgstr ""
 
-#: templates/smart_settings.html:87
+#: templates/smart_settings.html:91
 msgid "Exclude Favorite Tracks"
 msgstr ""
 
-#: templates/smart_settings.html:92
+#: templates/smart_settings.html:96
 msgid "Save settings"
 msgstr ""
 
-#: templates/smart_settings.html:111
+#: templates/smart_settings.html:115
 msgid "Are you sure you want to unpin the playlist from your smart playlist?"
 msgstr ""
 

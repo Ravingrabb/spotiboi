@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-12-07 17:33+0500\n"
+"POT-Creation-Date: 2020-12-08 19:08+0500\n"
 "PO-Revision-Date: 2020-09-30 22:31+0500\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
@@ -19,31 +19,39 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: app.py:109
+#: app.py:96
 msgid "Recently played tracks"
 msgstr "История"
 
-#: app.py:294 app.py:443 app.py:462 app.py:482 app.py:502
+#: app.py:135 app.py:401 app.py:420 app.py:440 app.py:460
 msgid "Success!"
 msgstr "Успешно!"
 
-#: app.py:415
+#: app.py:137
+msgid "You are not playlist creator or you are not following it"
+msgstr "Вы не подписаны на плейлист, либо не являетесь его создателем. Создайте свой собственный плейлист и попробуйте снова"
+
+#: app.py:139
+msgid "Wrong URI"
+msgstr "Неправильная ссылка на плейлист"
+
+#: app.py:373
 msgid "Error! Can't find that last.fm user"
 msgstr "Ошибка! Не могу найти такого юзера в last.fm"
 
-#: app.py:445 app.py:464 app.py:484 app.py:504 app.py:513
+#: app.py:403 app.py:422 app.py:442 app.py:462 app.py:471
 msgid "bruh"
 msgstr "Произошла какая-то ошибка... 🤔"
 
-#: tasks.py:260
+#: tasks.py:270
 msgid "Can't connect to Spotify server"
 msgstr "Не могу подключиться к Spotify"
 
-#: tasks.py:329
+#: tasks.py:339
 msgid "History updated"
 msgstr "История обновлена"
 
-#: tasks.py:332
+#: tasks.py:342
 msgid "Nothing to update"
 msgstr "Нечего добавлять"
 
@@ -91,15 +99,11 @@ msgid ""
 "You can become a subscriber and support me every month, or make a one-"
 "time donation by clicking on the button below"
 msgstr ""
-"Вы можете поддержать проект двумя путями: стать подписчиком и поддерживать "
-"каждый месяц в автоматическом режиме, либо поддержать единожды, "
-"нажав по кнопке ниже и перейдя на страницу доната."
+"Вы можете поддержать проект двумя путями: стать подписчиком и "
+"поддерживать каждый месяц в автоматическом режиме, либо поддержать "
+"единожды, нажав по кнопке ниже и перейдя на страницу доната."
 
-#: templates/donate.html:13
-msgid "Or make a donation here :)"
-msgstr "Либо, вы можете сделать пожертвование здесь :)"
-
-#: templates/donate.html:16
+#: templates/donate.html:19
 msgid "Thanks a lot in advance! "
 msgstr "Заранее больше спасибо!"
 
@@ -211,7 +215,7 @@ msgid "sign out"
 msgstr "выйти"
 
 #: templates/index.html:35 templates/index.html:122
-#: templates/smart_settings.html:105
+#: templates/smart_settings.html:109
 msgid "Detach playlist"
 msgstr "Открепить плейлист"
 
@@ -284,78 +288,70 @@ msgid "Are you sure you want to detach the playlist?"
 msgstr "Вы уверены, что хотите открепить плейлист?"
 
 #: templates/index.html:265 templates/index.html:289
-#: templates/smart_settings.html:115
+#: templates/smart_settings.html:119
 msgid "Yes"
 msgstr "Да"
 
 #: templates/index.html:267 templates/index.html:291
-#: templates/smart_settings.html:114
+#: templates/smart_settings.html:118
 msgid "No"
 msgstr "Нет"
 
 #: templates/index.html:311
-msgid "Playlist URI"
-msgstr "URI плейлиста"
+msgid "Playlist URL or URI"
+msgstr "Ссылка на плейлист"
 
 #: templates/index.html:316
-msgid ""
-"If you can't find URI, right-click on your playlist -> Share -> Copy "
-"Spotify URI. Do not confuse with URL!"
-msgstr ""
-"Если вы не можете найти URI, с ПК версии нажмите правой кнопкой мыши по "
-"плейлисту -> Поделиться -> Копировать Spotify URI.. Не перепутайте с URL!"
-
-#: templates/index.html:319
 msgid "Attach"
 msgstr "Прикрепить"
 
-#: templates/index.html:331 templates/smart_settings.html:3
+#: templates/index.html:328 templates/smart_settings.html:3
 msgid "Settings"
 msgstr "Настройки"
 
-#: templates/index.html:343
+#: templates/index.html:340
 msgid "Fixed de-duplicate"
 msgstr "Проверять на дубли последние N треков"
 
-#: templates/index.html:356
+#: templates/index.html:353
 msgid "Value must be 200 or more tracks"
 msgstr "Значение должно быть 200 или более треков"
 
-#: templates/index.html:365
+#: templates/index.html:362
 msgid "Fixed playlist"
 msgstr "Фиксированный плейлист"
 
-#: templates/index.html:379
+#: templates/index.html:376
 msgid "Must be 100 or more tracks"
 msgstr "Укажите 100 или более треков"
 
-#: templates/index.html:384
+#: templates/index.html:381
 msgid "Auto-update time"
 msgstr "Время автоматического обновления"
 
-#: templates/index.html:388
+#: templates/index.html:385
 msgid "In minutes (10 or more)"
 msgstr "В минутах (10 или более)"
 
-#: templates/index.html:394
+#: templates/index.html:391
 msgid "Integration with Last.fm"
 msgstr "Интеграция с last.fm"
 
-#: templates/index.html:404
+#: templates/index.html:401
 msgid "Attention! When integration is enabled, the update will take much longer."
 msgstr ""
 "Внимание! Когда интеграция включена, обновление будет занимать намного "
 "больше времени."
 
-#: templates/index.html:407
+#: templates/index.html:404
 msgid "Save"
 msgstr "Сохранить"
 
-#: templates/index.html:423
+#: templates/index.html:420
 msgid "Support project:"
-msgstr ""
+msgstr "Поддержать проект:"
 
-#: templates/index.html:473
+#: templates/index.html:453
 msgid ""
 "When enabled, Spotiboi will check duplicates of the last N tracks of your"
 " History Playlist. This is necessary to speed up the update function"
@@ -368,7 +364,7 @@ msgstr ""
 "запросы будут обрабатываться дольше, так что отключать не рекомендуется "
 ":)"
 
-#: templates/index.html:475
+#: templates/index.html:455
 msgid ""
 "When enabled, limits the size of your playlist to the number of tracks "
 "specified in the setting. New tracks will be added, old ones removed."
@@ -401,51 +397,51 @@ msgstr "Будут добавлены:"
 msgid "Attached playlists"
 msgstr "Прикреплённые плейлисты"
 
-#: templates/smart_settings.html:43
+#: templates/smart_settings.html:49
 msgid "You don't have attached playlists"
 msgstr "У вас нет прикреплённых плейлистов"
 
-#: templates/smart_settings.html:47
+#: templates/smart_settings.html:53
 msgid "Add playlists"
 msgstr "Добавить плейлисты"
 
-#: templates/smart_settings.html:51
+#: templates/smart_settings.html:57
 msgid "Add"
 msgstr "Добавить"
 
-#: templates/smart_settings.html:56
+#: templates/smart_settings.html:62
 msgid "Playlist settings"
 msgstr "Настройки плейлиста"
 
-#: templates/smart_settings.html:61
+#: templates/smart_settings.html:67
 msgid "Maximum tracks in playlist"
 msgstr "Максимальное количество треков в плейлисте"
 
-#: templates/smart_settings.html:66
+#: templates/smart_settings.html:72
 msgid "Update time"
 msgstr "Время обновления"
 
-#: templates/smart_settings.html:68
+#: templates/smart_settings.html:74
 msgid "In days"
 msgstr "В днях"
 
-#: templates/smart_settings.html:76
+#: templates/smart_settings.html:80
 msgid "Exclude History"
 msgstr "Исключать историю прослушивания"
 
-#: templates/smart_settings.html:78 templates/smart_settings.html:89
+#: templates/smart_settings.html:82 templates/smart_settings.html:93
 msgid "This setting slows down the update of the playlist"
 msgstr "Эта настройка замедляет обновление плейлиста"
 
-#: templates/smart_settings.html:87
+#: templates/smart_settings.html:91
 msgid "Exclude Favorite Tracks"
 msgstr "Исключать любимые треки"
 
-#: templates/smart_settings.html:92
+#: templates/smart_settings.html:96
 msgid "Save settings"
 msgstr "Сохранить настройки"
 
-#: templates/smart_settings.html:111
+#: templates/smart_settings.html:115
 msgid "Are you sure you want to unpin the playlist from your smart playlist?"
 msgstr "Вы уверены, что хотите открепить плейлист?"
 
@@ -475,4 +471,22 @@ msgstr "Войти с помощью Spotify"
 
 #~ msgid "Create"
 #~ msgstr "Создать"
+
+#~ msgid "Or make a donation here :)"
+#~ msgstr "Либо, вы можете сделать пожертвование здесь :)"
+
+#~ msgid "Playlist URI"
+#~ msgstr "URI плейлиста"
+
+#~ msgid ""
+#~ "If you can't find URI, right-click"
+#~ " on your playlist -> Share -> "
+#~ "Copy Spotify URI. Do not confuse "
+#~ "with URL!"
+#~ msgstr ""
+#~ "Если вы не можете найти URI, с "
+#~ "ПК версии нажмите правой кнопкой мыши"
+#~ " по плейлисту -> Поделиться -> "
+#~ "Копировать Spotify URI.. Не перепутайте "
+#~ "с URL!"
 

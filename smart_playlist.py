@@ -5,6 +5,9 @@ import os, random, base64
 def url_to_plid(url: str) -> str:
     ''' Перевод URL в ID'''
     
+    if ' ' in url:
+            url = url.replace(' ', '')
+            
     if 'https://open.spotify.com/playlist/' in url:
         t = url.replace('https://open.spotify.com/playlist/', '')
         output = t

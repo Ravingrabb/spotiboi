@@ -103,6 +103,7 @@ def index():
 
     # POST запросы
     if request.method == "POST":
+        
         if 'create_playlist' in request.form:
             if not UserSettings.history_query.playlist_id:
                 data = spotify.user_playlist_create(
@@ -120,24 +121,22 @@ def index():
             history_query.update = False
             db.session.commit()
 
+        # проверка и прикрепление плейлиста истории
         if 'uriInput' in request.form:
             history_query = UserSettings.history_query
             user_query = UserSettings.user_query
-            data = request.form.get('uriInput')
-            # если рандом текст какой-то
-            if "spotify:playlist:" not in data:
-                flash('Wrong URI', category='alert-danger')
-            else:
-                data = data.replace('spotify:playlist:', '')
-                if ' ' in data:
-                    data = data.replace(' ', '')
-                if spotify.playlist_is_following(data, [user_query.spotify_id])[0]:
+            data = smart_playlist.is_exist(request.form.get('uriInput'), UserSettings)
+            if data:
+                playlist_owner_uri = UserSettings.spotify.playlist(data)['owner']['uri']
+                current_user_uri = UserSettings.spotify.me()['uri']
+                if spotify.playlist_is_following(data, [user_query.spotify_id])[0] and playlist_owner_uri == current_user_uri:
                     history_query.playlist_id = data
                     db.session.commit()
-                    flash('Success!', category='alert-success')
+                    flash(gettext('Success!'), category='alert-success')
                 else:
-                    flash(
-                        'You are not playlist creator or you are not following it', category='alert-danger')
+                    flash(gettext('You are not playlist creator or you are not following it'), category='alert-danger')
+            else:
+                 flash(gettext('Wrong URI'), category='alert-danger')
 
     # поиск плейлиста
     history_playlist_data = UserSettings.attach_playlist(UserSettings.history_query, scheduler_h)
@@ -187,6 +186,8 @@ def test2():
 @app.route('/debug')
 @auth
 def debug(UserSettings):
+    print(UserSettings.spotify.playlist('1pG9gkXUF1dsFK7jUOXBn3')['owner']['uri'])
+    print(UserSettings.spotify.me()['uri'])
     return UserSettings.user_id
         
 @app.route('/donate')
