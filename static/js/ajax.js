@@ -14,6 +14,18 @@ async function updateTime() {
 
 setInterval(updateTime, 60000);
 
+function toogleButtonSpinner(buttonSelector){
+    if ($(buttonSelector).children().hasClass("busy")){
+        $(buttonSelector).children().removeClass('busy');
+        $(buttonSelector).prop('disabled', false);
+    }
+    else {
+        $(buttonSelector).children().addClass('busy');
+        $(buttonSelector).prop('disabled', true);
+    }
+}
+
+
 function checkCheckbox(inputId) {
     isChecked = document.getElementById(event.target.id).checked;
     if (isChecked) {
@@ -73,10 +85,10 @@ tippy(document.querySelector('#dedupFixed'),{
 });
 
 
-function showAlert(modalQuery, output){
-    $(modalQuery).show()
-    $('#alertTextArea').text(output)
-    $(modalQuery).delay(3000).fadeOut("slow")
+function showAlert(alertID, output, delay=3000){
+    $(alertID).show()
+    $(alertID).find('#alertTextArea').text(output)
+    $(alertID).delay(delay).fadeOut("slow")
 }
 
 // settings AJAX

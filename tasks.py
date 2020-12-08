@@ -10,6 +10,7 @@ import gc
 import random
 from sys import exc_info
 from traceback import extract_tb
+from start_settings import app
 #for last
 import pylast
 from transliterate import detect_language
@@ -28,13 +29,13 @@ class UserSettings():
             db.session.add(User(spotify_id=self.user_id))
             db.session.add(HistoryPlaylist(user_id=self.user_id))
             db.session.add(FavoritePlaylist(user_id=self.user_id))
-            db.session.add(SmartPlaylist(user_id=self.user_id))
+            db.session.add(SmartPlaylist(user_id=self.user_id, max_tracks = 100))
             db.session.commit()
 
         self.user_query = User.query.filter_by(spotify_id=self.user_id).first()
         self.history_query = HistoryPlaylist.query.filter_by(user_id=self.user_id).first()
         self.favorite_query = FavoritePlaylist.query.filter_by(user_id=self.user_id).first()
-        self.smart_query = SmartPlaylist.query.filter_by(user_id=self.user_id, max_tracks = 100).first()
+        self.smart_query = SmartPlaylist.query.filter_by(user_id=self.user_id).first()
             
         # Used only for HTML page. Template for settings, that will be changed in future. 
         self.settings = {
@@ -128,7 +129,6 @@ class UserSettings():
     def attach_playlist(self, query, scheduler):
             """ Функция, необходимая только для отображения плейлиста юзера, данные
             которого находятся в базе данных """
-            
             # создаётся заготовок пустого плейлиста
             self.playlist_data = {
                 'name': None,
@@ -146,7 +146,13 @@ class UserSettings():
                         query.playlist_id, fields="name, id, images")
                     self.playlist_data['name'] = self.current_playlist['name']
                     self.playlist_data['id'] = self.current_playlist['id']
-                    self.playlist_data['images'] = self.current_playlist['images'][0]['url']
+                    try:
+                        self.playlist_data['images'] = self.current_playlist['images'][0]['url']
+                    except Exception as e:
+                        app.logger.error(e)
+                        app.logger.error(self.current_playlist['images'])
+                        self.playlist_data['images'] = None
+ 
                 # если ID плейлиста привязан, но юзер не подписан на плейлист
                 elif query.playlist_id and not self.spotify.playlist_is_following(query.playlist_id, [self.user_query.spotify_id])[0]:
                     query.playlist_id = None
@@ -155,8 +161,9 @@ class UserSettings():
                     if query.job_id in scheduler:
                         scheduler.cancel(query.job_id)         
             except Exception as e:
-                print(extract_tb(exc_info()[2])[0][1])
-                print(e)
+                app.logger.error(e)
+                app.logger.error(query)
+                app.logger.error(type(query))
             finally:
                 return self.playlist_data    
                
@@ -188,14 +195,17 @@ def create_job(UserSettings, playlist_query, func, scheduler, job_time=30) -> No
         playlist_query.job_id = job.id
         db.session.commit()
     except Exception as e:
-        print(extract_tb(exc_info()[2])[0][1])
-        print(e)
-            
+        app.logger.error(e)
 
 def check_worker_status(UserSettings, playlist_query, func, scheduler) -> str:
     """ Функция для проверки работы менеджера расписаний и статуса авто-обновления """
     user_query = UserSettings.user_query
     # если autoupdate = ON
+    try:
+        playlist_query.update
+    except:
+        app.logger.error(playlist_query)
+        app.logger.error(type(playlist_query))
     if playlist_query.update == True and playlist_query.playlist_id and UserSettings.spotify.playlist_is_following(playlist_query.playlist_id, [UserSettings.user_id])[0]:
         # если работа не задана или она не в расписании
         if not playlist_query.job_id or playlist_query.job_id not in scheduler:
@@ -219,8 +229,7 @@ def check_worker_status(UserSettings, playlist_query, func, scheduler) -> str:
             if playlist_query.job_id in scheduler:
                 scheduler.cancel(playlist_query.job_id)
         except Exception as e:
-            print(extract_tb(exc_info()[2])[0][1])
-            print(e)
+            app.logger.error(e)
         return None
     
     
@@ -533,6 +542,6 @@ def update_smart_playlist(user_id, UserSettings):
         else:
             return 'You unfollowed this playlist. Please, refresh your page'
     except Exception as e:
-        print(e)
+        app.logger.error(e)
     finally:
         gc.collect()

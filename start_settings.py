@@ -6,7 +6,6 @@ import logging
 import logging.handlers
 
 app = Flask(__name__)
-
 app.config.from_object('config')
 
 db = SQLAlchemy(app)
@@ -15,8 +14,20 @@ scheduler_f = Scheduler(connection=Redis(), queue_name="favorite_update")
 scheduler_s = Scheduler(connection=Redis(), queue_name="smart_update")
 
 
-
 logging.basicConfig(filename='logs.log', level=logging.ERROR)
+handler = logging.handlers.RotatingFileHandler(
+        'logs.log',
+        maxBytes=1024 * 1024)
+handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+logging.getLogger('werkzeug').addHandler(handler)
+logging.getLogger('rq.worker').setLevel(logging.ERROR)
+logging.getLogger('rq.worker').addHandler(handler)
+
+app.logger.setLevel(logging.ERROR)
+app.logger.addHandler(handler)
 
 
 # flask db migrate -m "users table"

@@ -16,28 +16,44 @@
         {{_('Create playlist')}}</button>
         
     </div>
-
+    <script src="{{ url_for('static', filename='js/ajax.js') }}"></script>
     <script>
+        function isEmptyRequest(){
+            inputs = $('.urlInput')
+            if ($(inputs[0]).children().val() == ""){
+                return true
+            }
+            else {
+                return false
+            }
+        }
+
         function createPlaylist() {
-            $('#createSpinner').addClass('busy');
-            $('#submitButton').prop('disabled', true);
-            urls = $('.urlInput')
-            arr = []
-            for (let i = 0; i < urls.length; i++) { 
-                url = $(urls[i]).children().val()
-                if (url){
-                    arr.push(url)
+            toogleButtonSpinner('#submitButton')
+            if (isEmptyRequest()){
+                toogleButtonSpinner('#submitButton')
+                showAlert('#errorAlert', 'Выберите хотя бы один плейлист :)', 4000)
+            }
+            else {
+                $('#submitButton').prop('disabled', true);
+                urls = $('.urlInput')
+                arr = []
+                for (let i = 0; i < urls.length; i++) { 
+                    url = $(urls[i]).children().val()
+                    if (url){
+                        arr.push(url)
+                    }
                 }
-              }
-            output = arr.join(';')
-            $.ajax({
-                type: "POST",
-                url: "/playlist_worker",
-                data: { urlArray : output },
-            })
-            .done(function (data) {
-                document.location.href = '/'
-            })
+                output = arr.join(';')
+                $.ajax({
+                    type: "POST",
+                    url: "/playlist_worker",
+                    data: { urlArray : output },
+                })
+                .done(function (data) {
+                    document.location.href = '/'
+                })
+            }
         }
     </script>
 {% endblock body %}

@@ -94,9 +94,7 @@ function isSubscribed() {
     } 
     else {
         request_existance(url, target)
-    }
-    
-    
+    }  
 }
 
 function togglePlaylistSelect(){

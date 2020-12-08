@@ -23,11 +23,10 @@ from flask_babel import Babel, gettext
 from functools import wraps
 from dotenv import load_dotenv
 # test
-from transliterate import detect_language
 import objgraph
 import gc
 
-DEBUG = True
+DEBUG = 0
 
 # objects
 migrate = Migrate(app, db)
@@ -56,18 +55,6 @@ if not os.path.exists(caches_folder):
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
-
-
-def db_commit() -> None:
-    global db
-    try:
-        db.session.commit()
-    except:
-        print('Database commit returned error:\n')
-        err = sys.exc_info()
-        for e in err:
-            print(e)
-
 
 @babel.localeselector
 def get_locale():
@@ -165,8 +152,6 @@ def index():
     
     gc.collect()
     
-
-    
     return render_template(
         'index.html', 
         username=spotify.me()["display_name"],
@@ -194,44 +179,10 @@ def auth(func):
 
     
 @app.route('/test2')
-@auth
-def test2(UserSettings):
-    API_KEY = os.environ['LASTFM_API_KEY']
-    API_SECRET = os.environ['LASTFM_API_SECRET']
-    username = "Ravingrabb"
-
-    network = pylast.LastFMNetwork(api_key=API_KEY, api_secret=API_SECRET,
-                               username=username)
-    result = network.get_user(username).get_recent_tracks(limit=45)
-    
-    # достаём данные из lastfm
-    data_with_duplicates = [
-        {'name': song[0].title, 'artist': song[0].artist.name, 'album': song.album}
-        for song in result
-    ]
-    
-    last_fm_data = []
-    for song in data_with_duplicates:
-        if song not in last_fm_data:
-            last_fm_data.append(song)
-    
-    # переводим эти данные в uri спотифай
-    test = []
-    for q in last_fm_data:
-        # 1 попытка: проверка как есть
-        lang = detect_language(q['artist'])
-        try:
-            if lang != 'ru':
-                track = UserSettings.spotify.search(f"\"{q['name']}\" artist:{q['artist']} album:\"{q['album']}\"", limit=1, type="track")['tracks']['items'][0]
-            else:
-                track = UserSettings.spotify.search(f"\"{q['name']}\" album:\"{q['album']}\"", limit=1, type="track")['tracks']['items'][0]
-            test.append(f"{q['name']} - {q['artist']} - ({q['album']})  ---  {str(track['name'])} - {str(track['artists'][0]['name'])} - ({str(track['album']['name'])})")
-        except Exception as e:
-            continue
-            
-    test.append(str(len(test)))
-
-    return render_template('test.html', queries=test)
+def test2():
+    test = [1,2,3]
+    test.pop(3)
+    return render_template('test.html')
         
 @app.route('/donate')
 def donate():
@@ -291,7 +242,7 @@ def open_logs(UserSettings):
 def clear_logs():
     with open('logs.log', 'w'):
         pass
-    return gettext('Success!')
+    return redirect('/logs')
 
 
 @app.route('/create_cookie')
@@ -314,6 +265,7 @@ def create_smart(UserSettings):
 @auth
 def smart_settings(UserSettings):
     if UserSettings.smart_query.playlist_id:
+        #POST
         if request.method == "POST":
             if 'unpinID' in request.form:
                 id = request.form['unpinID']
@@ -322,7 +274,7 @@ def smart_settings(UserSettings):
                     db.session.commit()
                     return jsonify({'response': 'OK'})
                 except Exception as e:
-                    print(e)
+                    app.logger.error(e)
                     return jsonify({'response': None})
                 
             # НАСТРОЙКИ POST
@@ -337,7 +289,7 @@ def smart_settings(UserSettings):
                 pass
                 UserSettings.smart_query.exclude_history = 0
             if 'excludeFavoriteSwitch' in request.form:
-                result = tasks.decode_to_bool(request.form['excludeHistorySwitch'])
+                result = tasks.decode_to_bool(request.form['excludeFavoriteSwitch'])
                 UserSettings.smart_query.exclude_favorite = result
             else:
                 UserSettings.smart_query.exclude_favorite = 0
@@ -360,7 +312,7 @@ def smart_settings(UserSettings):
         user_playlists = [item for item in user_pl if item['id'] not in tasks.get_items_by_key(playlist_data, 'id') and item['id'] not in main_attached_playlists]
         
         UserSettings.settings_worker()
-        
+
         return render_template('smart_settings.html', 
                                used_playlists = playlist_data, 
                                user_playlists = user_playlists,
@@ -547,7 +499,7 @@ def playlist_worker(UserSettings):
                 smart_playlist.create_new_smart_playlist(request.form['urlArray'], UserSettings)
                 return jsonify({'response': 'OK'})
             except Exception as e:
-                print(e)
+                app.logger.error(e)
                 return jsonify({'response': None})
     # если плейлист существует
     elif UserSettings.smart_query.playlist_id:
