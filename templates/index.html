@@ -180,13 +180,13 @@
                                 </button>
                             </div>
                         </div>
-                        <!-- 
-                        {% if time_difference != None %}
-                        <small class="text-muted current-time">
-                            {{_("Updated")}} {{ time_difference }} {{_('min ago')}}
+                        
+                        {% if smart_time_difference != None %}
+                        <small class="text-muted">
+                            {{_("Updated")}} {{ smart_time_difference }} {{_('ago')}}
                         </small>
                         {% endif %}
-                        -->
+                       
                         <!-- Если плейлиста нет -->
                         {% else %}
                             <h4>Smart Playlist</h4>
@@ -196,9 +196,13 @@
                             </form>
                         {% endif %}
                     </div>
-                    <small class="text-muted" style='text-align: right;
+                    <small class="text-muted" style='
+                    text-align: right;
                     padding-right: 6px;
-                    margin: 6px;'>Beta</small>
+                    margin: 8px;
+                    position: absolute;
+                    right: 0px;
+                    bottom: 0px;'>Beta</small>
                 </div>
             </div>
 

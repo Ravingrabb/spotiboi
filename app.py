@@ -148,6 +148,7 @@ def index():
     tasks.auto_clean_checker(UserSettings, scheduler_a)
     # вычислятор времени
     time_difference = UserSettings.time_worker()
+    smart_time_difference = tasks.time_converter(UserSettings.smart_query)
     
     gc.collect()
     
@@ -161,6 +162,7 @@ def index():
         history_playlist_data = history_playlist_data,
         smart_playlist_data = smart_playlist_data,
         time_difference = time_difference,
+        smart_time_difference = smart_time_difference,
         settings = UserSettings.settings
     )
     
@@ -301,10 +303,11 @@ def smart_settings(UserSettings):
                 smart_query.auto_clean = get_worker_bool('autoCleanSwitch')        
 
                 # TIME
-                UserSettings.smart_query.update_time = tasks.days_to_minutes(request.form['updateTime'])
-                
-                if UserSettings.smart_query.job_id in scheduler_s:
-                        scheduler_s.cancel(UserSettings.smart_query.job_id)
+                if UserSettings.smart_query.update_time != tasks.days_to_minutes(request.form['updateTime']):
+                    UserSettings.smart_query.update_time = tasks.days_to_minutes(request.form['updateTime'])
+                    
+                    if UserSettings.smart_query.job_id in scheduler_s:
+                            scheduler_s.cancel(UserSettings.smart_query.job_id)
                         
                 db.session.commit()
                 return redirect('/')

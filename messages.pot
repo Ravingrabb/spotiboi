@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-12-10 23:27+0500\n"
+"POT-Creation-Date: 2020-12-11 18:26+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,7 +21,7 @@ msgstr ""
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:134 app.py:412 app.py:431 app.py:451 app.py:471
+#: app.py:134 app.py:415 app.py:434 app.py:454 app.py:474
 msgid "Success!"
 msgstr ""
 
@@ -33,23 +33,23 @@ msgstr ""
 msgid "Wrong URI"
 msgstr ""
 
-#: app.py:384
+#: app.py:387
 msgid "Error! Can't find that last.fm user"
 msgstr ""
 
-#: app.py:414 app.py:433 app.py:453 app.py:473 app.py:482
+#: app.py:417 app.py:436 app.py:456 app.py:476 app.py:485
 msgid "bruh"
 msgstr ""
 
-#: tasks.py:270
+#: tasks.py:296
 msgid "Can't connect to Spotify server"
 msgstr ""
 
-#: tasks.py:338
+#: tasks.py:364
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:341
+#: tasks.py:367
 msgid "Nothing to update"
 msgstr ""
 
@@ -204,7 +204,7 @@ msgstr ""
 msgid "Updated"
 msgstr ""
 
-#: templates/index.html:98 templates/index.html:186
+#: templates/index.html:98
 msgid "min ago"
 msgstr ""
 
@@ -226,6 +226,10 @@ msgstr ""
 
 #: templates/index.html:160 templates/index.html:225
 msgid "Auto-update"
+msgstr ""
+
+#: templates/index.html:186
+msgid "ago"
 msgstr ""
 
 #: templates/index.html:193

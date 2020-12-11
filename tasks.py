@@ -173,10 +173,10 @@ class UserSettings():
                 return self.playlist_data    
             
             
-def time_worker2(UserSettings) -> int:
+def time_worker2(query) -> int:
     """ Возвращает разницу между последним обновлением и текущим временем в минутах """
-    if UserSettings.history_query.last_update:
-        time_past = UserSettings.history_query.last_update
+    if query.last_update:
+        time_past = query.last_update
         time_now = datetime.now()
         FMT = '%H:%M:%S'
         duration = time_now - datetime.strptime(time_past, FMT)
@@ -186,17 +186,20 @@ def time_worker2(UserSettings) -> int:
         return None 
 
 
-def time_converter(UserSettings):
-    minutes = str(time_worker2(UserSettings)) + 'мин.' 
-    if minutes >= 60:
-        hours = str(minutes / 60) + 'ч.'
-        if hours >= 24:
-            days = str(hours / 24) + 'дн.'
-            return days
+def time_converter(query):
+    minutes = time_worker2(query)
+    if minutes:
+        if minutes >= 60:
+            hours = minutes / 60
+            if hours >= 24:
+                days = hours / 24
+                return str(round(days)) + ' дн.'
+            else:
+                return str(round(hours)) + ' ч.'
         else:
-            return hours
+            return str(round(minutes)) + ' мин.'
     else:
-        return minutes
+        return None
       
                            
 def decode_to_bool(text):
@@ -583,6 +586,9 @@ def update_smart_playlist(user_id, UserSettings):
     except Exception as e:
         app.logger.error(e)
     finally:
+        smart_query = SmartPlaylist.query.filter_by(user_id=user_id).first()
+        smart_query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
+        db.session.commit()
         gc.collect()
         
  
