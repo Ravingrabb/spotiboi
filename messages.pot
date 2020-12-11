@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-12-08 19:08+0500\n"
+"POT-Creation-Date: 2020-12-10 23:27+0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,27 +17,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: app.py:96
+#: app.py:95
 msgid "Recently played tracks"
 msgstr ""
 
-#: app.py:135 app.py:401 app.py:420 app.py:440 app.py:460
+#: app.py:134 app.py:412 app.py:431 app.py:451 app.py:471
 msgid "Success!"
 msgstr ""
 
-#: app.py:137
+#: app.py:136
 msgid "You are not playlist creator or you are not following it"
 msgstr ""
 
-#: app.py:139
+#: app.py:138
 msgid "Wrong URI"
 msgstr ""
 
-#: app.py:373
+#: app.py:384
 msgid "Error! Can't find that last.fm user"
 msgstr ""
 
-#: app.py:403 app.py:422 app.py:442 app.py:462 app.py:471
+#: app.py:414 app.py:433 app.py:453 app.py:473 app.py:482
 msgid "bruh"
 msgstr ""
 
@@ -45,11 +45,11 @@ msgstr ""
 msgid "Can't connect to Spotify server"
 msgstr ""
 
-#: tasks.py:339
+#: tasks.py:338
 msgid "History updated"
 msgstr ""
 
-#: tasks.py:342
+#: tasks.py:341
 msgid "Nothing to update"
 msgstr ""
 
@@ -180,7 +180,7 @@ msgid "sign out"
 msgstr ""
 
 #: templates/index.html:35 templates/index.html:122
-#: templates/smart_settings.html:109
+#: templates/smart_settings.html:168
 msgid "Detach playlist"
 msgstr ""
 
@@ -253,12 +253,12 @@ msgid "Are you sure you want to detach the playlist?"
 msgstr ""
 
 #: templates/index.html:265 templates/index.html:289
-#: templates/smart_settings.html:119
+#: templates/smart_settings.html:177
 msgid "Yes"
 msgstr ""
 
 #: templates/index.html:267 templates/index.html:291
-#: templates/smart_settings.html:118
+#: templates/smart_settings.html:178
 msgid "No"
 msgstr ""
 
@@ -354,47 +354,80 @@ msgstr ""
 msgid "You don't have attached playlists"
 msgstr ""
 
-#: templates/smart_settings.html:53
+#: templates/smart_settings.html:54
+msgid "Excluded playlists"
+msgstr ""
+
+#: templates/smart_settings.html:75
 msgid "Add playlists"
 msgstr ""
 
-#: templates/smart_settings.html:57
+#: templates/smart_settings.html:79
+msgid "Additional settings"
+msgstr ""
+
+#: templates/smart_settings.html:84
+msgid "These playlists will exclude artists"
+msgstr ""
+
+#: templates/smart_settings.html:86
+msgid ""
+"All selected playlists will exclude artists from smart playlist instead "
+"of adding new tracks. It works like a filter for your playlist"
+msgstr ""
+
+#: templates/smart_settings.html:92
+msgid "These playlists will exclude tracks"
+msgstr ""
+
+#: templates/smart_settings.html:94
+msgid ""
+"The selected playlists will exclude inner tracks from smart playlist "
+"instead add new tracks. This works exactly like a history playlist "
+"exception below."
+msgstr ""
+
+#: templates/smart_settings.html:98
 msgid "Add"
 msgstr ""
 
-#: templates/smart_settings.html:62
+#: templates/smart_settings.html:102
 msgid "Playlist settings"
 msgstr ""
 
-#: templates/smart_settings.html:67
+#: templates/smart_settings.html:107
 msgid "Maximum tracks in playlist"
 msgstr ""
 
-#: templates/smart_settings.html:72
+#: templates/smart_settings.html:112
 msgid "Update time"
 msgstr ""
 
-#: templates/smart_settings.html:74
+#: templates/smart_settings.html:114
 msgid "In days"
 msgstr ""
 
-#: templates/smart_settings.html:80
+#: templates/smart_settings.html:123
 msgid "Exclude History"
 msgstr ""
 
-#: templates/smart_settings.html:82 templates/smart_settings.html:93
-msgid "This setting slows down the update of the playlist"
-msgstr ""
-
-#: templates/smart_settings.html:91
+#: templates/smart_settings.html:133
 msgid "Exclude Favorite Tracks"
 msgstr ""
 
-#: templates/smart_settings.html:96
+#: templates/smart_settings.html:150
+msgid "Auto clean playlist"
+msgstr ""
+
+#: templates/smart_settings.html:152
+msgid "Your playlist will be cleared of listened tracks every hour"
+msgstr ""
+
+#: templates/smart_settings.html:156
 msgid "Save settings"
 msgstr ""
 
-#: templates/smart_settings.html:115
+#: templates/smart_settings.html:174
 msgid "Are you sure you want to unpin the playlist from your smart playlist?"
 msgstr ""
 

@@ -49,19 +49,59 @@
     <h2> {{_('You don\'t have attached playlists')}} </h2>
 {% endif %}
 
+<!--------- EXCLUDED -------->
+{% if excluded_playlists %}
+<h2 class="mb-3"> {{ _('Excluded playlists') }} </h2>
+<div class="row">
+    {% for item in excluded_playlists %}
+    <div class="col-lg-2 col-4" >
+        <img src="
+        {% if item.images %}
+           {{item.images[0].url}}
+        {% else %}
+            {{url_for('static', filename='/img/covers/noart.jpg')}}
+        {% endif %}
+        " class="img-fluid rounded mx-auto d-block">
+        <a href="{{item.external_urls.spotify}}"><p class='playlist-title'>{{item.name}}</p></a>
+        <svg id="{{item.id}}" onclick='setUnpinID()' width="20px" height="20px" viewBox="0 0 16 16" class="bi bi-x-square-fill trashBucket" fill="red" xmlns="http://www.w3.org/2000/svg" data-toggle="modal" data-target="#detachModal">
+            <path id="{{item.id}}" fill-rule="evenodd" d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
+        </svg>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 <!------------------ ADD NEW PLAYLIST  -------------->
 <button style='margin-top:20px' class="btn btn-success" data-toggle="collapse" href="#addNewCollapse" role="button" aria-expanded="false" aria-controls="addNewCollapse">{{_('Add playlists')}}</button>
 
 <div class="collapse" id="addNewCollapse" style='border: solid #eaecef; background-color:#f8f9fa; margin-top: 10px; padding: 10px'>
     {% include 'playlist_template.html' %}
+    <h4 class="mt-3">{{_('Additional settings')}}</h4>
+    <form>
+      <div class="form-check">
+        <label class="exclude-artists-label">
+          <input type="checkbox" id='excludeArtistsCheckbox' class="form-check-input">
+          {{_('These playlists will exclude artists')}}
+        </label>
+        <small class="text-muted d-block">{{_('All selected playlists will exclude artists from smart playlist instead of adding new tracks. It works like a filter for your playlist')}}</small>
+      </div>
+
+      <!-- <div class="form-check">
+        <label class="exclude-tracks-label">
+          <input type="checkbox" id='excludeTracksCheckbox' class="form-check-input">
+          {{_('These playlists will exclude tracks')}}
+        </label>
+        <small class="text-muted d-block">{{_('The selected playlists will exclude inner tracks from smart playlist instead add new tracks. This works exactly like a history playlist exception below.')}}</small>
+      </div> -->
+    </form>
+
     <button onclick='addUsedToSmart()' id="addButton" type="button" class="btn btn-primary btn-lg btn-block mt-5" style='display: none'>{{_('Add')}}</button>
 </div>
-
 
 <!---------------- SETTINGS ----------------->
 <h2 style="margin-top: 50px;">{{_('Playlist settings')}}</h2>
 <div>
-    <form action="/smart_settings" method="post">
+    <form method='POST' action="/smart_settings" >
         <!-- MAX -->
         <div class="form-group">
             <label for="capacity" >{{_('Maximum tracks in playlist')}}</label>
@@ -76,10 +116,12 @@
         <!-- EXCLUDE HISTORY -->
         <div class="form-group">
             <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" name='excludeHistorySwitch' id="excludeHistorySwitch" {{settings.exclude_history}}>
+                <input type="checkbox" class="custom-control-input" name='excludeHistorySwitch' id="excludeHistorySwitch" {{settings.exclude_history}}
+                {% if not history %}
+                    disabled
+                {% endif %} >
                 <label class="custom-control-label" style='padding-bottom: 10px;' for="excludeHistorySwitch">{{_('Exclude History')}}
                 </label>
-                <small class="text-muted d-block">{{_('This setting slows down the update of the playlist')}}</small>
             </div>
         </div>
         <!-- EXCLUDE FAVORITE -->
@@ -90,11 +132,28 @@
                     for="excludeFavoriteSwitch">
                     {{_('Exclude Favorite Tracks')}}
                 </label>
-                <small class="text-muted d-block">{{_('This setting slows down the update of the playlist')}}</small>
             </div>
         </div>
+        <!-- AUTO CLEAN -->
+        <div class="form-group">
+          <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" name='autoCleanSwitch' id="autoCleanSwitch"
+              {% if auto_clean %}
+                checked
+              {% endif %}
+              {% if not history %}
+                    disabled
+                {% endif %}
+                >
+              <label class="custom-control-label" style='padding-bottom: 10px;'
+                  for="autoCleanSwitch">
+                  {{_('Auto clean playlist')}}
+              </label>
+              <small class="text-muted d-block">{{_('Your playlist will be cleared of listened tracks every hour')}}</small>
+          </div>
+      </div>
+        
         <button type="submit" class="btn btn-success mb-3">{{_('Save settings')}}</button>
-      
     </form>
 
 </div>
@@ -115,8 +174,8 @@
         {{_('Are you sure you want to unpin the playlist from your smart playlist?')}} 
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">{{_('No')}}</button>
           <button type="button" onclick='unpinPlaylist()' class="btn btn-primary">{{_('Yes')}}</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{{_('No')}}</button>
         </div>
       </div>
     </div>

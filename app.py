@@ -9,11 +9,10 @@ import os
 import uuid
 from requests.cookies import create_cookie
 import spotipy
-import sys
 import pylast
 from sqlalchemy.orm import query
 
-from start_settings import UsedPlaylist, app, db, scheduler_h, scheduler_f, scheduler_s
+from start_settings import UsedPlaylist, app, db, scheduler_h, scheduler_f, scheduler_s, scheduler_a
 import smart_playlist
 
 from flask_migrate import Migrate
@@ -146,6 +145,7 @@ def index():
     history_checked = tasks.check_worker_status(UserSettings, UserSettings.history_query, tasks.update_history, scheduler_h)
     favorite_checked = tasks.check_worker_status(UserSettings, UserSettings.favorite_query, tasks.update_favorite_playlist, scheduler_f)
     smart_checked = tasks.check_worker_status(UserSettings, UserSettings.smart_query, tasks.update_smart_playlist, scheduler_s)
+    tasks.auto_clean_checker(UserSettings, scheduler_a)
     # вычислятор времени
     time_difference = UserSettings.time_worker()
     
@@ -178,9 +178,9 @@ def auth(func):
 
     
 @app.route('/test2')
-def test2():
-    test = [1,2,3]
-    test.pop(3)
+@auth
+def test2(UserSettings):
+    tasks.auto_clean(UserSettings)
     return render_template('test.html')
 
 @app.route('/debug')
@@ -270,59 +270,70 @@ def create_smart(UserSettings):
 @app.route('/smart_settings', methods=['POST', 'GET'])
 @auth
 def smart_settings(UserSettings):
+    
+    smart_query = UserSettings.smart_query
+
+    def get_worker_bool (input_name: str):
+            return True if input_name in request.form else False
+    
     if UserSettings.smart_query.playlist_id:
         #POST
-        if request.method == "POST":
-            if 'unpinID' in request.form:
-                id = request.form['unpinID']
-                try:
-                    UsedPlaylist.query.filter_by(user_id = UserSettings.user_id, playlist_id = id).delete()
-                    db.session.commit()
-                    return jsonify({'response': 'OK'})
-                except Exception as e:
-                    app.logger.error(e)
-                    return jsonify({'response': None})
-                
-            # НАСТРОЙКИ POST
-            # MAX
-            if 'capacity' in request.form:
-                UserSettings.smart_query.max_tracks = request.form['capacity']
-            # EXCLUDE
-            if 'excludeHistorySwitch' in request.form:
-                result = tasks.decode_to_bool(request.form['excludeHistorySwitch'])
-                UserSettings.smart_query.exclude_history = result
-            else:
-                pass
-                UserSettings.smart_query.exclude_history = 0
-            if 'excludeFavoriteSwitch' in request.form:
-                result = tasks.decode_to_bool(request.form['excludeFavoriteSwitch'])
-                UserSettings.smart_query.exclude_favorite = result
-            else:
-                UserSettings.smart_query.exclude_favorite = 0
-            # TIME
-            UserSettings.smart_query.update_time = tasks.days_to_minutes(request.form['updateTime'])
-            
-            if UserSettings.smart_query.job_id in scheduler_s:
-                    scheduler_s.cancel(UserSettings.smart_query.job_id)
+        try:
+            if request.method == "POST":
+                if 'unpinID' in request.form:
+                    id = request.form['unpinID']
+                    try:
+                        UsedPlaylist.query.filter_by(user_id = UserSettings.user_id, playlist_id = id).delete()
+                        db.session.commit()
+                        return jsonify({'response': 'OK'})
+                    except Exception as e:
+                        app.logger.error(e)
+                        return jsonify({'response': None})
                     
-            db.session.commit()
-            return redirect('/')
+                # НАСТРОЙКИ POST
+                # MAX
+                if 'capacity' in request.form:
+                    UserSettings.smart_query.max_tracks = request.form['capacity']
+                # EXCLUDE
+
+                smart_query.exclude_history = get_worker_bool('excludeHistorySwitch')
+                smart_query.exclude_favorite = get_worker_bool('excludeFavoriteSwitch')
+                smart_query.auto_clean = get_worker_bool('autoCleanSwitch')        
+
+                # TIME
+                UserSettings.smart_query.update_time = tasks.days_to_minutes(request.form['updateTime'])
+                
+                if UserSettings.smart_query.job_id in scheduler_s:
+                        scheduler_s.cancel(UserSettings.smart_query.job_id)
+                        
+                db.session.commit()
+                return redirect('/')
+        except Exception as e:
+            print(e)
     
-        # сбор уже прикреплённых плейлистов на добавление  
+        # сбор ATTACHED
         pl_ids = UsedPlaylist.query.filter_by(user_id = UserSettings.user_id, exclude = False, exclude_artists = False).all()
-        playlist_data = UserSettings.get_several_playlists_data(pl_ids)
+        used_playlists = UserSettings.get_several_playlists_data(pl_ids)
+        
+        # сбор EXCLUDED
+        ex_ar_ids = UsedPlaylist.query.filter_by(user_id = UserSettings.user_id, exclude = False, exclude_artists = True).all()
+        excluded_playlists = UserSettings.get_several_playlists_data(ex_ar_ids)
         
         # сбор инфы об оставшихся, не прикреплённых плейлистах
         user_pl = smart_playlist.sort_playlist(UserSettings.get_user_playlists())
         main_attached_playlists = smart_playlist.get_main_attached_ids(UserSettings)
-        user_playlists = [item for item in user_pl if item['id'] not in tasks.get_items_by_key(playlist_data, 'id') and item['id'] not in main_attached_playlists]
+        user_playlists = [item for item in user_pl if item['id'] not in tasks.get_items_by_key(used_playlists, 'id') and item['id'] not in main_attached_playlists and item['id'] not in tasks.get_items_by_key(excluded_playlists, 'id')]
         
+        # settings
         UserSettings.settings_worker()
 
         return render_template('smart_settings.html', 
-                               used_playlists = playlist_data, 
+                               used_playlists = used_playlists, 
                                user_playlists = user_playlists,
-                               settings = UserSettings.settings)
+                               excluded_playlists = excluded_playlists,
+                               settings = UserSettings.settings,
+                               history = UserSettings.history_query.playlist_id,
+                               auto_clean = tasks.get_updater_status(UserSettings.smart_query.ac_job_id, scheduler_a))
     else:
         return redirect('/')
     
@@ -509,9 +520,11 @@ def playlist_worker(UserSettings):
                 return jsonify({'response': None})
     # если плейлист существует
     elif UserSettings.smart_query.playlist_id:
+        exclude_artists = tasks.decode_to_bool(request.form['excludeArtists'])
+        # exclude_tracks = tasks.decode_to_bool(request.form['excludeTracks'])
         if 'addUrlToSmart' in request.form:
             try:
-                smart_playlist.add_playlists_to_smart(request.form['addUrlToSmart'], UserSettings)
+                smart_playlist.add_playlists_to_smart(request.form['addUrlToSmart'], UserSettings, exclude_artists)
                 return jsonify({'response': 'OK'})
             except:
                 return jsonify({'response': None})

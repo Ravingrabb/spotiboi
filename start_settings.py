@@ -12,6 +12,7 @@ db = SQLAlchemy(app)
 scheduler_h = Scheduler(connection=Redis(), queue_name="history_update")
 scheduler_f = Scheduler(connection=Redis(), queue_name="favorite_update")
 scheduler_s = Scheduler(connection=Redis(), queue_name="smart_update")
+scheduler_a = Scheduler(connection=Redis(), queue_name="auto_clean")
 
 
 logging.basicConfig(filename='logs.log', level=logging.ERROR)
@@ -93,6 +94,8 @@ class SmartPlaylist(db.Model):
     max_tracks = db.Column(db.Integer, default=100)
     exclude_history = db.Column(db.Boolean, default=True)
     exclude_favorite = db.Column(db.Boolean, default=False)
+    auto_clean = db.Column(db.Boolean, default=False)
+    ac_job_id = db.Column(db.String(80), default=0)
         
     def __repr__(self):
             return '<SmartPlaylist %r>' % self.playlist_id

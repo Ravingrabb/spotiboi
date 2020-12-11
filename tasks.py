@@ -98,6 +98,10 @@ class UserSettings():
         return HistoryPlaylist.query.filter_by(user_id=self.user_id).first()
     
     
+    def new_smart_query(self):
+        return SmartPlaylist.query.filter_by(user_id=self.user_id).first()
+    
+    
     def get_several_playlists_data(self, playlist_ids: list):
         ''' Возвращает сырые данные плейлиста '''
         output = tuple(self.spotify.playlist(playlist.playlist_id, fields="name, images, external_urls, id") for playlist in playlist_ids)
@@ -148,12 +152,12 @@ class UserSettings():
                     self.playlist_data['name'] = self.current_playlist['name']
                     self.playlist_data['id'] = self.current_playlist['id']
                     try:
-                        self.playlist_data['images'] = self.current_playlist['images'][0]['url']
+                        if not self.current_playlist['images']:
+                            self.playlist_data['images'] = None
+                        else:
+                            self.playlist_data['images'] = self.current_playlist['images'][0]['url']
                     except Exception as e:
                         app.logger.error(e)
-                        app.logger.error(self.current_playlist['images'])
-                        self.playlist_data['images'] = None
- 
                 # если ID плейлиста привязан, но юзер не подписан на плейлист
                 elif query.playlist_id and not self.spotify.playlist_is_following(query.playlist_id, [self.user_query.spotify_id])[0]:
                     query.playlist_id = None
@@ -167,15 +171,34 @@ class UserSettings():
                 app.logger.error(type(query))
             finally:
                 return self.playlist_data    
-               
-               
-def restart_job_with_new_settings(query, scheduler, UserSettings):
-    if query.job_id in scheduler:
-        scheduler.cancel(query.job_id)
-        create_job(UserSettings, query, update_history, scheduler)
             
+            
+def time_worker2(UserSettings) -> int:
+    """ Возвращает разницу между последним обновлением и текущим временем в минутах """
+    if UserSettings.history_query.last_update:
+        time_past = UserSettings.history_query.last_update
+        time_now = datetime.now()
+        FMT = '%H:%M:%S'
+        duration = time_now - datetime.strptime(time_past, FMT)
+        time_difference = duration.seconds // 60
+        return time_difference
+    else:
+        return None 
 
 
+def time_converter(UserSettings):
+    minutes = str(time_worker2(UserSettings)) + 'мин.' 
+    if minutes >= 60:
+        hours = str(minutes / 60) + 'ч.'
+        if hours >= 24:
+            days = str(hours / 24) + 'дн.'
+            return days
+        else:
+            return hours
+    else:
+        return minutes
+      
+                           
 def decode_to_bool(text):
     words = {'on', 'true'}
     if text.lower() in words:
@@ -186,6 +209,7 @@ def decode_to_bool(text):
 def days_to_minutes(number_string):
     return int(number_string) * 1440
 
+            
 def create_job(UserSettings, playlist_query, func, scheduler, job_time=30) -> None:
     if playlist_query.update_time:
         job_time = int(playlist_query.update_time)
@@ -198,22 +222,25 @@ def create_job(UserSettings, playlist_query, func, scheduler, job_time=30) -> No
     except Exception as e:
         app.logger.error(e)
 
+
+def restart_job_with_new_settings(query, scheduler, UserSettings):
+    if query.job_id in scheduler:
+        scheduler.cancel(query.job_id)
+        create_job(UserSettings, query, update_history, scheduler)
+
+
 def check_worker_status(UserSettings, playlist_query, func, scheduler) -> str:
-    """ Функция для проверки работы менеджера расписаний и статуса авто-обновления """
+    """ Функция для проверки и перезапуска менеджера расписаний и статуса авто-обновления """
     user_query = UserSettings.user_query
     # если autoupdate = ON
-    try:
-        playlist_query.update
-    except:
-        app.logger.error(playlist_query)
-        app.logger.error(type(playlist_query))
+
     if playlist_query.update == True and playlist_query.playlist_id and UserSettings.spotify.playlist_is_following(playlist_query.playlist_id, [UserSettings.user_id])[0]:
         # если работа не задана или она не в расписании
         if not playlist_query.job_id or playlist_query.job_id not in scheduler:
             try:
                 create_job(UserSettings, playlist_query, func, scheduler)
             except Exception as e:
-                print (e)
+                app.logger.error(e)
         # если работа работается, но uuid не совпадает
         if playlist_query.job_id in scheduler and user_query.last_uuid != session.get('uuid'):
             try:
@@ -222,7 +249,7 @@ def check_worker_status(UserSettings, playlist_query, func, scheduler) -> str:
                 user_query.last_uuid = session.get('uuid')
                 db.session.commit()
             except Exception as e:
-                print (e)
+                app.logger.error(e)
         return "checked"
     # если autoupdate = OFF
     else:
@@ -254,7 +281,6 @@ def update_history(user_id, UserSettings) -> str:
             tracks_to_delete = [item['track']['uri'] for item in result['items']]
             spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)   
                      
-                     
     spotify = UserSettings.spotify
     history_query = UserSettings.history_query
     history_id = history_query.playlist_id
@@ -278,7 +304,6 @@ def update_history(user_id, UserSettings) -> str:
                             if item['track']['uri'] not in get_items_by_key(history_playlist, 'uri') 
                             and item['track']['name'].lower() not in get_items_by_key(history_playlist, 'name') ]
 
- 
     # если в настройках указан логин lasfm, то вытаскиваются данные с него
     if user_query.lastfm_username:
         try:
@@ -348,10 +373,10 @@ def update_history(user_id, UserSettings) -> str:
         db.session.commit()
         gc.collect()
 
+
 def get_playlist_raw_tracks(sp, playlist_id):
     return sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
     
-
 
 def convert_playlist(playlist_array) -> list:
     """ Перевод сырого JSON в формат, более удобный для программы """
@@ -378,10 +403,8 @@ def get_every_playlist_track(spotify, raw_results: list) -> list:
 
 def get_limited_playlist_track(spotify, raw_results, limit) -> list:
     def is_reached_limit(array, limit) -> bool:
-            if len(array) >= limit:
-                return True
-            else:
-                return False
+            return True if len(array) >= limit else False
+        
     tracks = convert_playlist(raw_results)
     
     while raw_results['next'] and not is_reached_limit(tracks, limit):
@@ -428,6 +451,7 @@ def fill_playlist(sp, playlist_id : str, uris_list : list, from_top = False) -> 
         else:
             sp.playlist_add_items(playlist_id, uris_list[offset:offset+100], position=0)
         offset += 100
+        
         
 def fill_playlist_with_replace(sp, user_id: str, playlist_id : str, uris_list : list) -> None:
     """ Почти то же самое, что и fill playlist, только он заменяет песни, а не добавляет. Нужно для smart плейлиста""" 
@@ -496,7 +520,6 @@ def update_smart_playlist(user_id, UserSettings):
     
     check_by_names = True
     
-    
     def fillup(excluded_list, key):  
         if smart_query.exclude_history:
             history_playlist = get_current_history_list(UserSettings)
@@ -561,3 +584,46 @@ def update_smart_playlist(user_id, UserSettings):
         app.logger.error(e)
     finally:
         gc.collect()
+        
+ 
+def auto_clean(user_id, UserSettings):
+    history_query = UserSettings.new_history_query()
+    sp = UserSettings.spotify
+    if history_query.playlist_id and UserSettings.smart_query.playlist_id:
+        listened_raw = get_playlist_raw_tracks(sp, history_query.playlist_id)
+        listened = get_items_by_key(convert_playlist(listened_raw), 'uri')
+        sp.playlist_remove_all_occurrences_of_items(UserSettings.smart_query.playlist_id, listened)
+
+    
+def auto_clean_checker(UserSettings, scheduler):
+    """ Работник с задачей, но только специально для auto cleaner """
+    def create_ac_job():
+        ''' То же самое, что и create_job, только для auto cleaner'''
+        job = scheduler.schedule(datetime.utcnow(), auto_clean, args=[UserSettings.user_id, UserSettings], interval=3600, repeat=None)
+        scheduler.enqueue_job(job)
+        smart_query.ac_job_id = job.id
+        db.session.commit()
+        
+    try:
+        smart_query = UserSettings.new_smart_query()
+        if smart_query.auto_clean and smart_query.playlist_id:
+            if not smart_query.ac_job_id or smart_query.ac_job_id not in scheduler:
+                create_ac_job()
+            if smart_query.ac_job_id in scheduler and UserSettings.user_query.last_uuid != session.get('uuid'):
+                scheduler.cancel(smart_query.ac_job_id)
+                create_ac_job()
+                UserSettings.user_query.last_uuid = session.get('uuid')
+                db.session.commit()  
+        else:
+            if smart_query.ac_job_id in scheduler:
+                scheduler.cancel(smart_query.ac_job_id)
+    except Exception as e:
+        app.logger.error(e)
+    
+    
+def get_updater_status(job_id, scheduler):
+    return True if job_id in scheduler else False
+
+
+        
+        

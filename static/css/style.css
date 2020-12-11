@@ -87,9 +87,9 @@
 }
 
 .toBeAdded {
-    border: 1px solid #c5c5c5;
+    /* border: 1px solid #c5c5c5; */
     padding: 10px;
-    border-radius: 20px;
+    /* border-radius: 20px; */
 }
 
 .trashBucket {

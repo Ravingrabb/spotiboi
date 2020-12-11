@@ -138,7 +138,6 @@ function togglePlaylistSelect(){
 }
 
 function addUsedToSmart(){
-    //$('#createSpinner').addClass('busy');
     $(event.target).prop('disabled', true);
     urls = $('.urlInput')
     arr = []
@@ -152,7 +151,9 @@ function addUsedToSmart(){
     $.ajax({
         type: "POST",
         url: "/playlist_worker",
-        data: { addUrlToSmart : output },
+        data: { addUrlToSmart : output,
+                excludeArtists : document.getElementById("excludeArtistsCheckbox").checked
+            },
     })
     .done(function (data) {
         document.location.href = '/smart_settings'

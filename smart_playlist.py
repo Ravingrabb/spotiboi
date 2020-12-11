@@ -40,8 +40,8 @@ def check_and_get_pldata(url: str, UserSettings) -> dict:
         return UserSettings.spotify.playlist(url_to_plid(url), fields="name, images")
 
 
-def check_data(data, UserSettings):
-    ''' Проверяет полученные данные из AJAX и создаёт новый плейлист'''
+def check_data(data, UserSettings) -> list:
+    ''' Проверяет полученные данные из AJAX и возвращает хорошие URL'''
     output = []
     
     def append_good_playlist(url):
@@ -112,14 +112,13 @@ def create_new_smart_playlist(data, UserSettings):
 
     
     
-def add_playlists_to_smart(data, UserSettings):
+def add_playlists_to_smart(data, UserSettings, exclude_artists=False, exclude_tracks=False):
     user_id = UserSettings.user_id    
     output = check_data(data, UserSettings)
-    
     if output:
         smart_query = SmartPlaylist.query.filter_by(user_id = user_id).first()
         for id in output:
-            db.session.add(UsedPlaylist(playlist_id=id, user_id=user_id, attached_playlist_id = smart_query.playlist_id))
+            db.session.add(UsedPlaylist(playlist_id=id, user_id=user_id, attached_playlist_id = smart_query.playlist_id, exclude = exclude_tracks, exclude_artists = exclude_artists))
         db.session.commit()
         
 
@@ -134,3 +133,4 @@ def get_main_attached_ids(UserSettings):
         output.append(history_query.playlist_id)
         
     return output
+

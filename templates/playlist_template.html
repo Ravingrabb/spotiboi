@@ -49,7 +49,7 @@
             {% endfor %}
         </div>
     </div>
-    <h6 class="mt-3" style="cursor: pointer" data-toggle="collapse" href="#collapsePlaylists" aria-controls="collapsePlaylists">{{_('Show more...')}}</h6>
+    <h6 class="mt-2" style="cursor: pointer" data-toggle="collapse" href="#collapsePlaylists" aria-controls="collapsePlaylists">{{_('Show more...')}}</h6>
 </div>
 {% endif %}
 
@@ -73,6 +73,7 @@
     <div class="row toBeAdded"></div>
 </div>  
 
+
 <script>
     $(document).width() > 480 ? trimTitles(33, '.playlist-title', false): trimTitles(16, '.playlist-title', true);
 
@@ -80,7 +81,7 @@
     * Clearable text inputs
     */
     function tog(v){return v ? "addClass" : "removeClass";} 
-    $(document).on("input", ".clearable", function(){
+    $(document).on("change", ".clearable", function(){
         $(this)[tog(this.value)]("x");
     }).on("mousemove", ".x", function( e ){
         $(this)[tog(this.offsetWidth-18 < e.clientX-this.getBoundingClientRect().left)]("onX");
@@ -89,7 +90,6 @@
         $(this).removeClass("x onX").val("").change();
     });
 
-    
 </script>
 
 
