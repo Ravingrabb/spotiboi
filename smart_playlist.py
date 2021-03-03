@@ -1,4 +1,3 @@
-from flask_migrate import history
 from start_settings import  HistoryPlaylist, db, SmartPlaylist, UsedPlaylist
 import os, random, base64
 

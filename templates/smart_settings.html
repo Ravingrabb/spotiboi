@@ -39,7 +39,7 @@
         {% endif %}
         " class="img-fluid rounded mx-auto d-block">
         <a href="{{item.external_urls.spotify}}"><p class='playlist-title'>{{item.name}}</p></a>
-        <svg id="{{item.id}}" onclick='setUnpinID()' width="20px" height="20px" viewBox="0 0 16 16" class="bi bi-x-square-fill trashBucket" fill="red" xmlns="http://www.w3.org/2000/svg" data-toggle="modal" data-target="#detachModal">
+        <svg id="{{item.id}}" onclick='setUnpinID()' width="20px" height="20px" viewBox="0 0 16 16" class="bi bi-x-square-fill trashBucket" fill="red" xmlns="https://www.w3.org/2000/svg" data-toggle="modal" data-target="#detachModal">
             <path id="{{item.id}}" fill-rule="evenodd" d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
         </svg>
     </div>
@@ -63,7 +63,7 @@
         {% endif %}
         " class="img-fluid rounded mx-auto d-block">
         <a href="{{item.external_urls.spotify}}"><p class='playlist-title'>{{item.name}}</p></a>
-        <svg id="{{item.id}}" onclick='setUnpinID()' width="20px" height="20px" viewBox="0 0 16 16" class="bi bi-x-square-fill trashBucket" fill="red" xmlns="http://www.w3.org/2000/svg" data-toggle="modal" data-target="#detachModal">
+        <svg id="{{item.id}}" onclick='setUnpinID()' width="20px" height="20px" viewBox="0 0 16 16" class="bi bi-x-square-fill trashBucket" fill="red" xmlns="https://www.w3.org/2000/svg" data-toggle="modal" data-target="#detachModal">
             <path id="{{item.id}}" fill-rule="evenodd" d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2zm3.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
         </svg>
     </div>
@@ -148,7 +148,7 @@
               <label class="custom-control-label" style='padding-bottom: 10px;'
                   for="autoCleanSwitch">
                   {{_('Auto clean playlist')}}
-              </label>
+              </label><small class="text-muted d-inline ml-2">{{_('Beta')}}</small>
               <small class="text-muted d-block">{{_('Your playlist will be cleared of listened tracks every hour')}}</small>
           </div>
       </div>

@@ -1,15 +1,15 @@
 from datetime import datetime
-import logging
+import requests
 from flask import session
 from flask.globals import request
 import spotipy
 from sqlalchemy.orm import query
-from start_settings import db, User, HistoryPlaylist, FavoritePlaylist, SmartPlaylist, UsedPlaylist
+from start_settings import db, User, HistoryPlaylist, FavoritePlaylist, SmartPlaylist, UsedPlaylist, scheduler_h, scheduler_f, scheduler_s, scheduler_a
 from flask_babel import gettext
 import gc
 import random
 from sys import exc_info
-from traceback import extract_tb
+import traceback
 from start_settings import app
 #for last
 import pylast
@@ -21,8 +21,14 @@ class UserSettings():
     
     def __init__(self, auth_manager) -> None:
         # авторизация и получаем id
-        self.spotify = spotipy.Spotify(auth_manager=auth_manager)
-        self.user_id = self.spotify.current_user()['id']
+        try:
+            self.spotify = spotipy.Spotify(auth_manager=auth_manager)
+            self.user_id = self.spotify.current_user()['id']
+        except spotipy.requests.exceptions.ReadTimeout:
+            app.logger.error('Spotify HTTP read timed out. (read timeout=5)')
+        except spotipy.exceptions.SpotifyException as e:
+            app.logger.error(e)
+            
         
         # если юзера не сущестует в БД, то создаётся запись. Тут же создаётся запись дял плейлиста
         if not User.query.filter_by(spotify_id=self.user_id).first():
@@ -160,15 +166,16 @@ class UserSettings():
                         app.logger.error(e)
                 # если ID плейлиста привязан, но юзер не подписан на плейлист
                 elif query.playlist_id and not self.spotify.playlist_is_following(query.playlist_id, [self.user_query.spotify_id])[0]:
-                    query.playlist_id = None
-                    db.session.commit()
-                    # TODO: сделать в будущем защиту, чтобы все абсолютно отмены работы были функцией, как ниже
                     if query.job_id in scheduler:
-                        scheduler.cancel(query.job_id)         
+                        scheduler.cancel(query.job_id)    
+                        app.logger.error(f'Traceback: отключено автообновление у клиента, так как нет подписки на плейлист. {query.playlist_id}. Юзер {self.user_query.spotify_id}')
+            except spotipy.exceptions.SpotifyException as e:
+                app.logger.error('Tasks -> Attach_playlist -> spotipy.exceptions.SpotifyException. Неправильно указан Playlist ID. Если ошибка будет поймана вновь - выводить её юзеру, а не в консоль')
+            except requests.exceptions.ReadTimeout:
+                app.logger.error('Tasks -> Attach_playlist -> requests.exceptions.ReadTimeout. Read Timeout.')
             except Exception as e:
                 app.logger.error(e)
-                app.logger.error(query)
-                app.logger.error(type(query))
+                app.logger.error(traceback.format_exc())
             finally:
                 return self.playlist_data    
             
@@ -186,30 +193,31 @@ def time_worker2(query) -> int:
         return None 
 
 
-def time_converter(query):
-    minutes = time_worker2(query)
+def time_converter(minutes):
     if minutes:
         if minutes >= 60:
-            hours = minutes / 60
+            hours = minutes // 60
             if hours >= 24:
-                days = hours / 24
-                return str(round(days)) + ' дн.'
+                days = hours // 24
+                return str(days) + ' д.'
             else:
-                return str(round(hours)) + ' ч.'
+                return str(hours) + ' ч.'
         else:
-            return str(round(minutes)) + ' мин.'
+            return str(minutes) + ' мин.'
     else:
-        return None
+        return '0 мин.'
       
                            
-def decode_to_bool(text):
+def decode_to_bool(text: str) -> bool:
+    ''' Переводит текстовые значения on или true в bool'''
     words = {'on', 'true'}
     if text.lower() in words:
         return True
     else:
         return False
         
-def days_to_minutes(number_string):
+def days_to_minutes(number_string: str) -> int:
+    ''' Переводит число в дней в минуты для RQ'''
     return int(number_string) * 1440
 
             
@@ -225,11 +233,16 @@ def create_job(UserSettings, playlist_query, func, scheduler, job_time=30) -> No
     except Exception as e:
         app.logger.error(e)
 
-
+# TODO: объединить обе функции
 def restart_job_with_new_settings(query, scheduler, UserSettings):
     if query.job_id in scheduler:
         scheduler.cancel(query.job_id)
         create_job(UserSettings, query, update_history, scheduler)
+
+def restart_smart_with_new_settings(query, scheduler, UserSettings):
+    if query.job_id in scheduler:
+        scheduler.cancel(query.job_id)
+        create_job(UserSettings, query, update_smart_playlist, scheduler)
 
 
 def check_worker_status(UserSettings, playlist_query, func, scheduler) -> str:
@@ -238,14 +251,21 @@ def check_worker_status(UserSettings, playlist_query, func, scheduler) -> str:
     # если autoupdate = ON
 
     if playlist_query.update == True and playlist_query.playlist_id and UserSettings.spotify.playlist_is_following(playlist_query.playlist_id, [UserSettings.user_id])[0]:
+        if UserSettings.user_id != UserSettings.spotify.playlist(playlist_query.playlist_id, fields='owner')['owner']['id']:
+            if playlist_query.job_id in scheduler: 
+                scheduler.cancel(playlist_query.job_id)
+            playlist_query.update = False
+            playlist_query.job_id = 0
+            db.session.commit()
+            return None
         # если работа не задана или она не в расписании
-        if not playlist_query.job_id or playlist_query.job_id not in scheduler:
+        elif not playlist_query.job_id or playlist_query.job_id not in scheduler:
             try:
                 create_job(UserSettings, playlist_query, func, scheduler)
             except Exception as e:
                 app.logger.error(e)
         # если работа работается, но uuid не совпадает
-        if playlist_query.job_id in scheduler and user_query.last_uuid != session.get('uuid'):
+        elif playlist_query.job_id in scheduler and user_query.last_uuid != session.get('uuid'):
             try:
                 scheduler.cancel(playlist_query.job_id)
                 create_job(UserSettings, playlist_query, func, scheduler)
@@ -253,6 +273,8 @@ def check_worker_status(UserSettings, playlist_query, func, scheduler) -> str:
                 db.session.commit()
             except Exception as e:
                 app.logger.error(e)
+        
+        
         return "checked"
     # если autoupdate = OFF
     else:
@@ -265,6 +287,7 @@ def check_worker_status(UserSettings, playlist_query, func, scheduler) -> str:
     
     
 def get_items_by_key(array, search_key: str) -> str:
+    ''' Возможность вытащить из dict элементы по определённому ключу, только для итераций'''
     for item in array:
         for key, value in item.items():
             if key == search_key:
@@ -283,7 +306,7 @@ def update_history(user_id, UserSettings) -> str:
             result = spotify.playlist_tracks(history_id, fields="items(track(uri,name))", limit=len(recently_played_uris), offset=history_query.fixed_capacity)
             tracks_to_delete = [item['track']['uri'] for item in result['items']]
             spotify.playlist_remove_all_occurrences_of_items(history_id, tracks_to_delete)   
-                     
+
     spotify = UserSettings.spotify
     history_query = UserSettings.history_query
     history_id = history_query.playlist_id
@@ -348,10 +371,15 @@ def update_history(user_id, UserSettings) -> str:
                     recently_played_uris.insert(0, track['uri'])
                     
         except pylast.WSError:
-            logging.error('Last.fm. Connection to the API failed with HTTP code 500') 
+            pass
+            # TODO: добавить полноценное оповещение, но только при ручном автообновлении
+            #logging.error('Last.fm. Connection to the API failed with HTTP code 500') 
                      
         except Exception as e:
-            logging.error(e)
+            app.logger.error(e)
+            app.logger.error('And trackeback for error above:')
+            app.logger.error(traceback.format_exc())
+            
             
     # если есть новые треки для добавления - они добавляются в History   
     try:  
@@ -378,11 +406,12 @@ def update_history(user_id, UserSettings) -> str:
 
 
 def get_playlist_raw_tracks(sp, playlist_id):
+    ''' Шаблонное получение плейлиста по ID. Содержит лишние поля items, track, поэтому для работы из лучше убрать с помощью convert_playlist '''
     return sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
-    
+
 
 def convert_playlist(playlist_array) -> list:
-    """ Перевод сырого JSON в формат, более удобный для программы """
+    """ Перевод сырого dict плейлиста в формат, более удобный для программы """
     output = [
         {'name': item['track']['name'].lower(),
         'uri': item['track']['uri'],
@@ -392,6 +421,12 @@ def convert_playlist(playlist_array) -> list:
         if item['track']
         ]
     return output
+
+
+def get_playlist(sp, playlist_id, limit=100):
+    ''' Возвращает хорший и уже конвертнутый плейлист'''
+    result = get_playlist_raw_tracks(sp, playlist_id)
+    return convert_playlist(result) if limit else get_every_playlist_track(sp, result)
 
 
 def get_every_playlist_track(spotify, raw_results: list) -> list:
@@ -476,42 +511,46 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
     sp = UserSettings.spotify
     favorite_query = UserSettings.favorite_query
     results = sp.current_user_saved_tracks(limit=20)
-    
-    # если плейлист добавлен, то просто обновляем
-    if favorite_query.playlist_id and sp.playlist_is_following(favorite_query.playlist_id, [user_id])[0]:
-        # получаем актуальный список треков из saved
-        new_track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
-        
-        # получаем список песен из плейлиста favorites
-        fav_playlist_results = sp.playlist_tracks(favorite_query.playlist_id)
-        fav_playlist_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results) )
-        
-        #добавляем новые треки
-        to_add = [uri for uri in new_track_uris if uri not in fav_playlist_uris]
-        if to_add: 
-            fill_playlist(sp, favorite_query.playlist_id, to_add, from_top=True)
-        
-        #удаляем не акутальные
-        to_delete = [ uri for uri in fav_playlist_uris if uri not in new_track_uris]
-        if to_delete:
-            sp.playlist_remove_all_occurrences_of_items(favorite_query.playlist_id, to_delete)   
-    # плейлист не добавлен
-    else:
-        sp.user_playlist_create(
-                user=user_id, 
-                name='My Favorite Songs', 
-                description='My public liked tracks. Created by SpotiBoi'
-                )
-        
-        playlists = sp.current_user_playlists()
-        track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
-        for item in playlists['items']:
-            if item['name'] == 'My Favorite Songs':
-                favorite_query.playlist_id = item['id']
-                favorite_query.update = False
-                db.session.commit()
-                fill_playlist(sp, item['id'], track_uris)
-                break
+    try:
+        # если плейлист добавлен, то просто обновляем
+        if favorite_query.playlist_id and sp.playlist_is_following(favorite_query.playlist_id, [user_id])[0]:
+            # получаем актуальный список треков из saved
+            new_track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
+            
+            # получаем список песен из плейлиста favorites
+            fav_playlist_results = sp.playlist_tracks(favorite_query.playlist_id)
+            fav_playlist_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results) )
+            
+            #добавляем новые треки
+            to_add = [uri for uri in new_track_uris if uri not in fav_playlist_uris]
+            if to_add: 
+                fill_playlist(sp, favorite_query.playlist_id, to_add, from_top=True)
+            
+            #удаляем не акутальные
+            to_delete = [ uri for uri in fav_playlist_uris if uri not in new_track_uris]
+            if to_delete:
+                sp.playlist_remove_all_occurrences_of_items(favorite_query.playlist_id, to_delete)   
+        # плейлист не добавлен
+        else:
+            sp.user_playlist_create(
+                    user=user_id, 
+                    name='My Favorite Songs', 
+                    description='My public liked tracks. Created by SpotiBoi'
+                    )
+            
+            playlists = sp.current_user_playlists()
+            track_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, results) )
+            for item in playlists['items']:
+                if item['name'] == 'My Favorite Songs':
+                    favorite_query.playlist_id = item['id']
+                    favorite_query.update = False
+                    db.session.commit()
+                    fill_playlist(sp, item['id'], track_uris)
+                    break
+    except Exception as e:
+        app.logger.error(e)
+    finally:
+        gc.collect()
         
         
 def update_smart_playlist(user_id, UserSettings):
@@ -583,8 +622,23 @@ def update_smart_playlist(user_id, UserSettings):
             return 'OK!'
         else:
             return 'You unfollowed this playlist. Please, refresh your page'
+
+    except spotipy.exceptions.SpotifyException as e:
+        if 'Couldn\'t refresh token. Response Status Code: 400 Reason: Bad Request' in e:
+            pass
+        else:
+            app.logger.error(e)
+            app.logger.error('And trackeback for error above:')
+            app.logger.error(traceback.format_exc())
+    except TypeError as e:
+        app.logger.error(e)
+        app.logger.error('And some info for error above:')
+        app.logger.error(f'User:{UserSettings.user_id}, Playlist: https://open.spotify.com/playlist/{UserSettings.smart_query.playlist_id}')
     except Exception as e:
         app.logger.error(e)
+        app.logger.error('And trackeback for error above:')
+        app.logger.error(traceback.format_exc())
+
     finally:
         smart_query = SmartPlaylist.query.filter_by(user_id=user_id).first()
         smart_query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
@@ -593,29 +647,48 @@ def update_smart_playlist(user_id, UserSettings):
         
  
 def auto_clean(user_id, UserSettings):
-    history_query = UserSettings.new_history_query()
-    sp = UserSettings.spotify
-    if history_query.playlist_id and UserSettings.smart_query.playlist_id:
-        listened_raw = get_playlist_raw_tracks(sp, history_query.playlist_id)
-        listened = get_items_by_key(convert_playlist(listened_raw), 'uri')
-        sp.playlist_remove_all_occurrences_of_items(UserSettings.smart_query.playlist_id, listened)
+    try:
+        history_query = UserSettings.new_history_query()
+        smart_query = UserSettings.new_smart_query()
+        sp = UserSettings.spotify
+        if history_query.playlist_id and UserSettings.smart_query.playlist_id:
+            history_playlist = get_playlist(sp, history_query.playlist_id)
+            smart_raw = get_playlist(sp, smart_query.playlist_id)
+            to_delete = frozenset(item['uri'] for item in smart_raw if item['name'] in get_items_by_key(history_playlist, 'name'))
+            sp.playlist_remove_all_occurrences_of_items(UserSettings.smart_query.playlist_id, to_delete)
+            gc.collect()
+    except spotipy.exceptions.SpotifyException as e:
+        if 'Couldn\'t refresh token' in e:
+            smart_query = UserSettings.new_smart_query()
+            if smart_query.ac_job_id in scheduler_a:
+                scheduler_a.cancel(smart_query.ac_job_id)
+            smart_query.ac_job_id = None
+            db.session.commit()
+        else:
+            app.logger.error(e)
+            
 
     
 def auto_clean_checker(UserSettings, scheduler):
     """ Работник с задачей, но только специально для auto cleaner """
+    
     def create_ac_job():
         ''' То же самое, что и create_job, только для auto cleaner'''
-        job = scheduler.schedule(datetime.utcnow(), auto_clean, args=[UserSettings.user_id, UserSettings], interval=3600, repeat=None)
+        job = scheduler.schedule(datetime.utcnow(), auto_clean, args=[UserSettings.user_id, UserSettings], interval=3600, repeat=None, timeout=500)
         scheduler.enqueue_job(job)
         smart_query.ac_job_id = job.id
         db.session.commit()
         
     try:
         smart_query = UserSettings.new_smart_query()
+        
+        # если настройки включены
         if smart_query.auto_clean and smart_query.playlist_id:
+            #.... но работа не создана
             if not smart_query.ac_job_id or smart_query.ac_job_id not in scheduler:
                 create_ac_job()
-            if smart_query.ac_job_id in scheduler and UserSettings.user_query.last_uuid != session.get('uuid'):
+                
+            elif smart_query.ac_job_id in scheduler and UserSettings.user_query.last_uuid != session.get('uuid'):
                 scheduler.cancel(smart_query.ac_job_id)
                 create_ac_job()
                 UserSettings.user_query.last_uuid = session.get('uuid')

@@ -11,10 +11,11 @@ from requests.cookies import create_cookie
 import spotipy
 import pylast
 from sqlalchemy.orm import query
+from datetime import date, datetime, timedelta
 
 from start_settings import UsedPlaylist, app, db, scheduler_h, scheduler_f, scheduler_s, scheduler_a
 import smart_playlist
-
+from redis import Redis
 from flask_migrate import Migrate
 from flask_session import Session
 from flask import session, request, redirect, render_template, url_for, flash, jsonify, make_response
@@ -25,8 +26,7 @@ from dotenv import load_dotenv
 import objgraph
 import gc
 
-DEBUG = 0
-
+DEBUG = 1
 # objects
 migrate = Migrate(app, db)
 babel = Babel(app)
@@ -36,13 +36,11 @@ import tasks
 
 auth_scopes = 'playlist-modify-private playlist-read-private playlist-modify-public playlist-read-collaborative user-read-recently-played user-library-read  ugc-image-upload'
 
-# декоратор для авторизации
-
 def session_cache_path():
     try:
         return caches_folder + session['uuid']
     except:
-        return caches_folder + request.cookies.get('uuid')
+        return None
     
 
 # создание кэша для авторизации
@@ -147,8 +145,17 @@ def index():
     smart_checked = tasks.check_worker_status(UserSettings, UserSettings.smart_query, tasks.update_smart_playlist, scheduler_s)
     tasks.auto_clean_checker(UserSettings, scheduler_a)
     # вычислятор времени
-    time_difference = UserSettings.time_worker()
-    smart_time_difference = tasks.time_converter(UserSettings.smart_query)
+    history_time_diff = tasks.time_worker2(UserSettings.history_query)
+    time_difference = tasks.time_converter(minutes=history_time_diff)
+    
+    try:
+        job = scheduler_s.job_class.fetch(UserSettings.smart_query.job_id,connection=Redis())
+        diff = datetime.now() - job.started_at
+        diff_minutes = round((diff.days * 24 * 60) + (diff.seconds/60)) - 180
+    except:
+        diff_minutes = None
+    
+    smart_time_difference = tasks.time_converter(minutes=diff_minutes)
     
     gc.collect()
     
@@ -169,28 +176,75 @@ def index():
 def auth(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
-                                               cache_path=session_cache_path(),
-                                               show_dialog=True)
-        if not auth_manager.get_cached_token():
+        if session_cache_path():
+            auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
+                                                cache_path=session_cache_path(),
+                                                show_dialog=True)
+            if not auth_manager.get_cached_token():
+                return redirect('/')
+            get_user = tasks.UserSettings(auth_manager)
+            return func(UserSettings = get_user)
+        else:
             return redirect('/')
-        get_user = tasks.UserSettings(auth_manager)
-        return func(UserSettings = get_user)
     return wrapper
 
     
 @app.route('/test2')
 @auth
 def test2(UserSettings):
-    tasks.auto_clean(UserSettings)
-    return render_template('test.html')
+    sp = UserSettings.spotify
+    data = sp.audio_features(['spotify:artist:0LsTFjEB1IIrh7IlTxs1GY', 
+    'spotify:album:2edH6FFfrv00LqR3fuQpWr', 
+    'spotify:track:2ynCjjrmED5CfiVn2ZLkUk', 
+    'spotify:track:1zj2hXKBgOma076z0Ya96I',
+    'spotify:track:1ZsVFKysSROWBWZX3ZG1Gu',
+    'spotify:track:70ObidosunvN8jTLZuZQWO',
+    'spotify:track:4yaoVEBN4EDtFSkmXoQBd1',
+    'spotify:track:4IlVAZQ9gDZGQ0CILBRLVB',
+    'spotify:track:17vC29osvs1ArI3GDgZWzm',
+    'spotify:track:3ScyefUwfkGi0g6CaCemRc',
+    'spotify:track:68pRDxzsRVXjVojzrU5NNm',
+    'spotify:track:329yUC0343IqdAHu2dLVkJ',
+    'spotify:track:4W9n2JpWokIEZdBA3Kq1Ep',
+    'spotify:track:36reJeV8JjPXgHYfxz72X3',
+    'spotify:track:3s2MZsEfiMe7ZjiRtun6wv'])
+
+    def mean(numbers):
+        return float(sum(numbers)) / max(len(numbers), 1)
+
+    danceability = []
+    energy = []
+    valence = []
+    tempo = []
+    for track in data:
+        if track:
+            danceability.append(track['danceability'])
+            energy.append(track['energy'])
+            valence.append(track['valence'])
+            tempo.append(track['tempo'])
+    data.append('danceability - ' + str(mean(danceability)))
+    data.append('energy - ' + str(mean(energy)))
+    data.append('valence - ' + str(mean(valence)))
+    data.append('tempo - ' + str(mean(tempo)))
+
+    results = sp.playlist_tracks('spotify:playlist:2v8wK2uDTq7Rog1T8hPJRN', fields="items(track(uri)), next")
+
+    track_moods = sp.audio_features([item['track']['uri'] for item in results['items']])
+    tracks_to_delete = [song['uri'] for song in track_moods if song['danceability'] > 0.53 or song['energy'] > 0.5]
+    sp.playlist_remove_all_occurrences_of_items('spotify:playlist:2v8wK2uDTq7Rog1T8hPJRN', tracks_to_delete)   
+    return render_template('test.html', queries = track_moods)
 
 @app.route('/debug')
 @auth
 def debug(UserSettings):
-    print(UserSettings.spotify.playlist('1pG9gkXUF1dsFK7jUOXBn3')['owner']['uri'])
-    print(UserSettings.spotify.me()['uri'])
-    return UserSettings.user_id
+    try:     
+        job = scheduler_s.job_class.fetch(UserSettings.smart_query.job_id,connection=Redis())
+        print(job.started_at)
+        print(datetime.now())
+        return UserSettings.user_id
+    except:
+        app.logger.info('Someone unauthorized tried to visit debug page lol')
+
         
 @app.route('/donate')
 def donate():
@@ -199,14 +253,6 @@ def donate():
 @app.route('/faq')
 def faq():
     return render_template('faq.html')
-
-@app.route('/leak')
-def leak():
-    objgraph.show_most_common_types(limit=5)
-    print (objgraph.by_type('function')[0])
-    print('________________')
-    return "pizdec"
-
 
 @app.route('/sign_out')
 def sign_out():
@@ -327,6 +373,7 @@ def smart_settings(UserSettings):
         main_attached_playlists = smart_playlist.get_main_attached_ids(UserSettings)
         user_playlists = [item for item in user_pl if item['id'] not in tasks.get_items_by_key(used_playlists, 'id') and item['id'] not in main_attached_playlists and item['id'] not in tasks.get_items_by_key(excluded_playlists, 'id')]
         
+
         # settings
         UserSettings.settings_worker()
 
@@ -361,7 +408,9 @@ def make_liked(UserSettings):
 @app.route('/make_smart', methods=['POST'])
 @auth
 def make_smart(UserSettings):
-    response = tasks.update_smart_playlist(UserSettings.user_id, UserSettings)   
+    response = tasks.update_smart_playlist(UserSettings.user_id, UserSettings)
+    if UserSettings.smart_query.job_id or UserSettings.smart_query in scheduler_s:
+        tasks.restart_smart_with_new_settings(UserSettings.smart_query, scheduler_s, UserSettings)
     return jsonify({'response': response})
 
 
@@ -480,7 +529,8 @@ def auto_update_smart(UserSettings):
 @auth
 def get_time(UserSettings):
     try:
-        return jsonify({'response': UserSettings.time_worker()})
+        history_time_diff = tasks.time_worker2(UserSettings.history_query)
+        return jsonify({'response': tasks.time_converter(history_time_diff)})
     except:
         return jsonify({'response': gettext('bruh')})
 

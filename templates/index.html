@@ -35,7 +35,7 @@
                         title="{{_('Detach playlist')}}" class="text-decoration-none" data-toggle="modal"
                         data-target="#deattachModal">
                         <svg width="16" height="16" viewBox="0 0 16 16" class="bi bi-x-circle-fill" fill="currentColor"
-                            xmlns="http://www.w3.org/2000/svg">
+                            xmlns="https://www.w3.org/2000/svg">
                             <path fill-rule="evenodd"
                                 d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z">
                             </path>
@@ -47,7 +47,7 @@
                         <img src="{{ history_playlist_data.images }}" alt="cover" class="img-fluid">
                     {% else %}
                         <svg class="bd-placeholder-img card-img-top" width="100%" height="225"
-                            xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false"
+                            xmlns="https://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false"
                             role="img" aria-label="Placeholder: Thumbnail">
                             <title>No artwork</title>
                             <rect width="100%" height="100%" fill="#55595c"></rect><text x="35%" y="50%" fill="#eceeef"
@@ -84,7 +84,7 @@
                                     <button type="button" id='manualUpdateSettings' class="btn btn-sm btn-outline-secondary"
                                         data-toggle="modal" data-target="#settingsModal">
                                         <svg width="21" height="21" viewBox="0 0 16 16" class="bi bi-gear"
-                                            fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                            fill="currentColor" xmlns="https://www.w3.org/2000/svg">
                                             <path fill-rule="evenodd"
                                                 d="M8.837 1.626c-.246-.835-1.428-.835-1.674 0l-.094.319A1.873 1.873 0 0 1 4.377 3.06l-.292-.16c-.764-.415-1.6.42-1.184 1.185l.159.292a1.873 1.873 0 0 1-1.115 2.692l-.319.094c-.835.246-.835 1.428 0 1.674l.319.094a1.873 1.873 0 0 1 1.115 2.693l-.16.291c-.415.764.42 1.6 1.185 1.184l.292-.159a1.873 1.873 0 0 1 2.692 1.116l.094.318c.246.835 1.428.835 1.674 0l.094-.319a1.873 1.873 0 0 1 2.693-1.115l.291.16c.764.415 1.6-.42 1.184-1.185l-.159-.291a1.873 1.873 0 0 1 1.116-2.693l.318-.094c.835-.246.835-1.428 0-1.674l-.319-.094a1.873 1.873 0 0 1-1.115-2.692l.16-.292c.415-.764-.42-1.6-1.185-1.184l-.291.159A1.873 1.873 0 0 1 8.93 1.945l-.094-.319zm-2.633-.283c.527-1.79 3.065-1.79 3.592 0l.094.319a.873.873 0 0 0 1.255.52l.292-.16c1.64-.892 3.434.901 2.54 2.541l-.159.292a.873.873 0 0 0 .52 1.255l.319.094c1.79.527 1.79 3.065 0 3.592l-.319.094a.873.873 0 0 0-.52 1.255l.16.292c.893 1.64-.902 3.434-2.541 2.54l-.292-.159a.873.873 0 0 0-1.255.52l-.094.319c-.527 1.79-3.065 1.79-3.592 0l-.094-.319a.873.873 0 0 0-1.255-.52l-.292.16c-1.64.893-3.433-.902-2.54-2.541l.159-.292a.873.873 0 0 0-.52-1.255l-.319-.094c-1.79-.527-1.79-3.065 0-3.592l.319-.094a.873.873 0 0 0 .52-1.255l-.16-.292c-.892-1.64.902-3.433 2.541-2.54l.292.159a.873.873 0 0 0 1.255-.52l.094-.319z" />
                                             <path fill-rule="evenodd"
@@ -94,8 +94,8 @@
                                 </div>
                             </div>
                             {% if time_difference != None %}
-                                <small class="text-muted current-time">
-                                    {{_("Updated")}} {{ time_difference }} {{_('min ago')}}
+                                <small class="text-muted">
+                                    {{_("Updated")}} <div class="d-inline current-time">{{ time_difference }}</div> {{_('ago')}}
                                 </small>
                             {% endif %}
                             <!-- Если плейлиста нет -->
@@ -122,7 +122,7 @@
                     title="{{_('Detach playlist')}}" class="text-decoration-none" data-toggle="modal"
                     data-target="#detachSmartModal">
                     <svg width="16" height="16" viewBox="0 0 16 16" class="bi bi-x-circle-fill" fill="currentColor"
-                        xmlns="http://www.w3.org/2000/svg">
+                        xmlns="https://www.w3.org/2000/svg">
                         <path fill-rule="evenodd"
                             d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z">
                         </path>
@@ -134,7 +134,7 @@
                     <img src="{{ smart_playlist_data.images }}" alt="cover" class="img-fluid">
                     {% else %}
                     <svg class="bd-placeholder-img card-img-top" width="100%" height="225"
-                        xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false"
+                        xmlns="https://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false"
                         role="img" aria-label="Placeholder: Thumbnail">
                         <title>No artwork</title>
                         <rect width="100%" height="100%" fill="#55595c"></rect><text x="35%" y="50%" fill="#eceeef"
@@ -170,7 +170,7 @@
                                 </button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href='/smart_settings'">
                                     <svg width="21" height="21" viewBox="0 0 16 16" class="bi bi-gear"
-                                        fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        fill="currentColor" xmlns="https://www.w3.org/2000/svg">
                                         <path fill-rule="evenodd"
                                             d="M8.837 1.626c-.246-.835-1.428-.835-1.674 0l-.094.319A1.873 1.873 0 0 1 4.377 3.06l-.292-.16c-.764-.415-1.6.42-1.184 1.185l.159.292a1.873 1.873 0 0 1-1.115 2.692l-.319.094c-.835.246-.835 1.428 0 1.674l.319.094a1.873 1.873 0 0 1 1.115 2.693l-.16.291c-.415.764.42 1.6 1.185 1.184l.292-.159a1.873 1.873 0 0 1 2.692 1.116l.094.318c.246.835 1.428.835 1.674 0l.094-.319a1.873 1.873 0 0 1 2.693-1.115l.291.16c.764.415 1.6-.42 1.184-1.185l-.159-.291a1.873 1.873 0 0 1 1.116-2.693l.318-.094c.835-.246.835-1.428 0-1.674l-.319-.094a1.873 1.873 0 0 1-1.115-2.692l.16-.292c.415-.764-.42-1.6-1.185-1.184l-.291.159A1.873 1.873 0 0 1 8.93 1.945l-.094-.319zm-2.633-.283c.527-1.79 3.065-1.79 3.592 0l.094.319a.873.873 0 0 0 1.255.52l.292-.16c1.64-.892 3.434.901 2.54 2.541l-.159.292a.873.873 0 0 0 .52 1.255l.319.094c1.79.527 1.79 3.065 0 3.592l-.319.094a.873.873 0 0 0-.52 1.255l.16.292c.893 1.64-.902 3.434-2.541 2.54l-.292-.159a.873.873 0 0 0-1.255.52l-.094.319c-.527 1.79-3.065 1.79-3.592 0l-.094-.319a.873.873 0 0 0-1.255-.52l-.292.16c-1.64.893-3.433-.902-2.54-2.541l.159-.292a.873.873 0 0 0-.52-1.255l-.319-.094c-1.79-.527-1.79-3.065 0-3.592l.319-.094a.873.873 0 0 0 .52-1.255l-.16-.292c-.892-1.64.902-3.433 2.541-2.54l.292.159a.873.873 0 0 0 1.255-.52l.094-.319z" />
                                         <path fill-rule="evenodd"
@@ -342,7 +342,7 @@
                             id="fixedDedupSwitch" onchange="checkCheckbox('inputDiv1')" {{settings.dedup_status}}>
                         <label class="custom-control-label" for="fixedDedupSwitch">
                             {{_('Fixed de-duplicate')}}
-                        <svg id='dedupQuestion' class='ml-1 d-none d-sm-inline' width="12" height="12" viewBox="0 0 16 16" class="bi bi-question-circle" fill="#6c757d" xmlns="http://www.w3.org/2000/svg">
+                        <svg id='dedupQuestion' class='ml-1 d-none d-sm-inline' width="12" height="12" viewBox="0 0 16 16" class="bi bi-question-circle" fill="#6c757d" xmlns="https://www.w3.org/2000/svg">
                             <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                             <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
                         </svg>
@@ -354,7 +354,7 @@
                         <input id="dedupValue" type="number" class="form-control"
                             value='{% if settings.dedup_status %}{{settings.dedup_value}}{% else %}200{% endif %}'>
                         <small class="form-text text-muted">
-                            {{_('Value must be 200 or more tracks')}}
+                            {{_('Value must be between 200 and 500 tracks')}}
                         </small>
                     </div>
 
@@ -364,7 +364,7 @@
                         <input type="checkbox" class="custom-control-input" id="fixedPlaylistSwitch"
                             onchange="checkCheckbox('inputDiv2')" {{settings.fixed_status}}>
                         <label class="custom-control-label" for="fixedPlaylistSwitch">{{_('Fixed playlist')}}
-                            <svg id='dedupFixed' class='d-none d-sm-inline ml-1' width="12" height="12" viewBox="0 0 16 16" class="bi bi-question-circle" fill="#6c757d" xmlns="http://www.w3.org/2000/svg">
+                            <svg id='dedupFixed' class='d-none d-sm-inline ml-1' width="12" height="12" viewBox="0 0 16 16" class="bi bi-question-circle" fill="#6c757d" xmlns="https://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                                 <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
                               </svg>
@@ -386,7 +386,7 @@
                     </label>
                     <input id="updateTimeValue" type="number" class="form-control"
                         value='{{settings.update_time}}'>
-                    <small class="form-text text-muted">{{_('In minutes (10 or more)')}}</small>
+                    <small class="form-text text-muted">{{_('In minutes (30 or more)')}}</small>
 
                     <!-- LASTFM SWITCH -->
                     <div class="custom-control custom-switch">
@@ -428,7 +428,7 @@
                     <div class="d-flex flex-row-reverse">
                         <button id='TelegramButton'type="button pull-right" class="btn btn-outline-primary"
                         onClick="document.location.href='https://t.me/joinchat/Cr_lVxt7lw9fVo31OfiBQA'">
-                            <svg fill='#007bff' id="regular" enable-background="new 0 0 24 24" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="m12 24c6.617 0 12-5.383 12-12s-5.383-12-12-12-12 5.383-12 12 5.383 12 12 12zm0-22.5c5.79 0 10.5 4.71 10.5 10.5s-4.71 10.5-10.5 10.5-10.5-4.71-10.5-10.5 4.71-10.5 10.5-10.5z"/><path d="m7.896 14.155 1.568-.681-.44.441c-.141.141-.22.332-.22.53v2.935c0 .672.812.998 1.28.53l1.574-1.574 3.43 1.715c.444.222.981-.041 1.073-.537l1.957-10.761c.103-.579-.467-1.047-1.012-.833l-12.716 4.977c-.57.222-.646 1.002-.13 1.331l2.934 1.872c.21.134.475.155.702.055zm8.506-6.347-1.537 8.455-3.02-1.509c-.292-.146-.64-.085-.865.141l-.676.676v-.813l3.007-3.007c.583-.583-.073-1.545-.829-1.218l-4.817 2.09-1.354-.864z"/></svg>
+                            <svg fill='#007bff' id="regular" enable-background="new 0 0 24 24" height="20" viewBox="0 0 24 24" width="20" xmlns="https://www.w3.org/2000/svg"><path d="m12 24c6.617 0 12-5.383 12-12s-5.383-12-12-12-12 5.383-12 12 5.383 12 12 12zm0-22.5c5.79 0 10.5 4.71 10.5 10.5s-4.71 10.5-10.5 10.5-10.5-4.71-10.5-10.5 4.71-10.5 10.5-10.5z"/><path d="m7.896 14.155 1.568-.681-.44.441c-.141.141-.22.332-.22.53v2.935c0 .672.812.998 1.28.53l1.574-1.574 3.43 1.715c.444.222.981-.041 1.073-.537l1.957-10.761c.103-.579-.467-1.047-1.012-.833l-12.716 4.977c-.57.222-.646 1.002-.13 1.331l2.934 1.872c.21.134.475.155.702.055zm8.506-6.347-1.537 8.455-3.02-1.509c-.292-.146-.64-.085-.865.141l-.676.676v-.813l3.007-3.007c.583-.583-.073-1.545-.829-1.218l-4.817 2.09-1.354-.864z"/></svg>
                           </button>  
                     </div>
                 </div>

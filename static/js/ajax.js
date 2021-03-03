@@ -6,9 +6,10 @@ async function updateTime() {
         url: "/get_time"
     })
         .done(function (data) {
-            var r = /\d+/;
-            var s = $('.current-time').text();
-            $('.current-time').text(s.replace(r, data.response))
+            //var r = /\d+/;
+            //var s = $('.current-time').text();
+            //$('.current-time').text(s.replace(r, data.response))
+            $('.current-time').text(data.response)
         })
 }
 
@@ -100,9 +101,13 @@ $('#updateSettingsButton').click(function () {
             $(item[0]).addClass('blocked')
             gotErrors = true
         }
+        if ( item[2] != null && $(item[0]).val() > item[2] ){
+            $(item[0]).addClass('blocked')
+            gotErrors = true
+        }
     }
 
-    inputIds = [['#dedupValue', 200], ['#fixedValue', 100], ['#updateTimeValue', 10]]
+    inputIds = [['#dedupValue', 200, 500], ['#fixedValue', 100, null], ['#updateTimeValue', 30, null]]
     inputIds.forEach(element => $(element[0]).removeClass('blocked'));
     inputIds.forEach(checkInputs)
 
