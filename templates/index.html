@@ -182,9 +182,11 @@
                         </div>
                         
                         {% if smart_time_difference != None %}
-                        <small class="text-muted">
-                            {{_("Updated")}} {{ smart_time_difference }} {{_('ago')}}
-                        </small>
+                        <span class="d-inline-block" data-toggle="popover" data-placement="bottom" data-content="Следующее обновление через {{smart_time_difference[1]}}">
+                            <small class="text-muted" id='smartTimeDifference'>
+                                {{_("Updated")}} {{ smart_time_difference[0] }} {{_('ago')}}
+                            </small>
+                        </span>
                         {% endif %}
                        
                         <!-- Если плейлиста нет -->
@@ -460,10 +462,19 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
 
 <!-- SCRIPTS -->
 <script src="{{url_for('static', filename='js/ajax.js')}}"></script>
-
+<script>
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+    })
+    $('#smartTimeDifference').popover({
+        trigger: 'focus'
+    })
+</script>
 {% endblock %}
 
 <script>
+
+
     window.open(
         'https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
         '_blank' // <- This is what makes it open in a new window.

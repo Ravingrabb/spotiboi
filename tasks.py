@@ -313,97 +313,104 @@ def update_history(user_id, UserSettings) -> str:
     user_query = UserSettings.new_user_query()
 
     search_limit = 45
-    
-    # получаем историю прослушиваний (учитывая настройки )
-    history_playlist = get_current_history_list(UserSettings, history_query.fixed_dedup)
-    
-    # если вернутся None из-за ошибки, то выдаём ошибку
-    if history_playlist == None:
-        return (gettext('Can\'t connect to Spotify server'))
-    
-    # вытаскиваются последние прослушанные песни
-    results = spotify.current_user_recently_played(limit=search_limit)
-    
-    #песни из recently сравниваются с историей
-    recently_played_uris = [item['track']['uri'] 
-                            for item in results['items'] 
-                            if item['track']['uri'] not in get_items_by_key(history_playlist, 'uri') 
-                            and item['track']['name'].lower() not in get_items_by_key(history_playlist, 'name') ]
+    try:
+        # получаем историю прослушиваний (учитывая настройки )
+        history_playlist = get_current_history_list(UserSettings, history_query.fixed_dedup)
+        
+        # если вернутся None из-за ошибки, то выдаём ошибку
+        if history_playlist == None:
+            return (gettext('Can\'t connect to Spotify server'))
+        
+        # вытаскиваются последние прослушанные песни
+        results = spotify.current_user_recently_played(limit=search_limit)
+        
+        #песни из recently сравниваются с историей
+        recently_played_uris = [item['track']['uri'] 
+                                for item in results['items'] 
+                                if item['track']['uri'] not in get_items_by_key(history_playlist, 'uri') 
+                                and item['track']['name'].lower() not in get_items_by_key(history_playlist, 'name') ]
 
-    # если в настройках указан логин lasfm, то вытаскиваются данные с него
-    if user_query.lastfm_username:
-        try:
-            username = user_query.lastfm_username
-            network = pylast.LastFMNetwork(api_key='e62b095dc44b53f63137d90bce84117b', api_secret="1e3f4f44e4eae94a9cc8280f11b6fc71",
-                                        username=username)
-            result = network.get_user(username).get_recent_tracks(limit=search_limit)
-            
-            recently_played_names = { item['track']['name'].lower() for item in results['items'] if item['track']['uri'] not in get_items_by_key(history_playlist, 'uri') }
+        # если в настройках указан логин lasfm, то вытаскиваются данные с него
+        if user_query.lastfm_username:
+            try:
+                username = user_query.lastfm_username
+                network = pylast.LastFMNetwork(api_key='e62b095dc44b53f63137d90bce84117b', api_secret="1e3f4f44e4eae94a9cc8280f11b6fc71",
+                                            username=username)
+                result = network.get_user(username).get_recent_tracks(limit=search_limit)
                 
-            # достаём данные из lastfm
-            data_with_duplicates = [
-                {'name': song[0].title, 'artist': song[0].artist.name, 'album': song.album}
-                for song in result
-            ]
-            
-            # создаём оптимизированный список без дубликатов и без треков, которые уже, вероятно, есть в истории
-            last_fm_data = []
-            for song in data_with_duplicates:
-                if song not in last_fm_data and song['name'].lower() not in recently_played_names and song['name'].lower() not in get_items_by_key(history_playlist, 'name'):
-                    last_fm_data.append(song)
-
-            # переводим эти данные в uri спотифай (SPOTIFY API SEARCH)
-            last_fm_data_to_uri = [] 
-            for q in last_fm_data:
-                try:
-                    lang = detect_language(q['artist'])
-                    if lang != 'ru':
-                        track = spotify.search(f"\"{q['name']}\" artist:{q['artist']} album:\"{q['album']}\"", limit=1, type="track")['tracks']['items'][0]['uri']
-                    else:
-                        track = spotify.search(f"\"{q['name']}\" album:\"{q['album']}\"", limit=1, type="track")['tracks']['items'][0]['uri']
-                    last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': track})
-                except:
-                    continue
-                
-            # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
-            for track in last_fm_data_to_uri:
-                if track['uri'] not in recently_played_uris and track['uri'] not in get_items_by_key(history_playlist, 'uri'):
-                    recently_played_uris.insert(0, track['uri'])
+                recently_played_names = { item['track']['name'].lower() for item in results['items'] if item['track']['uri'] not in get_items_by_key(history_playlist, 'uri') }
                     
-        except pylast.WSError:
-            pass
-            # TODO: добавить полноценное оповещение, но только при ручном автообновлении
-            #logging.error('Last.fm. Connection to the API failed with HTTP code 500') 
-                     
-        except Exception as e:
-            app.logger.error(e)
-            app.logger.error('And trackeback for error above:')
-            app.logger.error(traceback.format_exc())
-            
-            
-    # если есть новые треки для добавления - они добавляются в History   
-    try:  
-        if recently_played_uris:
-            # убираем дубликаты
-            recently_played_uris = list(dict.fromkeys(recently_played_uris))
-            
-            spotify.playlist_add_items(history_id, recently_played_uris, position=0)
-            # если стоит настройка ограничения плейлиста по размеру
-            if history_query.fixed_capacity:
-                limit_playlist_size()
-            
-            return (gettext('History updated'))
-        # иначе пропускаем
-        else:
-            return (gettext('Nothing to update'))          
-    except spotipy.SpotifyException:
-        return ("Nothing to add for now")
-    finally:
-        history_query = HistoryPlaylist.query.filter_by(user_id=user_id).first()
-        history_query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
-        db.session.commit()
-        gc.collect()
+                # достаём данные из lastfm
+                data_with_duplicates = [
+                    {'name': song[0].title, 'artist': song[0].artist.name, 'album': song.album}
+                    for song in result
+                ]
+                
+                # создаём оптимизированный список без дубликатов и без треков, которые уже, вероятно, есть в истории
+                last_fm_data = []
+                for song in data_with_duplicates:
+                    if song not in last_fm_data and song['name'].lower() not in recently_played_names and song['name'].lower() not in get_items_by_key(history_playlist, 'name'):
+                        last_fm_data.append(song)
 
+                # переводим эти данные в uri спотифай (SPOTIFY API SEARCH)
+                last_fm_data_to_uri = [] 
+                for q in last_fm_data:
+                    try:
+                        lang = detect_language(q['artist'])
+                        if lang != 'ru':
+                            track = spotify.search(f"\"{q['name']}\" artist:{q['artist']} album:\"{q['album']}\"", limit=1, type="track")['tracks']['items'][0]['uri']
+                        else:
+                            track = spotify.search(f"\"{q['name']}\" album:\"{q['album']}\"", limit=1, type="track")['tracks']['items'][0]['uri']
+                        last_fm_data_to_uri.insert(0, {"name": q['name'], 'uri': track})
+                    except:
+                        continue
+                    
+                # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
+                for track in last_fm_data_to_uri:
+                    if track['uri'] not in recently_played_uris and track['uri'] not in get_items_by_key(history_playlist, 'uri'):
+                        recently_played_uris.insert(0, track['uri'])
+                        
+            except pylast.WSError:
+                pass
+                # TODO: добавить полноценное оповещение, но только при ручном автообновлении
+                #logging.error('Last.fm. Connection to the API failed with HTTP code 500') 
+                        
+            except Exception as e:
+                app.logger.error(e)
+                app.logger.error('And trackeback for error above:')
+                app.logger.error(traceback.format_exc())
+                
+                
+        # если есть новые треки для добавления - они добавляются в History   
+        try:  
+            if recently_played_uris:
+                # убираем дубликаты
+                recently_played_uris = list(dict.fromkeys(recently_played_uris))
+                
+                spotify.playlist_add_items(history_id, recently_played_uris, position=0)
+                # если стоит настройка ограничения плейлиста по размеру
+                if history_query.fixed_capacity:
+                    limit_playlist_size()
+                
+                return (gettext('History updated'))
+            # иначе пропускаем
+            else:
+                return (gettext('Nothing to update'))          
+        except spotipy.SpotifyException:
+            return ("Nothing to add for now")
+        finally:
+            history_query = HistoryPlaylist.query.filter_by(user_id=user_id).first()
+            history_query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
+            db.session.commit()
+            gc.collect()
+    except requests.exceptions.ReadTimeout as e:
+        if 'Read timed out' in str(e):
+            # TODO: выкидывать ошибку в интерфейсе в виде ретёрна как выше
+            pass
+        else:
+            app.logger.error(e)
+    except Exception as e:
+        app.logger.error(e)
 
 def get_playlist_raw_tracks(sp, playlist_id):
     ''' Шаблонное получение плейлиста по ID. Содержит лишние поля items, track, поэтому для работы из лучше убрать с помощью convert_playlist '''
@@ -471,8 +478,13 @@ def get_current_history_list(UserSettings, limit = None) -> tuple:
             tracks = get_every_playlist_track(sp, results)
         return tuple(item for item in tracks)
     
-    except:
-        print("Нет подключения к серверам Spotify. Переподключение через 5 минут")
+    except Exception as e:
+        if 'Couldn\'t refresh token' in str(e):
+            pass
+        else:
+            app.logger.error(e)
+            app.logger.error('And trackeback for error above:')
+            app.logger.error(traceback.format_exc())
         return None
     
 
@@ -510,8 +522,8 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
     
     sp = UserSettings.spotify
     favorite_query = UserSettings.favorite_query
-    results = sp.current_user_saved_tracks(limit=20)
     try:
+        results = sp.current_user_saved_tracks(limit=20)
         # если плейлист добавлен, то просто обновляем
         if favorite_query.playlist_id and sp.playlist_is_following(favorite_query.playlist_id, [user_id])[0]:
             # получаем актуальный список треков из saved
@@ -548,7 +560,10 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
                     fill_playlist(sp, item['id'], track_uris)
                     break
     except Exception as e:
-        app.logger.error(e)
+        if 'Couldn\'t refresh token' in str(e):
+            pass
+        else:
+            app.logger.error(e)
     finally:
         gc.collect()
         
@@ -623,22 +638,17 @@ def update_smart_playlist(user_id, UserSettings):
         else:
             return 'You unfollowed this playlist. Please, refresh your page'
 
-    except spotipy.exceptions.SpotifyException as e:
-        if 'Couldn\'t refresh token. Response Status Code: 400 Reason: Bad Request' in e:
-            pass
-        else:
-            app.logger.error(e)
-            app.logger.error('And trackeback for error above:')
-            app.logger.error(traceback.format_exc())
     except TypeError as e:
         app.logger.error(e)
         app.logger.error('And some info for error above:')
         app.logger.error(f'User:{UserSettings.user_id}, Playlist: https://open.spotify.com/playlist/{UserSettings.smart_query.playlist_id}')
     except Exception as e:
-        app.logger.error(e)
-        app.logger.error('And trackeback for error above:')
-        app.logger.error(traceback.format_exc())
-
+        if 'Couldn\'t refresh token' in str(e):
+            pass
+        else:
+            app.logger.error(e)
+            app.logger.error('And trackeback for error above:')
+            app.logger.error(traceback.format_exc())
     finally:
         smart_query = SmartPlaylist.query.filter_by(user_id=user_id).first()
         smart_query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
@@ -657,15 +667,16 @@ def auto_clean(user_id, UserSettings):
             to_delete = frozenset(item['uri'] for item in smart_raw if item['name'] in get_items_by_key(history_playlist, 'name'))
             sp.playlist_remove_all_occurrences_of_items(UserSettings.smart_query.playlist_id, to_delete)
             gc.collect()
-    except spotipy.exceptions.SpotifyException as e:
-        if 'Couldn\'t refresh token' in e:
+    except Exception as e:
+        if 'Couldn\'t refresh token' in str(e) or 'Task exceeded maximum timeout value' in str(e):
             smart_query = UserSettings.new_smart_query()
             if smart_query.ac_job_id in scheduler_a:
                 scheduler_a.cancel(smart_query.ac_job_id)
-            smart_query.ac_job_id = None
+            smart_query.ac_job_id = 0
             db.session.commit()
         else:
             app.logger.error(e)
+    
             
 
     

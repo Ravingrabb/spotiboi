@@ -6,12 +6,14 @@
 # flask db upgrade
 
 import os
+import gc
 import uuid
+from datetime import date, datetime, timedelta, time
 from requests.cookies import create_cookie
+
 import spotipy
 import pylast
 from sqlalchemy.orm import query
-from datetime import date, datetime, timedelta
 
 from start_settings import UsedPlaylist, app, db, scheduler_h, scheduler_f, scheduler_s, scheduler_a
 import smart_playlist
@@ -22,9 +24,7 @@ from flask import session, request, redirect, render_template, url_for, flash, j
 from flask_babel import Babel, gettext
 from functools import wraps
 from dotenv import load_dotenv
-# test
-import objgraph
-import gc
+
 
 DEBUG = 1
 # objects
@@ -148,14 +148,21 @@ def index():
     history_time_diff = tasks.time_worker2(UserSettings.history_query)
     time_difference = tasks.time_converter(minutes=history_time_diff)
     
+    # smart
     try:
+        # прошло времени
         job = scheduler_s.job_class.fetch(UserSettings.smart_query.job_id,connection=Redis())
         diff = datetime.now() - job.started_at
         diff_minutes = round((diff.days * 24 * 60) + (diff.seconds/60)) - 180
+        # время до след. задачи
+        smart_query = UserSettings.new_smart_query()
+        next_job_diff = (job.started_at + timedelta(minutes=smart_query.update_time)) - datetime.now()
+        next_job_diff_minutes = round((next_job_diff.days * 24 * 60) + (next_job_diff.seconds/60)) + 180
     except:
         diff_minutes = None
+        next_job_diff_minutes = None
     
-    smart_time_difference = tasks.time_converter(minutes=diff_minutes)
+    smart_time_difference = [tasks.time_converter(minutes=diff_minutes), tasks.time_converter(minutes=next_job_diff_minutes)]
     
     gc.collect()
     
