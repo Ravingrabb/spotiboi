@@ -15,7 +15,7 @@ scheduler_s = Scheduler(connection=Redis(), queue_name="smart_update")
 scheduler_a = Scheduler(connection=Redis(), queue_name="auto_clean")
 
 
-logging.basicConfig(filename='logs.log', level=logging.ERROR)
+logging.basicConfig(filename='logs_sh.log', level=logging.ERROR)
 handler = logging.handlers.RotatingFileHandler(
         'logs.log',
         maxBytes=1024 * 1024)

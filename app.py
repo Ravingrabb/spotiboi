@@ -15,7 +15,7 @@ import spotipy
 import pylast
 from sqlalchemy.orm import query
 
-from start_settings import UsedPlaylist, app, db, scheduler_h, scheduler_f, scheduler_s, scheduler_a
+from start_settings import UsedPlaylist, app, db, scheduler_h, scheduler_f, scheduler_s, scheduler_a, logging
 import smart_playlist
 from redis import Redis
 from flask_migrate import Migrate
@@ -245,6 +245,7 @@ def test2(UserSettings):
 @auth
 def debug(UserSettings):
     try:     
+        app.logger.error('test')
         job = scheduler_s.job_class.fetch(UserSettings.smart_query.job_id,connection=Redis())
         print(job.started_at)
         print(datetime.now())

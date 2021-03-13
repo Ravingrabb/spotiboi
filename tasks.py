@@ -233,6 +233,14 @@ def create_job(UserSettings, playlist_query, func, scheduler, job_time=30) -> No
     except Exception as e:
         app.logger.error(e)
 
+def cancel_job(new_query, job_id, scheduler):
+    '''Отмена задачи. Требуется создания нового запроса, чтобы выполнялось без ошибок'''
+    query = new_query
+    if job_id in scheduler:
+        scheduler.cancel(job_id)
+    job_id = 0
+    db.session.commit()
+
 # TODO: объединить обе функции
 def restart_job_with_new_settings(query, scheduler, UserSettings):
     if query.job_id in scheduler:
@@ -477,15 +485,19 @@ def get_current_history_list(UserSettings, limit = None) -> tuple:
         else:
             tracks = get_every_playlist_track(sp, results)
         return tuple(item for item in tracks)
-    
+    except AttributeError as e:
+        if 'NoneType' in str(e):
+            app.logger.error(f'get_current_history_list, проверь плейлист {playlist_id} на ошибки NoneType')
     except Exception as e:
         if 'Couldn\'t refresh token' in str(e):
-            pass
+            app.logger.error('Couldn\'t refresh token')
+            cancel_job(history_query, history_query.job_id, scheduler_h)
         else:
             app.logger.error(e)
             app.logger.error('And trackeback for error above:')
             app.logger.error(traceback.format_exc())
         return None
+    
     
 
 def fill_playlist(sp, playlist_id : str, uris_list : list, from_top = False) -> None:
@@ -589,12 +601,13 @@ def update_smart_playlist(user_id, UserSettings):
             excluded_list.update(fp)
             
     def appender(results, excluded_list, key):
+        ban_list = list(range(1, 245))
         for item in results:
             if not excluded_artists_playlists:
                 if item[key] not in excluded_list:
                     all_uris.append(item['uri'])
             else:
-                if item[key] not in excluded_list and item['artist'] not in excluded_artists:
+                if item[key] not in excluded_list and item['artist'] not in excluded_artists and item['uri'] not in ban_list:
                     all_uris.append(item['uri'])
                             
     try:
@@ -640,8 +653,10 @@ def update_smart_playlist(user_id, UserSettings):
 
     except TypeError as e:
         app.logger.error(e)
-        app.logger.error('And some info for error above:')
+        app.logger.error('Error in update_smart_playlist below:')
         app.logger.error(f'User:{UserSettings.user_id}, Playlist: https://open.spotify.com/playlist/{UserSettings.smart_query.playlist_id}')
+        app.logger.error('And trackeback for error above:')
+        app.logger.error(traceback.format_exc())
     except Exception as e:
         if 'Couldn\'t refresh token' in str(e):
             pass
@@ -668,7 +683,7 @@ def auto_clean(user_id, UserSettings):
             sp.playlist_remove_all_occurrences_of_items(UserSettings.smart_query.playlist_id, to_delete)
             gc.collect()
     except Exception as e:
-        if 'Couldn\'t refresh token' in str(e) or 'Task exceeded maximum timeout value' in str(e):
+        if 'Couldn\'t refresh token' in str(e) or 'Task exceeded maximum timeout value' in str(e) or 'playlist you don\'t own' in str(e):
             smart_query = UserSettings.new_smart_query()
             if smart_query.ac_job_id in scheduler_a:
                 scheduler_a.cancel(smart_query.ac_job_id)
