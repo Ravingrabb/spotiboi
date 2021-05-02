@@ -335,10 +335,12 @@ def update_history(user_id, UserSettings) -> str:
         results = spotify.current_user_recently_played(limit=search_limit)
         
         #песни из recently сравниваются с историей
+        history_tracks_uris = list(get_items_by_key(history_playlist, 'uri'))
+        history_tracks_names = list(get_items_by_key(history_playlist, 'name'))
         recently_played_uris = [item['track']['uri'] 
                                 for item in results['items'] 
-                                if item['track']['uri'] not in get_items_by_key(history_playlist, 'uri') 
-                                and item['track']['name'].lower() not in get_items_by_key(history_playlist, 'name') ]
+                                if item['track']['uri'] not in history_tracks_uris 
+                                and item['track']['name'].lower() not in history_tracks_names]
 
         # если в настройках указан логин lasfm, то вытаскиваются данные с него
         if user_query.lastfm_username:
@@ -348,7 +350,7 @@ def update_history(user_id, UserSettings) -> str:
                                             username=username)
                 result = network.get_user(username).get_recent_tracks(limit=search_limit)
                 
-                recently_played_names = { item['track']['name'].lower() for item in results['items'] if item['track']['uri'] not in get_items_by_key(history_playlist, 'uri') }
+                recently_played_names = {item['track']['name'].lower() for item in results['items'] if item['track']['uri'] not in history_tracks_uris }
                     
                 # достаём данные из lastfm
                 data_with_duplicates = [
@@ -359,7 +361,7 @@ def update_history(user_id, UserSettings) -> str:
                 # создаём оптимизированный список без дубликатов и без треков, которые уже, вероятно, есть в истории
                 last_fm_data = []
                 for song in data_with_duplicates:
-                    if song not in last_fm_data and song['name'].lower() not in recently_played_names and song['name'].lower() not in get_items_by_key(history_playlist, 'name'):
+                    if song not in last_fm_data and song['name'].lower() not in recently_played_names and song['name'].lower() not in history_tracks_names:
                         last_fm_data.append(song)
 
                 # переводим эти данные в uri спотифай (SPOTIFY API SEARCH)
@@ -377,7 +379,7 @@ def update_history(user_id, UserSettings) -> str:
                     
                 # проверяем все результаты на дубликаты и если всё ок - передаём в плейлист
                 for track in last_fm_data_to_uri:
-                    if track['uri'] not in recently_played_uris and track['uri'] not in get_items_by_key(history_playlist, 'uri'):
+                    if track['uri'] not in recently_played_uris and track['uri'] not in history_tracks_uris:
                         recently_played_uris.insert(0, track['uri'])
                         
             except pylast.WSError:
@@ -609,7 +611,7 @@ def update_smart_playlist(user_id, UserSettings):
                 if item[key] not in excluded_list:
                     all_uris.append(item['uri'])
             else:
-                if item[key] not in excluded_list and item['artist'] not in excluded_artists and item['uri'] not in ban_list:
+                if item[key] not in excluded_list and item['artist'] not in excluded_artists and item['uri'].replace('spotify:track:', '') not in ban_list:
                     all_uris.append(item['uri'])
                             
     try:
@@ -681,7 +683,8 @@ def auto_clean(user_id, UserSettings):
         if history_query.playlist_id and UserSettings.smart_query.playlist_id:
             history_playlist = get_playlist(sp, history_query.playlist_id)
             smart_raw = get_playlist(sp, smart_query.playlist_id)
-            to_delete = frozenset(item['uri'] for item in smart_raw if item['name'] in get_items_by_key(history_playlist, 'name'))
+            history_tracks_names = get_items_by_key(history_playlist, 'name')
+            to_delete = frozenset(item['uri'] for item in smart_raw if item['name'] in history_tracks_names)
             sp.playlist_remove_all_occurrences_of_items(UserSettings.smart_query.playlist_id, to_delete)
             gc.collect()
     except Exception as e:
