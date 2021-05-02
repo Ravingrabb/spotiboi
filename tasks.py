@@ -166,6 +166,8 @@ class UserSettings():
                         app.logger.error(e)
                 # если ID плейлиста привязан, но юзер не подписан на плейлист
                 elif query.playlist_id and not self.spotify.playlist_is_following(query.playlist_id, [self.user_query.spotify_id])[0]:
+                    query.playlist_id = None
+                    db.session.commit()
                     if query.job_id in scheduler:
                         scheduler.cancel(query.job_id)    
                         app.logger.error(f'Traceback: отключено автообновление у клиента, так как нет подписки на плейлист. {query.playlist_id}. Юзер {self.user_query.spotify_id}')
