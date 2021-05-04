@@ -1,3 +1,5 @@
+from modules.exceptions import TokenError
+
 from datetime import datetime
 import requests
 from flask import session
@@ -484,18 +486,15 @@ def get_current_history_list(UserSettings, limit = None) -> tuple:
     try:
         results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
                 
-        if limit:
-            tracks = get_limited_playlist_track(sp, results, limit)
-        else:
-            tracks = get_every_playlist_track(sp, results)
+        tracks = get_limited_playlist_track(sp, results, limit) if limit else get_every_playlist_track(sp, results)
         return tuple(item for item in tracks)
     except AttributeError as e:
         if 'NoneType' in str(e):
             app.logger.error(f'get_current_history_list, проверь плейлист {playlist_id} на ошибки NoneType')
     except Exception as e:
         if 'Couldn\'t refresh token' in str(e):
-            #app.logger.error('Couldn\'t refresh token')
             cancel_job(history_query, history_query.job_id, scheduler_h)
+            raise TokenError
         else:
             app.logger.error(e)
             app.logger.error('And trackeback for error above:')
@@ -595,9 +594,8 @@ def update_smart_playlist(user_id, UserSettings):
     
 
     def add_tracks_to_list(excluded_list, key, playlist):
-        if playlist:
-            new_list = frozenset(item[key] for item in playlist)
-            excluded_list.update(new_list)
+        new_list = frozenset(item[key] for item in playlist)
+        excluded_list.update(new_list)
 
 
     def fillup(excluded_list, key):  
@@ -660,7 +658,8 @@ def update_smart_playlist(user_id, UserSettings):
         else:
             return 'You unfollowed this playlist. Please, refresh your page'
 
-    
+    except TokenError:
+        cancel_job(smart_query, smart_query.job_id, scheduler_s)
     except TypeError as e:
         app.logger.error('Error in update_smart_playlist below:')
         app.logger.error(e)
@@ -669,8 +668,6 @@ def update_smart_playlist(user_id, UserSettings):
         app.logger.error(traceback.format_exc())
     except Exception as e:
         if 'Couldn\'t refresh token' in str(e):
-            pass
-        elif 'Task exceeded maximum timeout value' in str(e):
             pass
         else:
             app.logger.error(e)
