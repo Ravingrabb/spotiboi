@@ -494,7 +494,7 @@ def get_current_history_list(UserSettings, limit = None) -> tuple:
             app.logger.error(f'get_current_history_list, проверь плейлист {playlist_id} на ошибки NoneType')
     except Exception as e:
         if 'Couldn\'t refresh token' in str(e):
-            app.logger.error('Couldn\'t refresh token')
+            #app.logger.error('Couldn\'t refresh token')
             cancel_job(history_query, history_query.job_id, scheduler_h)
         else:
             app.logger.error(e)
@@ -593,19 +593,24 @@ def update_smart_playlist(user_id, UserSettings):
     
     check_by_names = True
     
+
+    def add_tracks_to_list(excluded_list, key, playlist):
+        if playlist:
+            new_list = frozenset(item[key] for item in playlist)
+            excluded_list.update(new_list)
+
+
     def fillup(excluded_list, key):  
         if smart_query.exclude_history:
             history_playlist = get_current_history_list(UserSettings)
-            hp = frozenset(item[key] for item in history_playlist)
-            excluded_list.update(hp)
+            add_tracks_to_list(excluded_list, key, history_playlist)
             
         if smart_query.exclude_favorite:
             favorite_playlist = get_every_playlist_track(sp, sp.current_user_saved_tracks(limit=20))
-            fp = frozenset(item[key] for item in favorite_playlist)
-            excluded_list.update(fp)
+            add_tracks_to_list(excluded_list, key, favorite_playlist)
             
     def appender(results, excluded_list, key):
-        ban_list = list(range(1, 245))
+        ban_list = list(range(1, 445))
         for item in results:
             if not excluded_artists_playlists:
                 if item[key] not in excluded_list:
@@ -655,14 +660,17 @@ def update_smart_playlist(user_id, UserSettings):
         else:
             return 'You unfollowed this playlist. Please, refresh your page'
 
+    
     except TypeError as e:
-        app.logger.error(e)
         app.logger.error('Error in update_smart_playlist below:')
+        app.logger.error(e)
         app.logger.error(f'User:{UserSettings.user_id}, Playlist: https://open.spotify.com/playlist/{UserSettings.smart_query.playlist_id}')
         app.logger.error('And trackeback for error above:')
         app.logger.error(traceback.format_exc())
     except Exception as e:
         if 'Couldn\'t refresh token' in str(e):
+            pass
+        elif 'Task exceeded maximum timeout value' in str(e):
             pass
         else:
             app.logger.error(e)
@@ -697,9 +705,7 @@ def auto_clean(user_id, UserSettings):
         else:
             app.logger.error(e)
     
-            
-
-    
+             
 def auto_clean_checker(UserSettings, scheduler):
     """ Работник с задачей, но только специально для auto cleaner """
     

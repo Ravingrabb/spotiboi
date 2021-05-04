@@ -87,6 +87,7 @@ print("--- %s seconds ---" % (time.time() - start_time))
 print('find recently - not sorted')
 start_time = time.time()
 sorted_history = list(get_items_by_key(history_tracks, 'uri'))
+print(sorted_history)
 recently_played_uris = [item['track']['uri'].replace('spotify:track:', '') for item in recently_result['items'] 
                                 if item['track']['uri'].replace('spotify:track:', '') not in sorted_history]
 print("--- %s seconds ---" % (time.time() - start_time))
@@ -97,13 +98,3 @@ sorted_history = sorted(list(get_items_by_key(history_tracks, 'uri')))
 recently_played_uris = [item['track']['uri'].replace('spotify:track:', '') for item in recently_result['items'] 
                                 if bisect.bisect_left(sorted_history, item['track']['uri'].replace('spotify:track:', ''))]
 print("--- %s seconds ---" % (time.time() - start_time))
-
-
-
-
-# print('find recently old')
-# start_time = time.time()
-# sorted_history = sorted(list(get_items_by_key(history_tracks, 'uri')))
-# recently_played_uris = [item['track']['uri'].replace('spotify:track:', '') for item in recently_result['items'] 
-#                                 if item['track']['uri'].replace('spotify:track:', '') not in get_items_by_key(history_tracks, 'uri')]
-# print("--- %s seconds ---" % (time.time() - start_time))
