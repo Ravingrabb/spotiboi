@@ -1,0 +1,97 @@
+{% if user_playlists %}
+<datalist id="playlists">
+    {% for playlists in user_playlists %}
+        <option value='{{playlists.url}}' LABEL="{{playlists.name}}"></option>
+    {% endfor %}
+</datalist>
+{% endif %} 
+
+<script src="{{url_for('static', filename='js/playlist_worker.js')}}"></script>
+
+<!----------------------- SUGGESTED PLAYLISTS ------------------------->
+{% if user_playlists %}
+<h5 style="cursor: pointer" data-toggle="collapse" href="#collapsePlaylists" aria-controls="collapsePlaylists">{{_('Select your playlist:')}}</h5>
+<div style="margin-bottom: 60px;">
+    {% if user_playlists|length >= 6 %}
+    <div class="row">
+        {% for i in range(6) %}
+            {% set playlist = user_playlists.pop(0) %}
+            <div class="col-4 col-md-2">
+                <img onclick='togglePlaylistSelect()' class='img-fluid rounded pointer'src="
+                {% if playlist.images %}
+                    {{playlist.images}}
+                {% else %}
+                    {{url_for('static', filename='/img/covers/noart.jpg')}}
+                {% endif %}
+                ">
+                <p class="playlist-title" style="text-align: center;">{{playlist.name}}</p>
+                <div class="suggestedPlaylists" style="display: none">{{playlist.url}}</div>
+                <div style="display: none" class="selected-playlist"><img style='width:40px; height: 40px' src="{{url_for('static', filename='/img/check.svg')}}"></div>
+            </div>
+        {% endfor %}
+    </div>
+        
+    {% endif %}
+    <div class="collapse" id="collapsePlaylists">
+        <div class="row">
+            {% for playlist in user_playlists %}
+                <div class=" col-4 col-md-2"><img onclick='togglePlaylistSelect()' class='img-fluid rounded pointer'src="
+                    {% if playlist.images %}
+                        {{playlist.images}}
+                    {% else %}
+                        {{url_for('static', filename='/img/covers/noart.jpg')}}
+                    {% endif %}
+                    ">
+                    <p class="playlist-title" style="text-align: center;">{{playlist.name}}</p>
+                    <div class="suggestedPlaylists" style="display: none">{{playlist.url}}</div>
+                    <div style="display: none" class="selected-playlist"><img style='width:40px; height: 40px' src="{{url_for('static', filename='/img/check.svg')}}"></div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <h6 class="mt-2" style="cursor: pointer" data-toggle="collapse" href="#collapsePlaylists" aria-controls="collapsePlaylists">{{_('Show more...')}}</h6>
+</div>
+{% endif %}
+
+<!----------------------- INPUTS ------------------------->
+<h5>{{_('Provide links to playlists to be merged into your smart playlist')}}</h5>
+<div id="inputs">
+    <div class="row mb-2">
+        <div class="col-10 urlInput">
+            <input list="playlists" placeholder="URL или URI плейлиста" type="text" class="form-control clearable" onblur="isSubscribed()">
+        </div>
+        
+        <div class="result col"></div>
+    </div>
+</div>
+
+<button onclick='createNewInput()' type="button" class="btn btn-success btn-md mb-3">{{_('+')}}</button>
+
+<!----------------------- WILL BE ADDED ------------------------->    
+<div class="pl" style='display: none'>
+    <h5 class="mt-5" >{{_('Will be added')}}</h5> 
+    <div class="row toBeAdded"></div>
+</div>  
+
+
+<script>
+    $(document).width() > 480 ? trimTitles(33, '.playlist-title', false): trimTitles(16, '.playlist-title', true);
+
+    /**
+    * Clearable text inputs
+    */
+    function tog(v){return v ? "addClass" : "removeClass";} 
+    $(document).on("change", ".clearable", function(){
+        $(this)[tog(this.value)]("x");
+    }).on("mousemove", ".x", function( e ){
+        $(this)[tog(this.offsetWidth-18 < e.clientX-this.getBoundingClientRect().left)]("onX");
+    }).on("touchstart click", ".onX", function( ev ){
+        ev.preventDefault();
+        $(this).removeClass("x onX").val("").change();
+    });
+
+</script>
+
+
+
+

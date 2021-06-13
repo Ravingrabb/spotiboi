@@ -7,7 +7,13 @@
 {% block body %}
 
     {% for row in bodytext %}
-        <b><p style="margin-bottom: 2px; font-size: 14px;">{{ row }}</p></b>
+        <b><p style="margin-bottom: 2px; font-size: 14px;">
+            {% if 'ERROR' in row or 'Traceback' in row %}
+                <div style="background-color: rgba(255, 127, 80, 0.329);">{{row}}</div>  
+            {% else %}
+                {{row}}
+            {% endif %} 
+       </p></b>
     {% endfor %}
 
 

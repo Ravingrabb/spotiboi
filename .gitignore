@@ -9,3 +9,5 @@ database.db
 migrations
 database_old.db
 misc/
+backup/
+spotiboi-workspace*

@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
 
+{% block title %}
+Главная
+{% endblock %}
+
 {% block body %}
 
 <div class="ml-2 container">
@@ -24,23 +28,113 @@
 <div class="album py-5 bg-light">
     <div class="container">
         <div class="row">
+            <!--           HISTORY PLAYLIST               -->
             <div class="col-lg-4 col-md-6 col-sm-6">
+                {% if history_playlist_data.name != None %}
+                    <a style="position: absolute; top: 1px; right: 21px; z-index: 1; color: #6c757d;" href="#"
+                        title="{{_('Detach playlist')}}" class="text-decoration-none" data-toggle="modal"
+                        data-target="#deattachModal">
+                        <svg width="16" height="16" viewBox="0 0 16 16" class="bi bi-x-circle-fill" fill="currentColor"
+                            xmlns="https://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z">
+                            </path>
+                        </svg>
+                    </a>
+                {% endif %}
+                <div class="card mb-4 shadow-sm">
+                    {% if history_playlist_data.images != None %}
+                        <img src="{{ history_playlist_data.images }}" alt="cover" class="img-fluid">
+                    {% else %}
+                        <svg class="bd-placeholder-img card-img-top" width="100%" height="225"
+                            xmlns="https://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false"
+                            role="img" aria-label="Placeholder: Thumbnail">
+                            <title>No artwork</title>
+                            <rect width="100%" height="100%" fill="#55595c"></rect><text x="35%" y="50%" fill="#eceeef"
+                                dy=".3em">{{_('No artwork')}} :(</text>
+                        </svg>
+                    {% endif %}
+                    <div class="card-body">
+                        <!-- Если плейлист есть и прикреплён -->
+                        {% if history_playlist_data.name != None %}
+                            <h3 class="card-text" style='margin-bottom: 3px;'>
+                            <a id='testTippy' style="color : #212529" href="https://open.spotify.com/playlist/{{ history_playlist_data.id }}"> {{ history_playlist_data.name }}</a> 
+                            </h3>
+                            <p class="card-text" style='padding-bottom: 15px;
+                            border-bottom: 1px solid #dee2e6!important;'>
+                                {{ _('This is your History playlist') }}
+                            </p>
+
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" name='updateSwitch' id="customSwitch1"
+                                    {{ history_checked }} onchange="autoUpdateToggle()">
+                                <label class="custom-control-label" style='padding-bottom: 10px;'
+                                    for="customSwitch1">
+                                    {{_('Auto-update History')}}
+                                </label>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group mt-3">
+                                    <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary">
+                                        <span id="updateSpinner" class="spinner-border spinner-border-sm" style="display: none;" role="status"
+                                            aria-hidden="true"></span>
+                                        {{_('Update')}}
+                                    </button>
+                                    <button type="button" id='manualUpdateSettings' class="btn btn-sm btn-outline-secondary"
+                                        data-toggle="modal" data-target="#settingsModal">
+                                        <svg width="21" height="21" viewBox="0 0 16 16" class="bi bi-gear"
+                                            fill="currentColor" xmlns="https://www.w3.org/2000/svg">
+                                            <path fill-rule="evenodd"
+                                                d="M8.837 1.626c-.246-.835-1.428-.835-1.674 0l-.094.319A1.873 1.873 0 0 1 4.377 3.06l-.292-.16c-.764-.415-1.6.42-1.184 1.185l.159.292a1.873 1.873 0 0 1-1.115 2.692l-.319.094c-.835.246-.835 1.428 0 1.674l.319.094a1.873 1.873 0 0 1 1.115 2.693l-.16.291c-.415.764.42 1.6 1.185 1.184l.292-.159a1.873 1.873 0 0 1 2.692 1.116l.094.318c.246.835 1.428.835 1.674 0l.094-.319a1.873 1.873 0 0 1 2.693-1.115l.291.16c.764.415 1.6-.42 1.184-1.185l-.159-.291a1.873 1.873 0 0 1 1.116-2.693l.318-.094c.835-.246.835-1.428 0-1.674l-.319-.094a1.873 1.873 0 0 1-1.115-2.692l.16-.292c.415-.764-.42-1.6-1.185-1.184l-.291.159A1.873 1.873 0 0 1 8.93 1.945l-.094-.319zm-2.633-.283c.527-1.79 3.065-1.79 3.592 0l.094.319a.873.873 0 0 0 1.255.52l.292-.16c1.64-.892 3.434.901 2.54 2.541l-.159.292a.873.873 0 0 0 .52 1.255l.319.094c1.79.527 1.79 3.065 0 3.592l-.319.094a.873.873 0 0 0-.52 1.255l.16.292c.893 1.64-.902 3.434-2.541 2.54l-.292-.159a.873.873 0 0 0-1.255.52l-.094.319c-.527 1.79-3.065 1.79-3.592 0l-.094-.319a.873.873 0 0 0-1.255-.52l-.292.16c-1.64.893-3.433-.902-2.54-2.541l.159-.292a.873.873 0 0 0-.52-1.255l-.319-.094c-1.79-.527-1.79-3.065 0-3.592l.319-.094a.873.873 0 0 0 .52-1.255l-.16-.292c-.892-1.64.902-3.433 2.541-2.54l.292.159a.873.873 0 0 0 1.255-.52l.094-.319z" />
+                                            <path fill-rule="evenodd"
+                                                d="M8 5.754a2.246 2.246 0 1 0 0 4.492 2.246 2.246 0 0 0 0-4.492zM4.754 8a3.246 3.246 0 1 1 6.492 0 3.246 3.246 0 0 1-6.492 0z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            {% if time_difference != None %}
+                                <small class="text-muted">
+                                    {{_("Updated")}} <div class="d-inline current-time">{{ time_difference }}</div> {{_('ago')}}
+                                </small>
+                            {% endif %}
+                            <!-- Если плейлиста нет -->
+                        {% else %}
+                                <h4>History</h4>
+                                <p class="card-text">{{_('You don\'t have attached history playlist')}}</p>
+                                <form action="/" method="post">
+                                    <input type="hidden" name="create_playlist">
+                                    <input type="submit" value="{{_('Create now')}}" class="btn btn-sm btn-outline-primary mb-1">
+                                </form>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal"
+                                    data-target="#attachModal">
+                                    {{_('Attach your own playlist')}}
+                                </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!--           SMART PLAYLIST               -->
+            <div class="col-lg-4 col-md-6 col-sm-6">
+                {% if smart_playlist_data.name != None %}
                 <a style="position: absolute; top: 1px; right: 21px; z-index: 1; color: #6c757d;" href="#"
-                    title="Detach playlist" class="text-decoration-none" data-toggle="modal"
-                    data-target="#deattachModal">
+                    title="{{_('Detach playlist')}}" class="text-decoration-none" data-toggle="modal"
+                    data-target="#detachSmartModal">
                     <svg width="16" height="16" viewBox="0 0 16 16" class="bi bi-x-circle-fill" fill="currentColor"
-                        xmlns="http://www.w3.org/2000/svg">
+                        xmlns="https://www.w3.org/2000/svg">
                         <path fill-rule="evenodd"
                             d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z">
                         </path>
                     </svg>
                 </a>
+                {% endif %}
                 <div class="card mb-4 shadow-sm">
-                    {% if history_playlist_data.images != None %}
-                    <img src="{{ history_playlist_data.images }}" alt="cover" class="img-fluid">
+                    {% if smart_playlist_data.images != None %}
+                    <img src="{{ smart_playlist_data.images }}" alt="cover" class="img-fluid">
                     {% else %}
                     <svg class="bd-placeholder-img card-img-top" width="100%" height="225"
-                        xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false"
+                        xmlns="https://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" focusable="false"
                         role="img" aria-label="Placeholder: Thumbnail">
                         <title>No artwork</title>
                         <rect width="100%" height="100%" fill="#55595c"></rect><text x="35%" y="50%" fill="#eceeef"
@@ -49,69 +143,77 @@
                     {% endif %}
                     <div class="card-body">
                         <!-- Если плейлист есть и прикреплён -->
-                        {% if history_playlist_data.name != None %}
+                        {% if smart_playlist_data.name != None %}
                         <h3 class="card-text" style='margin-bottom: 3px;'>
-                           <a id='testTippy' style="color : #212529" href="https://open.spotify.com/playlist/{{ history_playlist_data.id }}"> {{ history_playlist_data.name }}</a> 
+                           <a id='testTippy' style="color : #212529" href="https://open.spotify.com/playlist/{{ smart_playlist_data.id }}"> {{ smart_playlist_data.name }}</a> 
                         </h3>
                         <p class="card-text" style='padding-bottom: 15px;
                         border-bottom: 1px solid #dee2e6!important;'>
-                            {{ _('This is your History playlist') }}
+                            {{ _('This is your smart playlist') }}
                         </p>
 
                         <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" name='updateSwitch' id="customSwitch1"
-                                {{ history_checked }} onchange="autoUpdateToggle()">
+                            <input type="checkbox" class="custom-control-input" name='smartSwitch' id="smartSwitch"
+                                {{ smart_checked }} onchange="autoUpdateToggle3()">
                             <label class="custom-control-label" style='padding-bottom: 10px;'
-                                for="customSwitch1">
-                                {{_('Auto-update History')}}
+                                for="smartSwitch">
+                                {{_('Auto-update')}}
                             </label>
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="btn-group mt-3">
-                                <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary">
-                                    <span id="updateSpinner" class="spinner-border spinner-border-sm" role="status"
+                                <button type="button" id='manualUpdate3' class="btn btn-sm btn-outline-secondary">
+                                    <span id="updateSpinner3" class="spinner-border spinner-border-sm" style="display: none;" role="status"
                                         aria-hidden="true"></span>
                                     {{_('Update')}}
                                 </button>
-                                <button type="button" id='manualUpdate' class="btn btn-sm btn-outline-secondary"
-                                    data-toggle="modal" data-target="#settingsModal">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href='/smart_settings'">
                                     <svg width="21" height="21" viewBox="0 0 16 16" class="bi bi-gear"
-                                        fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        fill="currentColor" xmlns="https://www.w3.org/2000/svg">
                                         <path fill-rule="evenodd"
                                             d="M8.837 1.626c-.246-.835-1.428-.835-1.674 0l-.094.319A1.873 1.873 0 0 1 4.377 3.06l-.292-.16c-.764-.415-1.6.42-1.184 1.185l.159.292a1.873 1.873 0 0 1-1.115 2.692l-.319.094c-.835.246-.835 1.428 0 1.674l.319.094a1.873 1.873 0 0 1 1.115 2.693l-.16.291c-.415.764.42 1.6 1.185 1.184l.292-.159a1.873 1.873 0 0 1 2.692 1.116l.094.318c.246.835 1.428.835 1.674 0l.094-.319a1.873 1.873 0 0 1 2.693-1.115l.291.16c.764.415 1.6-.42 1.184-1.185l-.159-.291a1.873 1.873 0 0 1 1.116-2.693l.318-.094c.835-.246.835-1.428 0-1.674l-.319-.094a1.873 1.873 0 0 1-1.115-2.692l.16-.292c.415-.764-.42-1.6-1.185-1.184l-.291.159A1.873 1.873 0 0 1 8.93 1.945l-.094-.319zm-2.633-.283c.527-1.79 3.065-1.79 3.592 0l.094.319a.873.873 0 0 0 1.255.52l.292-.16c1.64-.892 3.434.901 2.54 2.541l-.159.292a.873.873 0 0 0 .52 1.255l.319.094c1.79.527 1.79 3.065 0 3.592l-.319.094a.873.873 0 0 0-.52 1.255l.16.292c.893 1.64-.902 3.434-2.541 2.54l-.292-.159a.873.873 0 0 0-1.255.52l-.094.319c-.527 1.79-3.065 1.79-3.592 0l-.094-.319a.873.873 0 0 0-1.255-.52l-.292.16c-1.64.893-3.433-.902-2.54-2.541l.159-.292a.873.873 0 0 0-.52-1.255l-.319-.094c-1.79-.527-1.79-3.065 0-3.592l.319-.094a.873.873 0 0 0 .52-1.255l-.16-.292c-.892-1.64.902-3.433 2.541-2.54l.292.159a.873.873 0 0 0 1.255-.52l.094-.319z" />
                                         <path fill-rule="evenodd"
                                             d="M8 5.754a2.246 2.246 0 1 0 0 4.492 2.246 2.246 0 0 0 0-4.492zM4.754 8a3.246 3.246 0 1 1 6.492 0 3.246 3.246 0 0 1-6.492 0z" />
                                     </svg>
+                                    
                                 </button>
                             </div>
                         </div>
-                        {% if time_difference != None %}
-                        <small class="text-muted current-time">
-                            {{_("Updated")}} {{ time_difference }} {{_('min ago')}}
-                        </small>
+                        
+                        {% if smart_time_difference != None %}
+                        <span class="d-inline-block" data-toggle="popover" data-placement="bottom" data-content="Следующее обновление через {{smart_time_difference[1]}}">
+                            <small class="text-muted" id='smartTimeDifference'>
+                                {{_("Updated")}} {{ smart_time_difference[0] }} {{_('ago')}}
+                            </small>
+                        </span>
                         {% endif %}
+                       
                         <!-- Если плейлиста нет -->
                         {% else %}
-                        <p class="card-text">{{_('You don\'t have attached history playlist')}}</p>
-                        <form action="/" method="post">
-                            <input type="hidden" name="create_playlist">
-                            <input type="submit" value="{{_('Create now')}}" class="btn btn-sm btn-outline-primary">
-                        </form>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal"
-                            data-target="#attachModal">
-                            {{_('Attach your own playlist')}}
-                        </button>
+                            <h4>Smart Playlist</h4>
+                            <p class="card-text">{{_('You don\'t have created smart playlist')}}</p>
+                            <form action="/create_smart">
+                                <input type="submit" value="{{_('Create now')}}" class="btn btn-sm btn-outline-primary">
+                            </form>
                         {% endif %}
                     </div>
+                    <small class="text-muted" style='
+                    text-align: right;
+                    padding-right: 6px;
+                    margin: 8px;
+                    position: absolute;
+                    right: 0px;
+                    bottom: 0px;'>Beta</small>
                 </div>
             </div>
+
 
             <!-- FAVORITE CARD -->
             <div class="col-lg-4 col-md-6 col-sm-6">
                 <div class="card mb-4 shadow-sm" style='height: 275px'>
-                    <div class="crop" style="z-index: 99;">
-                        <img src="static/img/listen.png" class='rounded float-left' width="200px"> 
+                    <div class="crop" style="z-index: 30;">
+                        <img src="static/img/listen.png" class='rounded float-left' width="160px"> 
                     </div>
 
                     <div class="card-body">
@@ -149,6 +251,7 @@
     </div>
 </div>
 
+<!--------------------- MODALS  ------------------->
 <!-- Detach Modal -->
 <div class="modal fade" id="deattachModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -163,8 +266,32 @@
                 {{_('Are you sure you want to detach the playlist?')}}
             </div>
             <div class="modal-footer">
-                <form action="/" method="post">
+                <form action="/postworker" method="post">
                     <input type="hidden" name="detach_playlist">
+                    <input type="submit" class="btn btn-primary" value="{{_('Yes')}}">
+                </form>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">{{_('No')}}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detach SMART Modal -->
+<div class="modal fade" id="detachSmartModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">{{_('Warning!')}}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                {{_('Are you sure you want to detach the playlist?')}}
+            </div>
+            <div class="modal-footer">
+                <form action="/postworker" method="post">
+                    <input type="hidden" name="detach_smart_playlist">
                     <input type="submit" class="btn btn-primary" value="{{_('Yes')}}">
                 </form>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">{{_('No')}}</button>
@@ -187,15 +314,12 @@
                 <form action="/" method="post">
                     <div class="form-group">
                         <label for="uriInput">
-                            {{_('Playlist URI')}}
+                            {{_('Playlist URL or URI')}}
                         </label>
                         <input name='uriInput' type="text" class="form-control" id="uriInput" aria-describedby="uri"
-                            placeholder="URI">
-                        <small id="uriHelp" class="form-text text-muted">
-                            {{_('If you can\'t find URI, right-click on your playlist -> Share -> Copy Spotify URI. Do not confuse with URL!')}}
-                        </small>
-                        <input type="submit" class="btn btn-primary" value="{{_('Attach')}}">
+                            placeholder="URL or URI">
                     </div>
+                    <input type="submit" class="btn btn-primary" value="{{_('Attach')}}">
                 </form>
             </div>
         </div>
@@ -220,7 +344,7 @@
                             id="fixedDedupSwitch" onchange="checkCheckbox('inputDiv1')" {{settings.dedup_status}}>
                         <label class="custom-control-label" for="fixedDedupSwitch">
                             {{_('Fixed de-duplicate')}}
-                        <svg id='dedupQuestion' class='ml-1 d-none d-sm-inline' width="12" height="12" viewBox="0 0 16 16" class="bi bi-question-circle" fill="#6c757d" xmlns="http://www.w3.org/2000/svg">
+                        <svg id='dedupQuestion' class='ml-1 d-none d-sm-inline' width="12" height="12" viewBox="0 0 16 16" class="bi bi-question-circle" fill="#6c757d" xmlns="https://www.w3.org/2000/svg">
                             <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                             <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
                         </svg>
@@ -232,7 +356,7 @@
                         <input id="dedupValue" type="number" class="form-control"
                             value='{% if settings.dedup_status %}{{settings.dedup_value}}{% else %}200{% endif %}'>
                         <small class="form-text text-muted">
-                            {{_('Value must be 200 or more tracks')}}
+                            {{_('Value must be between 200 and 500 tracks')}}
                         </small>
                     </div>
 
@@ -242,7 +366,7 @@
                         <input type="checkbox" class="custom-control-input" id="fixedPlaylistSwitch"
                             onchange="checkCheckbox('inputDiv2')" {{settings.fixed_status}}>
                         <label class="custom-control-label" for="fixedPlaylistSwitch">{{_('Fixed playlist')}}
-                            <svg id='dedupFixed' class='d-none d-sm-inline ml-1' width="12" height="12" viewBox="0 0 16 16" class="bi bi-question-circle" fill="#6c757d" xmlns="http://www.w3.org/2000/svg">
+                            <svg id='dedupFixed' class='d-none d-sm-inline ml-1' width="12" height="12" viewBox="0 0 16 16" class="bi bi-question-circle" fill="#6c757d" xmlns="https://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                                 <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
                               </svg>
@@ -264,7 +388,7 @@
                     </label>
                     <input id="updateTimeValue" type="number" class="form-control"
                         value='{{settings.update_time}}'>
-                    <small class="form-text text-muted">{{_('In minutes (10 or more)')}}</small>
+                    <small class="form-text text-muted">{{_('In minutes (30 or more)')}}</small>
 
                     <!-- LASTFM SWITCH -->
                     <div class="custom-control custom-switch">
@@ -297,21 +421,21 @@
     </div>
 </div>
         <div class="container">
-            <div class="row mt-3">
-                <div class="col-8">
-                    <span class="text-muted">Perfectly works with <a target="blank" href="http://smarterplaylists.playlistmachinery.com">smarterplaylists</a></span>
-                </div>
+            <div class="row mt-3 mb-3">
                 <div class="col">
+                    <span class="text-muted mr-3">{{_('Support project:')}}</span> 
+                    <a class="btn btn-success" href="/donate" role="button">Donate</a>
+                </div>
+                <div class="col-1">
                     <div class="d-flex flex-row-reverse">
                         <button id='TelegramButton'type="button pull-right" class="btn btn-outline-primary"
                         onClick="document.location.href='https://t.me/joinchat/Cr_lVxt7lw9fVo31OfiBQA'">
-                            TG
-                            <svg fill='#007bff' id="regular" enable-background="new 0 0 24 24" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="m12 24c6.617 0 12-5.383 12-12s-5.383-12-12-12-12 5.383-12 12 5.383 12 12 12zm0-22.5c5.79 0 10.5 4.71 10.5 10.5s-4.71 10.5-10.5 10.5-10.5-4.71-10.5-10.5 4.71-10.5 10.5-10.5z"/><path d="m7.896 14.155 1.568-.681-.44.441c-.141.141-.22.332-.22.53v2.935c0 .672.812.998 1.28.53l1.574-1.574 3.43 1.715c.444.222.981-.041 1.073-.537l1.957-10.761c.103-.579-.467-1.047-1.012-.833l-12.716 4.977c-.57.222-.646 1.002-.13 1.331l2.934 1.872c.21.134.475.155.702.055zm8.506-6.347-1.537 8.455-3.02-1.509c-.292-.146-.64-.085-.865.141l-.676.676v-.813l3.007-3.007c.583-.583-.073-1.545-.829-1.218l-4.817 2.09-1.354-.864z"/></svg>
-                          </button>
-                          
+                            <svg fill='#007bff' id="regular" enable-background="new 0 0 24 24" height="20" viewBox="0 0 24 24" width="20" xmlns="https://www.w3.org/2000/svg"><path d="m12 24c6.617 0 12-5.383 12-12s-5.383-12-12-12-12 5.383-12 12 5.383 12 12 12zm0-22.5c5.79 0 10.5 4.71 10.5 10.5s-4.71 10.5-10.5 10.5-10.5-4.71-10.5-10.5 4.71-10.5 10.5-10.5z"/><path d="m7.896 14.155 1.568-.681-.44.441c-.141.141-.22.332-.22.53v2.935c0 .672.812.998 1.28.53l1.574-1.574 3.43 1.715c.444.222.981-.041 1.073-.537l1.957-10.761c.103-.579-.467-1.047-1.012-.833l-12.716 4.977c-.57.222-.646 1.002-.13 1.331l2.934 1.872c.21.134.475.155.702.055zm8.506-6.347-1.537 8.455-3.02-1.509c-.292-.146-.64-.085-.865.141l-.676.676v-.813l3.007-3.007c.583-.583-.073-1.545-.829-1.218l-4.817 2.09-1.354-.864z"/></svg>
+                          </button>  
                     </div>
                 </div>
             </div>
+
         </div>
 
 
@@ -324,13 +448,9 @@
     {{msg}}
 </div>
 {% endfor %}
-  
-<div id='successAlert' class="alert alert-success collapse" role="alert">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-    </button>
-    <div id='alertTextArea'></div>
-</div>
+
+
+    
 
 <script src="https://unpkg.com/@popperjs/core@2"></script>
 <script src="https://unpkg.com/tippy.js@6"></script>
@@ -342,10 +462,19 @@ value="{{_('When enabled, limits the size of your playlist to the number of trac
 
 <!-- SCRIPTS -->
 <script src="{{url_for('static', filename='js/ajax.js')}}"></script>
-
+<script>
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+    })
+    $('#smartTimeDifference').popover({
+        trigger: 'focus'
+    })
+</script>
 {% endblock %}
 
 <script>
+
+
     window.open(
         'https://open.spotify.com/playlist/{{ history_playlist_data.id }}',
         '_blank' // <- This is what makes it open in a new window.

@@ -6,17 +6,60 @@ async function updateTime() {
         url: "/get_time"
     })
         .done(function (data) {
-            var r = /\d+/;
-            var s = $('.current-time').text();
-            $('.current-time').text(s.replace(r, data.response))
+            //var r = /\d+/;
+            //var s = $('.current-time').text();
+            //$('.current-time').text(s.replace(r, data.response))
+            $('.current-time').text(data.response)
         })
 }
 
 setInterval(updateTime, 60000);
 
+function toogleButtonSpinner(buttonSelector){
+    if ($(buttonSelector).children().hasClass("busy")){
+        $(buttonSelector).children().removeClass('busy');
+        $(buttonSelector).prop('disabled', false);
+    }
+    else {
+        $(buttonSelector).children().addClass('busy');
+        $(buttonSelector).prop('disabled', true);
+    }
+}
+
+
+function checkCheckbox(inputId) {
+    isChecked = document.getElementById(event.target.id).checked;
+    if (isChecked) {
+        $('#' + inputId).addClass('reveal')
+    }
+    if (!isChecked) {
+        $('#' + inputId).removeClass('reveal')
+    }
+}
+
 // tippy instances
 // название плейлиста -> обновить плейлист
+
+function tippyShowAndHide(inst, output){
+    inst.setProps({
+        content: output,
+        });
+    inst.show();
+    setTimeout(inst.hide, 3000);
+}
+
 const instance = tippy(document.querySelector('#testTippy'),{
+    trigger: 'manual',
+    arrow: false,
+    offset: [0, 10],
+    placement: 'right-end',
+    duration: [100, 200],
+    theme: "spotigreen",
+    animation: 'scale',
+    inertia: true,
+});
+
+const tippySettings = tippy(document.querySelector('#manualUpdateSettings'),{
     trigger: 'manual',
     arrow: false,
     offset: [0, 10],
@@ -43,14 +86,10 @@ tippy(document.querySelector('#dedupFixed'),{
 });
 
 
-function checkCheckbox(inputId) {
-    isChecked = document.getElementById(event.target.id).checked;
-    if (isChecked) {
-        $('#' + inputId).addClass('reveal')
-    }
-    if (!isChecked) {
-        $('#' + inputId).removeClass('reveal')
-    }
+function showAlert(alertID, output, delay=3000){
+    $(alertID).show()
+    $(alertID).find('#alertTextArea').text(output)
+    $(alertID).delay(delay).fadeOut("slow")
 }
 
 // settings AJAX
@@ -62,9 +101,13 @@ $('#updateSettingsButton').click(function () {
             $(item[0]).addClass('blocked')
             gotErrors = true
         }
+        if ( item[2] != null && $(item[0]).val() > item[2] ){
+            $(item[0]).addClass('blocked')
+            gotErrors = true
+        }
     }
 
-    inputIds = [['#dedupValue', 200], ['#fixedValue', 100], ['#updateTimeValue', 10]]
+    inputIds = [['#dedupValue', 200, 500], ['#fixedValue', 100, null], ['#updateTimeValue', 30, null]]
     inputIds.forEach(element => $(element[0]).removeClass('blocked'));
     inputIds.forEach(checkInputs)
 
@@ -96,10 +139,8 @@ $('#updateSettingsButton').click(function () {
                 }
                 else {
                     $('#settingsModal').modal('hide')
-                    $('#settingsModal .alert-success').show()
-                    $('#settingsModal .alert-success .alertTextArea').text(data.response)
-                    $('#settingsModal .alert-success').delay(3000).fadeOut("slow")
-                    updateTime()
+                    setTimeout(tippyShowAndHide, 1000, tippySettings, data.response)
+                    setTimeout(updateTime, 2000)
                 }
             })
     }
@@ -117,11 +158,8 @@ $('#manualUpdate').click(function () {
         data: { update: true },
     })
         .done(function (data) {
-            instance.setProps({
-                content: data.response,
-                });
-            instance.show()
-            $('#updateSpinner').removeClass('busy')
+            tippyShowAndHide(instance, data.response);
+            $('#updateSpinner').removeClass('busy');
             $('#manualUpdate').prop('disabled', false);
         })
 });
@@ -136,6 +174,9 @@ $('#manualUpdate2').click(function () {
         data: { update: true },
     })
         .done(function (data) {
+            if ( $('#manualUpdate2').text().replace(/\s/g, '') == "Создать" || $('#manualUpdate2').text().replace(/\s/g, '') == "Create new" ) {
+                location.reload()
+            }
             $('#successAlert').show()
             $('#alertTextArea').text(data.response)
             $('#successAlert').delay(5000).fadeOut("slow")
@@ -144,19 +185,34 @@ $('#manualUpdate2').click(function () {
         })
 });
 
+// create smart AJAX
+$('#manualUpdate3').click(function () {
+    $('#updateSpinner3').addClass('busy');
+    $('#manualUpdate3').prop('disabled', true);
+    $.ajax({
+        type: "POST",
+        url: "/make_smart",
+        data: { update: true },
+    })
+        .done(function (data) {
+            $('#successAlert').show()
+            $('#alertTextArea').text(data.response)
+            $('#successAlert').delay(5000).fadeOut("slow")
+            $('#updateSpinner3').removeClass('busy')
+            $('#manualUpdate3').prop('disabled', false);
+        })
+});
+
 // TODO: сделать общий интерфейс для объектов
 // Auto-update
 function autoUpdateToggle() {
-    console.log(document.getElementById(event.target.id).checked)
     $.ajax({
         type: "POST",
         url: "/auto_update",
         data: { update: document.getElementById(event.target.id).checked },
     })
         .done(function (data) {
-            $('#successAlert').show()
-            $('#alertTextArea').text(data.response)
-            $('#successAlert').delay(5000).fadeOut("slow")
+            showAlert('#successAlert', data.response)
         })
 }
 
@@ -168,8 +224,18 @@ function autoUpdateToggle2() {
         data: { update: document.getElementById(event.target.id).checked },
     })
         .done(function (data) {
-            $('#successAlert').show()
-            $('#alertTextArea').text(data.response)
-            $('#successAlert').delay(5000).fadeOut("slow")
+            showAlert('#successAlert', data.response)
+        })
+}
+// 
+function autoUpdateToggle3() {
+    console.log(document.getElementById(event.target.id).checked)
+    $.ajax({
+        type: "POST",
+        url: "/auto_update_smart",
+        data: { update: document.getElementById(event.target.id).checked },
+    })
+        .done(function (data) {
+            showAlert('#successAlert', data.response)
         })
 }
