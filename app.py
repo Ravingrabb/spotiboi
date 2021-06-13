@@ -17,6 +17,8 @@ from sqlalchemy.orm import query
 
 from start_settings import UsedPlaylist, app, db, scheduler_h, scheduler_f, scheduler_s, scheduler_a, logging
 import smart_playlist
+from modules import *
+
 from redis import Redis
 from flask_migrate import Migrate
 from flask_session import Session
@@ -391,7 +393,7 @@ def smart_settings(UserSettings):
                                excluded_playlists = excluded_playlists,
                                settings = UserSettings.settings,
                                history = UserSettings.history_query.playlist_id,
-                               auto_clean = tasks.get_updater_status(UserSettings.smart_query.ac_job_id, scheduler_a))
+                               auto_clean = get_updater_status(UserSettings.smart_query.ac_job_id, scheduler_a))
     else:
         return redirect('/')
     

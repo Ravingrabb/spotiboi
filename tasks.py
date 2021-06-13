@@ -1,4 +1,4 @@
-from modules.exceptions import TokenError
+from modules.exceptions import *
 
 from datetime import datetime
 import requests
@@ -417,6 +417,8 @@ def update_history(user_id, UserSettings) -> str:
             history_query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
             db.session.commit()
             gc.collect()
+    except TokenError:
+        pass
     except requests.exceptions.ReadTimeout as e:
         if 'Read timed out' in str(e):
             # TODO: выкидывать ошибку в интерфейсе в виде ретёрна как выше
@@ -483,22 +485,22 @@ def get_current_history_list(UserSettings, limit = None) -> tuple:
     sp = UserSettings.spotify
     playlist_id = history_query.playlist_id
     
-    try:
-        results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
-                
-        tracks = get_limited_playlist_track(sp, results, limit) if limit else get_every_playlist_track(sp, results)
-        return tuple(item for item in tracks)
-    except AttributeError as e:
-        if 'NoneType' in str(e):
-            app.logger.error(f'get_current_history_list, проверь плейлист {playlist_id} на ошибки NoneType')
-    except Exception as e:
-        if 'Couldn\'t refresh token' in str(e):
-            cancel_job(history_query, history_query.job_id, scheduler_h)
-            raise TokenError
-        else:
-            app.logger.error(e)
-            app.logger.error('And trackeback for error above:')
-            app.logger.error(traceback.format_exc())
+    if playlist_id:
+        try:
+            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
+            tracks = get_limited_playlist_track(sp, results, limit) if limit else get_every_playlist_track(sp, results)
+            return tuple(item for item in tracks)
+        except Exception as e:
+            if 'Couldn\'t refresh token' in str(e):
+                cancel_job(history_query, history_query.job_id, scheduler_h)
+                raise TokenError
+            else:
+                app.logger.error(e)
+                app.logger.error('And trackeback for error above:')
+                app.logger.error(traceback.format_exc())
+            return None
+    else:
+        cancel_job(history_query, history_query.job_id, scheduler_h)
         return None
     
     
@@ -546,7 +548,7 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
             
             # получаем список песен из плейлиста favorites
             fav_playlist_results = sp.playlist_tracks(favorite_query.playlist_id)
-            fav_playlist_uris = tuple( item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results) )
+            fav_playlist_uris = tuple(item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results))
             
             #добавляем новые треки
             to_add = [uri for uri in new_track_uris if uri not in fav_playlist_uris]
@@ -554,9 +556,9 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
                 fill_playlist(sp, favorite_query.playlist_id, to_add, from_top=True)
             
             #удаляем не акутальные
-            to_delete = [ uri for uri in fav_playlist_uris if uri not in new_track_uris]
+            to_delete = [uri for uri in fav_playlist_uris if uri not in new_track_uris]
             if to_delete:
-                sp.playlist_remove_all_occurrences_of_items(favorite_query.playlist_id, to_delete)   
+                sp.playlist_remove_all_occurrences_of_items(favorite_query.playlist_id, to_delete[:99])   
         # плейлист не добавлен
         else:
             sp.user_playlist_create(
@@ -594,27 +596,31 @@ def update_smart_playlist(user_id, UserSettings):
     
 
     def add_tracks_to_list(excluded_list, key, playlist):
-        new_list = frozenset(item[key] for item in playlist)
-        excluded_list.update(new_list)
+        if playlist:
+            new_list = frozenset(item[key] for item in playlist)
+            excluded_list.update(new_list)
+            return True
+        else:
+            return False
 
 
     def fillup(excluded_list, key):  
         if smart_query.exclude_history:
             history_playlist = get_current_history_list(UserSettings)
-            add_tracks_to_list(excluded_list, key, history_playlist)
+            smart_query.exclude_history = add_tracks_to_list(excluded_list, key, history_playlist)
             
         if smart_query.exclude_favorite:
             favorite_playlist = get_every_playlist_track(sp, sp.current_user_saved_tracks(limit=20))
-            add_tracks_to_list(excluded_list, key, favorite_playlist)
+            smart_query.exclude_favorite = add_tracks_to_list(excluded_list, key, favorite_playlist)
             
     def appender(results, excluded_list, key):
-        ban_list = list(range(1, 445))
+        ban_list = list(f'spotify:track:{i}' for i in range(1, 445))
         for item in results:
             if not excluded_artists_playlists:
-                if item[key] not in excluded_list:
+                if item[key] not in excluded_list and item['uri'] not in ban_list:
                     all_uris.append(item['uri'])
             else:
-                if item[key] not in excluded_list and item['artist'] not in excluded_artists and item['uri'].replace('spotify:track:', '') not in ban_list:
+                if item[key] not in excluded_list and item['artist'] not in excluded_artists and item['uri'] not in ban_list:
                     all_uris.append(item['uri'])
                             
     try:
@@ -732,11 +738,3 @@ def auto_clean_checker(UserSettings, scheduler):
                 scheduler.cancel(smart_query.ac_job_id)
     except Exception as e:
         app.logger.error(e)
-    
-    
-def get_updater_status(job_id, scheduler):
-    return True if job_id in scheduler else False
-
-
-        
-        
