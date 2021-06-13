@@ -1,9 +1,10 @@
 # flask db migrate -m "users table"
 # flask db upgrade
 
-from .app_init import app
+from modules.app_init import app, os, basedir
 from flask_sqlalchemy import SQLAlchemy
 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///../database.db'
 db = SQLAlchemy(app)
 
 
@@ -73,3 +74,4 @@ class SmartPlaylist(db.Model):
 
     def __repr__(self):
         return '<SmartPlaylist %r>' % self.playlist_id
+

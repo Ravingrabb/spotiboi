@@ -18,10 +18,9 @@ class Config(object):
     BABEL_DEFAULT_LOCALE = 'en'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///../database.db'
     if DEV_FLAG:
         DEBUG = True
-        _env_load('../.env-beta')
+        _env_load('../.env-b')
     else:
         DEBUG = False
         _env_load('../.env')
