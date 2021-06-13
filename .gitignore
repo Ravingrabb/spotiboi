@@ -8,6 +8,7 @@ database.db
 .vscode
 migrations
 database_old.db
-misc/
 backup/
+misc/test*
 spotiboi-workspace*
+venv/

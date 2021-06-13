@@ -1,2 +1,2 @@
 class TokenError(Exception):
-	pass
+    pass
