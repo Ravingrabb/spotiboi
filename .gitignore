@@ -1,4 +1,4 @@
-.env
+.env*
 .envlocal
 .spotify_caches/
 .flask_session/
@@ -12,3 +12,4 @@ backup/
 misc/test*
 spotiboi-workspace*
 venv/
+.idea
