@@ -26,7 +26,7 @@ class UserSettings:
         except spotipy.exceptions.SpotifyException as e:
             app.logger.error(e)
 
-        # если юзера не сущестует в БД, то создаётся запись. Тут же создаётся запись дял плейлиста
+        # если юзера не сущестует в БД, то создаётся запись. Тут же создаётся запись для плейлиста
         if not User.query.filter_by(spotify_id=self.user_id).first():
             db.session.add(User(spotify_id=self.user_id))
             db.session.add(HistoryPlaylist(user_id=self.user_id))
@@ -626,8 +626,7 @@ def update_smart_playlist(user_id, UserSettings):
                 if item[key] not in excluded_list and item['uri'] not in ban_list:
                     all_uris.append(item['uri'])
             else:
-                if item[key] not in excluded_list and item['artist'] not in excluded_artists and item[
-                    'uri'] not in ban_list:
+                if item[key] not in excluded_list and item['artist'] not in excluded_artists and item['uri'] not in ban_list:
                     all_uris.append(item['uri'])
 
     try:
@@ -723,7 +722,7 @@ def auto_clean_checker(UserSettings, scheduler):
     """ Работник с задачей, но только специально для auto cleaner """
 
     def create_ac_job():
-        ''' То же самое, что и create_job, только для auto cleaner'''
+        """ То же самое, что и create_job, только для auto cleaner"""
         job = scheduler.schedule(datetime.utcnow(), auto_clean, args=[UserSettings.user_id, UserSettings],
                                  interval=3600, repeat=None, timeout=500)
         scheduler.enqueue_job(job)
