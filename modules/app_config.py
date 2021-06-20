@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 DEV_FLAG = True
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-
 def _env_load(path):
     dotenv_path = os.path.join(basedir, path)
     if os.path.exists(dotenv_path):

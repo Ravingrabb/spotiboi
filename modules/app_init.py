@@ -7,7 +7,8 @@ from flask import Flask, request
 from flask_babel import Babel
 from flask_session import Session
 
-from modules.app_config import *
+from .app_config import Config
+# from app_config import Config
 
 # ----------------------- APP INIT -----------------------
 app = Flask(__name__, template_folder='../templates', static_folder='../static')

@@ -1,9 +1,9 @@
 import os
 import spotipy
 import pylast
+import uuid
 
 from modules import *
-from pages.index import get_session_cache_path, auth_scopes
 import pages
 import smart_playlist
 import tasks
@@ -11,6 +11,17 @@ import tasks
 from flask import session, request, redirect, render_template, jsonify, make_response
 from flask_babel import gettext
 from functools import wraps
+
+auth_scopes = 'playlist-modify-private playlist-read-private playlist-modify-public playlist-read-collaborative ' \
+              'user-read-recently-played user-library-read  ugc-image-upload '
+
+
+def get_session_cache_path():
+    caches_folder = './.spotify_caches/'
+    if not os.path.exists(caches_folder):
+        os.makedirs(caches_folder)
+
+    return caches_folder + session['uuid']
 
 
 # декоратор проверки авторизации
@@ -32,9 +43,36 @@ def auth(func):
 
 
 # ---------------PAGES START HERE-------------------
+
 @app.route('/', methods=['POST', 'GET'])
 def index():
-    return pages.index_page()
+    if not session.get('uuid'):
+        # Step 1. Visitor is unknown, give random ID
+        # TODO: исправить сессии и удалить cookies
+        if request.cookies.get('uuid'):
+            session['uuid'] = request.cookies.get('uuid')
+        else:
+            session['uuid'] = str(uuid.uuid4())
+
+    auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
+                                               cache_path=get_session_cache_path(),
+                                               show_dialog=True)
+
+    if request.args.get("code"):
+        # Step 3. Being redirected from Spotify auth page
+        auth_manager.get_access_token(request.args.get("code"), as_dict=False)
+        return redirect('/create_cookie')
+    try:
+        if not auth_manager.get_cached_token():
+            # Step 2. Display sign in link when no token
+            auth_url = auth_manager.get_authorize_url()
+            return render_template('start.html', auth_url=auth_url)
+    except spotipy.SpotifyException:
+        return redirect('/sign_out')
+
+    UserSettings = tasks.UserSettings(auth_manager)
+
+    return pages.index_page(UserSettings)
 
 
 @app.route('/test2')
@@ -46,7 +84,7 @@ def test2(UserSettings):
 @app.route('/test')
 @auth
 def test():
-    return 0/1
+    return 0 / 1
 
 
 @app.route('/debug')
@@ -222,16 +260,6 @@ def auto_update_smart(UserSettings):
         return jsonify({'response': gettext('bruh')})
 
 
-@app.route('/get_time', methods=['POST'])
-@auth
-def get_time(UserSettings):
-    try:
-        history_time_diff = tasks.time_worker2(UserSettings.history_query)
-        return jsonify({'response': tasks.time_converter(history_time_diff)})
-    except:
-        return jsonify({'response': gettext('bruh')})
-
-
 @app.route('/postworker', methods=['POST'])
 @auth
 def postworker(UserSettings):
@@ -285,4 +313,4 @@ def playlist_worker(UserSettings):
 
 # ------------------- DON'T CROSS THE LINE :) -------------------
 if __name__ == '__main__':
-    app.run(threaded=True, debug=DEBUG)
+    app.run(threaded=True, debug=DEBUG, host='0.0.0.0')

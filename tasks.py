@@ -11,10 +11,9 @@ from flask_babel import gettext
 import pylast
 from transliterate import detect_language
 
-from modules.exceptions import *
+from modules import *
 from modules.app_init import app
 from modules.database import db, User, HistoryPlaylist, FavoritePlaylist, SmartPlaylist, UsedPlaylist
-from modules.schedulers import *
 
 
 class UserSettings:

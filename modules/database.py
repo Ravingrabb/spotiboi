@@ -1,7 +1,7 @@
 # flask db migrate -m "users table"
 # flask db upgrade
 
-from modules.app_init import app
+from .app_init import app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -76,4 +76,3 @@ class SmartPlaylist(db.Model):
 
     def __repr__(self):
         return '<SmartPlaylist %r>' % self.playlist_id
-
