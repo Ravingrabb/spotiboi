@@ -9,6 +9,7 @@ import smart_playlist
 
 
 def smart_settings_page(UserSettings):
+    """ Render smart settings HTML page """
     smart_query = UserSettings.smart_query
 
     def get_worker_bool(input_name: str):
@@ -52,15 +53,15 @@ def smart_settings_page(UserSettings):
 
         # сбор ATTACHED
         pl_ids = UsedPlaylist.query.filter_by(user_id=UserSettings.user_id, exclude=False, exclude_artists=False).all()
-        used_playlists = UserSettings.get_several_playlists_data(pl_ids)
+        used_playlists = get_several_playlists_data(UserSettings, pl_ids)
 
         # сбор EXCLUDED
         ex_ar_ids = UsedPlaylist.query.filter_by(user_id=UserSettings.user_id, exclude=False,
                                                  exclude_artists=True).all()
-        excluded_playlists = UserSettings.get_several_playlists_data(ex_ar_ids)
+        excluded_playlists = get_several_playlists_data(UserSettings, ex_ar_ids)
 
         # сбор инфы об оставшихся, не прикреплённых плейлистах
-        user_pl = smart_playlist.sort_playlist(UserSettings.get_user_playlists())
+        user_pl = smart_playlist.sort_playlist(get_user_playlists(UserSettings))
         main_attached_playlists = smart_playlist.get_main_attached_ids(UserSettings)
         user_playlists = [item for item in user_pl if
                           item['id'] not in tasks.get_items_by_key(used_playlists, 'id') and item[
@@ -68,13 +69,11 @@ def smart_settings_page(UserSettings):
                               excluded_playlists, 'id')]
 
         # settings
-        UserSettings.settings_worker()
-
         return render_template('smart_settings.html',
                                used_playlists=used_playlists,
                                user_playlists=user_playlists,
                                excluded_playlists=excluded_playlists,
-                               settings=UserSettings.settings,
+                               settings=UserSettings.get_playlists_settings(),
                                history=UserSettings.history_query.playlist_id,
                                auto_clean=get_updater_status(UserSettings.smart_query.ac_job_id, scheduler_a))
     else:
