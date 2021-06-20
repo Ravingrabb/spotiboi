@@ -19,7 +19,7 @@ def index_page(UserSettings):
     spotify = UserSettings.spotify
 
     # settings
-    UserSettings.settings_worker()
+    UserSettings.get_playlists_settings()
 
     # POST запросы
     if request.method == "POST":
@@ -49,8 +49,7 @@ def index_page(UserSettings):
             if data:
                 playlist_owner_uri = UserSettings.spotify.playlist(data)['owner']['uri']
                 current_user_uri = UserSettings.spotify.me()['uri']
-                if spotify.playlist_is_following(data, [user_query.spotify_id])[
-                    0] and playlist_owner_uri == current_user_uri:
+                if spotify.playlist_is_following(data, [user_query.spotify_id])[0] and playlist_owner_uri == current_user_uri:
                     history_query.playlist_id = data
                     db.session.commit()
                     flash(gettext('Success!'), category='alert-success')
@@ -60,8 +59,8 @@ def index_page(UserSettings):
                 flash(gettext('Wrong URI'), category='alert-danger')
 
     # поиск плейлиста
-    history_playlist_data = UserSettings.attach_playlist(UserSettings.history_query, scheduler_h)
-    smart_playlist_data = UserSettings.attach_playlist(UserSettings.smart_query, scheduler_s)
+    history_playlist_data = get_playlist_data_for_html(UserSettings, UserSettings.history_query, scheduler_h)
+    smart_playlist_data = get_playlist_data_for_html(UserSettings, UserSettings.smart_query, scheduler_s)
 
     # CRON
     history_checked = tasks.check_worker_status(UserSettings, UserSettings.history_query, tasks.update_history,
@@ -108,5 +107,5 @@ def index_page(UserSettings):
         smart_playlist_data=smart_playlist_data,
         time_difference=time_difference,
         smart_time_difference=smart_time_difference,
-        settings=UserSettings.settings
+        settings=UserSettings.get_playlists_settings()
     )

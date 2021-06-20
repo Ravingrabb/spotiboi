@@ -1,9 +1,13 @@
 import os
+import sys
+import time
+
 import spotipy
 import pylast
 import uuid
 
 from modules import *
+import userdata
 import pages
 import smart_playlist
 import tasks
@@ -34,7 +38,7 @@ def auth(func):
                                                        show_dialog=True)
             if not auth_manager.get_cached_token():
                 return redirect('/')
-            get_user = tasks.UserSettings(auth_manager)
+            get_user = userdata.UserSettings(auth_manager)
             return func(UserSettings=get_user)
         else:
             return redirect('/')
@@ -70,8 +74,7 @@ def index():
     except spotipy.SpotifyException:
         return redirect('/sign_out')
 
-    UserSettings = tasks.UserSettings(auth_manager)
-
+    UserSettings = userdata.UserSettings(auth_manager)
     return pages.index_page(UserSettings)
 
 
@@ -83,8 +86,9 @@ def test2(UserSettings):
 
 @app.route('/test')
 @auth
-def test():
-    return 0 / 1
+def test(UserSettings):
+    print(UserSettings)
+    return "kek"
 
 
 @app.route('/debug')
@@ -159,7 +163,7 @@ def create_cookie():
 @auth
 def create_smart(UserSettings):
     if not UserSettings.smart_query.playlist_id:
-        user_playlists = smart_playlist.sort_playlist(UserSettings.get_user_playlists())
+        user_playlists = smart_playlist.sort_playlist(get_user_playlists(UserSettings))
         return render_template('create_smart.html', user_playlists=user_playlists)
     else:
         return redirect('/')
