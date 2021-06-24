@@ -1,11 +1,10 @@
-import os
 import gc
 from datetime import datetime, timedelta
-from flask import request, render_template, url_for, flash
+from flask import request, render_template, url_for, flash, session
 from flask_babel import gettext
 
-from modules import *
-import tasks
+from workers import tasks, rq_tasks
+from workers.autoupdate_worker import *
 import smart_playlist
 
 
@@ -63,29 +62,29 @@ def index_page(UserSettings):
     smart_playlist_data = get_playlist_data_for_html(UserSettings, UserSettings.smart_query, scheduler_s)
 
     # CRON
-    history_checked = tasks.check_worker_status(UserSettings, UserSettings.history_query, tasks.update_history,
-                                                scheduler_h)
+    history_checked = check_autoupdate_status(UserSettings, UserSettings.history_query,
+                                              rq_tasks.update_history_task, scheduler_h, session)
     favorite_checked = tasks.check_worker_status(UserSettings, UserSettings.favorite_query,
                                                  tasks.update_favorite_playlist, scheduler_f)
     smart_checked = tasks.check_worker_status(UserSettings, UserSettings.smart_query, tasks.update_smart_playlist,
                                               scheduler_s)
     tasks.auto_clean_checker(UserSettings, scheduler_a)
+
     # вычислятор времени
     history_time_diff = tasks.time_worker2(UserSettings.history_query)
     time_difference = tasks.time_converter(minutes=history_time_diff)
 
     # smart
     try:
-        from rq.job import Job
-        job = Job.fetch(UserSettings.smart_query.job_id, connection=Redis())
         # прошло времени
         job = scheduler_s.job_class.fetch(UserSettings.smart_query.job_id, connection=Redis())
-        diff = datetime.now() - job.started_at
-        diff_minutes = round((diff.days * 24 * 60) + (diff.seconds / 60)) - 180
-        # время до след. задачи
-        smart_query = UserSettings.new_smart_query()
-        next_job_diff = (job.started_at + timedelta(minutes=smart_query.update_time)) - datetime.now()
-        next_job_diff_minutes = round((next_job_diff.days * 24 * 60) + (next_job_diff.seconds / 60)) + 180
+        if job:
+            diff = datetime.now() - job.started_at
+            diff_minutes = round((diff.days * 24 * 60) + (diff.seconds / 60)) - 180
+            # время до след. задачи
+            smart_query = UserSettings.new_smart_query()
+            next_job_diff = (job.started_at + timedelta(minutes=smart_query.update_time)) - datetime.now()
+            next_job_diff_minutes = round((next_job_diff.days * 24 * 60) + (next_job_diff.seconds / 60)) + 180
     except Exception as e:
         diff_minutes = None
         next_job_diff_minutes = None

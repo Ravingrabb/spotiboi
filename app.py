@@ -5,7 +5,7 @@ from modules import *
 import userdata
 import pages
 import smart_playlist
-import tasks
+from workers import tasks
 
 from flask import session, request, redirect, render_template, jsonify, make_response
 from flask_babel import gettext

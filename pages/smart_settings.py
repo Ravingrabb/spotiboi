@@ -4,7 +4,7 @@ from modules import *
 from flask import request, redirect, render_template, jsonify
 from flask_babel import gettext
 
-import tasks
+from workers import tasks
 import smart_playlist
 
 

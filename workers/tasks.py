@@ -54,7 +54,7 @@ def decode_to_bool(text: str) -> bool:
 
 
 def days_to_minutes(number_string: str) -> int:
-    ''' Переводит число в дней в минуты для RQ'''
+    """ Переводит число в дней в минуты для RQ"""
     return int(number_string) * 1440
 
 
