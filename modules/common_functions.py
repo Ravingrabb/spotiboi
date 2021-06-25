@@ -1,8 +1,11 @@
 import traceback
+from datetime import datetime
 
 from modules import exceptions
 from modules.database import db
 from modules.app_init import app
+
+from workers.autoupdate_worker import create_job
 
 
 def get_updater_status(job_id, scheduler) -> bool:
@@ -83,3 +86,42 @@ def get_playlist_data_for_html(UserSettings, query, scheduler):
         app.logger.error(traceback.format_exc())
     finally:
         return playlist_data
+
+
+def get_time_from_last_update(query) -> int:
+    """ Возвращает разницу между последним обновлением и текущим временем в минутах """
+    if query.last_update:
+        time_past = query.last_update
+        time_now = datetime.now()
+        FMT = '%H:%M:%S'
+        duration = time_now - datetime.strptime(time_past, FMT)
+        time_difference = duration.seconds // 60
+        return time_difference
+    else:
+        return None
+
+
+def convert_time_to_string(minutes: int) -> str:
+    if minutes:
+        if minutes >= 60:
+            hours = minutes // 60
+            if hours >= 24:
+                days = hours // 24
+                return str(days) + ' д.'
+            else:
+                return str(hours) + ' ч.'
+        else:
+            return str(minutes) + ' мин.'
+    else:
+        return '0 мин.'
+
+
+def convert_days_in_minutes(number_string: str) -> int:
+    """ Переводит число в дней в минуты для RQ"""
+    return int(number_string) * 1440
+
+
+def restart_job_with_new_settings(UserSettings, query, func, scheduler):
+    if query.job_id in scheduler:
+        scheduler.cancel(query.job_id)
+        create_job(UserSettings, query, func, scheduler)

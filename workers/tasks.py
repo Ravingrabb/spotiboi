@@ -1,7 +1,5 @@
 import gc
 import random
-import traceback
-from datetime import datetime
 
 import requests
 import spotipy
@@ -16,36 +14,8 @@ from modules.app_init import app
 from modules.database import db, HistoryPlaylist, SmartPlaylist, UsedPlaylist
 
 
-def time_worker2(query) -> int:
-    """ Возвращает разницу между последним обновлением и текущим временем в минутах """
-    if query.last_update:
-        time_past = query.last_update
-        time_now = datetime.now()
-        FMT = '%H:%M:%S'
-        duration = time_now - datetime.strptime(time_past, FMT)
-        time_difference = duration.seconds // 60
-        return time_difference
-    else:
-        return None
-
-
-def time_converter(minutes):
-    if minutes:
-        if minutes >= 60:
-            hours = minutes // 60
-            if hours >= 24:
-                days = hours // 24
-                return str(days) + ' д.'
-            else:
-                return str(hours) + ' ч.'
-        else:
-            return str(minutes) + ' мин.'
-    else:
-        return '0 мин.'
-
-
 def decode_to_bool(text: str) -> bool:
-    ''' Переводит текстовые значения on или true в bool'''
+    """ Переводит текстовые значения on или true в bool """
     words = {'on', 'true'}
     if text.lower() in words:
         return True
@@ -53,27 +23,9 @@ def decode_to_bool(text: str) -> bool:
         return False
 
 
-def days_to_minutes(number_string: str) -> int:
-    """ Переводит число в дней в минуты для RQ"""
-    return int(number_string) * 1440
-
-
-def create_job(UserSettings, playlist_query, func, scheduler, job_time=30) -> None:
-    if playlist_query.update_time:
-        job_time = int(playlist_query.update_time)
-    job_time = job_time * 60
-    try:
-        job = scheduler.schedule(datetime.utcnow(), func, args=[UserSettings.user_id, UserSettings], interval=job_time,
-                                 repeat=None)
-        scheduler.enqueue_job(job)
-        playlist_query.job_id = job.id
-        db.session.commit()
-    except Exception as e:
-        app.logger.error(e)
-
-
+# TODO: узнать нахрена нужна
 def cancel_job(new_query, job_id, scheduler):
-    '''Отмена задачи. Требуется создания нового запроса, чтобы выполнялось без ошибок'''
+    """ Отмена задачи. Требуется создания нового запроса, чтобы выполнялось без ошибок """
     query = new_query
     if job_id in scheduler:
         scheduler.cancel(job_id)
@@ -81,63 +33,8 @@ def cancel_job(new_query, job_id, scheduler):
     db.session.commit()
 
 
-# TODO: объединить обе функции
-def restart_job_with_new_settings(query, scheduler, UserSettings):
-    if query.job_id in scheduler:
-        scheduler.cancel(query.job_id)
-        create_job(UserSettings, query, update_history, scheduler)
-
-
-def restart_smart_with_new_settings(query, scheduler, UserSettings):
-    if query.job_id in scheduler:
-        scheduler.cancel(query.job_id)
-        create_job(UserSettings, query, update_smart_playlist, scheduler)
-
-
-def check_worker_status(UserSettings, playlist_query, func, scheduler) -> str:
-    """ Функция для проверки и перезапуска менеджера расписаний и статуса авто-обновления """
-    user_query = UserSettings.user_query
-    # если autoupdate = ON
-
-    if playlist_query.update == True and playlist_query.playlist_id and \
-            UserSettings.spotify.playlist_is_following(playlist_query.playlist_id, [UserSettings.user_id])[0]:
-        if UserSettings.user_id != UserSettings.spotify.playlist(playlist_query.playlist_id, fields='owner')['owner'][
-            'id']:
-            if playlist_query.job_id in scheduler:
-                scheduler.cancel(playlist_query.job_id)
-            playlist_query.update = False
-            playlist_query.job_id = 0
-            db.session.commit()
-            return None
-        # если работа не задана или она не в расписании
-        elif not playlist_query.job_id or playlist_query.job_id not in scheduler:
-            try:
-                create_job(UserSettings, playlist_query, func, scheduler)
-            except Exception as e:
-                app.logger.error(e)
-        # если работа работается, но uuid не совпадает
-        elif playlist_query.job_id in scheduler and user_query.last_uuid != session.get('uuid'):
-            try:
-                scheduler.cancel(playlist_query.job_id)
-                create_job(UserSettings, playlist_query, func, scheduler)
-                user_query.last_uuid = session.get('uuid')
-                db.session.commit()
-            except Exception as e:
-                app.logger.error(e)
-
-        return "checked"
-    # если autoupdate = OFF
-    else:
-        try:
-            if playlist_query.job_id in scheduler:
-                scheduler.cancel(playlist_query.job_id)
-        except Exception as e:
-            app.logger.error(e)
-        return None
-
-
 def get_items_by_key(array, search_key: str) -> str:
-    ''' Возможность вытащить из dict элементы по определённому ключу, только для итераций'''
+    """ Возможность вытащить из dict элементы по определённому ключу, только для итераций """
     for item in array:
         for key, value in item.items():
             if key == search_key:
@@ -238,7 +135,7 @@ def update_history(user_id, UserSettings) -> str:
 
             except Exception as e:
                 app.logger.error(e)
-                app.logger.error('And trackeback for error above:')
+                app.logger.error('And traceback for error above:')
                 app.logger.error(traceback.format_exc())
 
         # если есть новые треки для добавления - они добавляются в History   
@@ -343,7 +240,7 @@ def get_current_history_list(UserSettings, limit=None) -> tuple:
                 raise TokenError
             else:
                 app.logger.error(e)
-                app.logger.error('And trackeback for error above:')
+                app.logger.error('And traceback for error above:')
                 app.logger.error(traceback.format_exc())
             return None
     else:
@@ -464,7 +361,8 @@ def update_smart_playlist(user_id, UserSettings):
                 if item[key] not in excluded_list and item['uri'] not in ban_list:
                     all_uris.append(item['uri'])
             else:
-                if item[key] not in excluded_list and item['artist'] not in excluded_artists and item['uri'] not in ban_list:
+                if item[key] not in excluded_list and item['artist'] not in excluded_artists and item[
+                    'uri'] not in ban_list:
                     all_uris.append(item['uri'])
 
     try:
@@ -516,14 +414,14 @@ def update_smart_playlist(user_id, UserSettings):
         app.logger.error(e)
         app.logger.error(
             f'User:{UserSettings.user_id}, Playlist: https://open.spotify.com/playlist/{UserSettings.smart_query.playlist_id}')
-        app.logger.error('And trackeback for error above:')
+        app.logger.error('And traceback for error above:')
         app.logger.error(traceback.format_exc())
     except Exception as e:
         if 'Couldn\'t refresh token' in str(e):
             pass
         else:
             app.logger.error(e)
-            app.logger.error('And trackeback for error above:')
+            app.logger.error('And traceback for error above:')
             app.logger.error(traceback.format_exc())
     finally:
         smart_query = SmartPlaylist.query.filter_by(user_id=user_id).first()

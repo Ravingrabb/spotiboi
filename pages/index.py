@@ -1,11 +1,11 @@
 import gc
-from datetime import datetime, timedelta
-from flask import request, render_template, url_for, flash, session
+from datetime import timedelta
+from flask import request, render_template, url_for, flash
 from flask_babel import gettext
 
-from workers import tasks, rq_tasks
+from workers import tasks, rq_tasks, smart_playlist
 from workers.autoupdate_worker import *
-import smart_playlist
+from modules import *
 
 
 def index_page(UserSettings):
@@ -48,7 +48,8 @@ def index_page(UserSettings):
             if data:
                 playlist_owner_uri = UserSettings.spotify.playlist(data)['owner']['uri']
                 current_user_uri = UserSettings.spotify.me()['uri']
-                if spotify.playlist_is_following(data, [user_query.spotify_id])[0] and playlist_owner_uri == current_user_uri:
+                if spotify.playlist_is_following(data, [user_query.spotify_id])[0] \
+                        and playlist_owner_uri == current_user_uri:
                     history_query.playlist_id = data
                     db.session.commit()
                     flash(gettext('Success!'), category='alert-success')
@@ -63,35 +64,39 @@ def index_page(UserSettings):
 
     # CRON
     history_checked = check_autoupdate_status(UserSettings, UserSettings.history_query,
-                                              rq_tasks.update_history_task, scheduler_h, session)
-    favorite_checked = tasks.check_worker_status(UserSettings, UserSettings.favorite_query,
-                                                 tasks.update_favorite_playlist, scheduler_f)
-    smart_checked = tasks.check_worker_status(UserSettings, UserSettings.smart_query, tasks.update_smart_playlist,
-                                              scheduler_s)
+                                              rq_tasks.update_history_task, scheduler_h)
+    favorite_checked = check_autoupdate_status(UserSettings, UserSettings.favorite_query,
+                                               rq_tasks.update_favorite_playlist_task, scheduler_f)
+    smart_checked = check_autoupdate_status(UserSettings, UserSettings.smart_query,
+                                            rq_tasks.update_smart_playlist_task, scheduler_s)
     tasks.auto_clean_checker(UserSettings, scheduler_a)
 
     # вычислятор времени
-    history_time_diff = tasks.time_worker2(UserSettings.history_query)
-    time_difference = tasks.time_converter(minutes=history_time_diff)
+    history_time_diff = get_time_from_last_update(UserSettings.history_query)
+    time_difference = convert_time_to_string(minutes=history_time_diff)
 
     # smart
+    # TODO: перенести в smart
     try:
-        # прошло времени
-        job = scheduler_s.job_class.fetch(UserSettings.smart_query.job_id, connection=Redis())
-        if job:
+        if get_updater_status(UserSettings.smart_query.job_id, scheduler_s):
+            # прошло времени
+            job = scheduler_s.job_class.fetch(UserSettings.smart_query.job_id, connection=Redis())
             diff = datetime.now() - job.started_at
             diff_minutes = round((diff.days * 24 * 60) + (diff.seconds / 60)) - 180
             # время до след. задачи
             smart_query = UserSettings.new_smart_query()
             next_job_diff = (job.started_at + timedelta(minutes=smart_query.update_time)) - datetime.now()
             next_job_diff_minutes = round((next_job_diff.days * 24 * 60) + (next_job_diff.seconds / 60)) + 180
+        else:
+            diff_minutes = None
+            next_job_diff_minutes = None
     except Exception as e:
         diff_minutes = None
         next_job_diff_minutes = None
         app.logger.error(e)
 
-    smart_time_difference = [tasks.time_converter(minutes=diff_minutes),
-                             tasks.time_converter(minutes=next_job_diff_minutes)]
+    smart_time_difference = [convert_time_to_string(minutes=diff_minutes),
+                             convert_time_to_string(minutes=next_job_diff_minutes)]
 
     gc.collect()
 

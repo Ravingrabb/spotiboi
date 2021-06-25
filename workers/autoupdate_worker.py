@@ -1,20 +1,23 @@
+from flask import session
 from datetime import datetime
 from modules import *
+from modules.database import db
 
 
-def check_autoupdate_status(UserSettings, playlist_query, func, scheduler, session):
+def check_autoupdate_status(UserSettings, playlist_query, func, scheduler):
     """ Функция для проверки и перезапуска менеджера расписаний и статуса авто-обновления """
-    print(session)
+
     spotify = UserSettings.spotify
     user_id = UserSettings.user_id
     user_query = UserSettings.user_query
     playlist_id = playlist_query.playlist_id
 
     # если autoupdate = ON
-    if playlist_query.update and playlist_id and spotify.playlist_is_following(playlist_id, [user_id])[0]:
-        is_user_own_playlist = check_playlist_owner(user_id, spotify, playlist_query, scheduler)
-        if not is_user_own_playlist:
-            return None
+    if all([playlist_query.update, playlist_id]):
+        if spotify.playlist_is_following(playlist_id, [user_id])[0]:
+            is_user_own_playlist = check_playlist_owner(user_id, spotify, playlist_query, scheduler)
+            if not is_user_own_playlist:
+                return None
 
         # если работа не задана или она не в расписании
         elif not playlist_query.job_id or playlist_query.job_id not in scheduler:
@@ -39,11 +42,9 @@ def create_job(UserSettings, playlist_query, func, scheduler, job_time=30) -> No
     job_time_in_seconds = job_time * 60
 
     try:
-        job = scheduler.schedule(datetime.utcnow(),
-                                 func,
+        job = scheduler.schedule(datetime.utcnow(), func,
                                  args=[UserSettings.user_id, UserSettings],
-                                 interval=job_time_in_seconds,
-                                 repeat=None)
+                                 interval=job_time_in_seconds, repeat=None)
         scheduler.enqueue_job(job)
         playlist_query.job_id = job.id
         db.session.commit()

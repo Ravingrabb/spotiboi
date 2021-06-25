@@ -1,11 +1,11 @@
 import pylast
 
+import modules.common_functions
 from modules import *
 from flask import request, redirect, render_template, jsonify
 from flask_babel import gettext
 
-from workers import tasks
-import smart_playlist
+from workers import tasks, smart_playlist
 
 
 def smart_settings_page(UserSettings):
@@ -40,8 +40,8 @@ def smart_settings_page(UserSettings):
                 smart_query.auto_clean = get_worker_bool('autoCleanSwitch')
 
                 # TIME
-                if UserSettings.smart_query.update_time != tasks.days_to_minutes(request.form['updateTime']):
-                    UserSettings.smart_query.update_time = tasks.days_to_minutes(request.form['updateTime'])
+                if UserSettings.smart_query.update_time != modules.common_functions.convert_days_in_minutes(request.form['updateTime']):
+                    UserSettings.smart_query.update_time = modules.common_functions.convert_days_in_minutes(request.form['updateTime'])
 
                     if UserSettings.smart_query.job_id in scheduler_s:
                         scheduler_s.cancel(UserSettings.smart_query.job_id)
@@ -122,7 +122,7 @@ def update_settings_post(UserSettings):
             if history_query.job_id in scheduler_h:
                 scheduler_h.cancel(history_query.job_id)
                 db.session.commit()
-                tasks.create_job(UserSettings, history_query, tasks.update_history, scheduler_h)
+                create_job(UserSettings, history_query, tasks.update_history, scheduler_h)
             else:
                 db.session.commit()
 

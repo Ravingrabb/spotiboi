@@ -97,7 +97,7 @@ def create_new_smart_playlist(data, UserSettings):
         # работа с картинкой
         try:
             cur_path = os.path.dirname(__file__)
-            new_path = os.path.relpath('static/img/covers/smart-playlist/', cur_path)
+            new_path = os.path.relpath('../static/img/covers/smart-playlist/', cur_path)
             file = 'static/img/covers/smart-playlist/' + random.choice(os.listdir(new_path))
             with open(file, "rb") as image_file:
                 encoded_string = base64.b64encode(image_file.read())

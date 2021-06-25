@@ -4,8 +4,8 @@ import uuid
 from modules import *
 import userdata
 import pages
-import smart_playlist
-from workers import tasks
+from workers import tasks, smart_playlist
+from workers.autoupdate_worker import create_job
 
 from flask import session, request, redirect, render_template, jsonify, make_response
 from flask_babel import gettext
@@ -23,14 +23,19 @@ def get_session_cache_path():
     return caches_folder + session['uuid']
 
 
+def get_auth_manager():
+    auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
+                                               cache_path=get_session_cache_path(),
+                                               show_dialog=True)
+    return auth_manager
+
+
 # декоратор проверки авторизации
 def auth(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         if get_session_cache_path():
-            auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
-                                                       cache_path=get_session_cache_path(),
-                                                       show_dialog=True)
+            auth_manager = get_auth_manager()
             if not auth_manager.get_cached_token():
                 return redirect('/')
             get_user = userdata.UserSettings(auth_manager)
@@ -42,20 +47,19 @@ def auth(func):
 
 
 # ---------------PAGES START HERE-------------------
-
 @app.route('/', methods=['POST', 'GET'])
 def index():
+    # Step 1. Visitor is unknown, give random ID
     if not session.get('uuid'):
-        # Step 1. Visitor is unknown, give random ID
-        # TODO: исправить сессии и удалить cookies
         if request.cookies.get('uuid'):
             session['uuid'] = request.cookies.get('uuid')
         else:
             session['uuid'] = str(uuid.uuid4())
 
-    auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
-                                               cache_path=get_session_cache_path(),
-                                               show_dialog=True)
+    auth_manager = get_auth_manager()
+    if not auth_manager.get_cached_token():
+        session['uuid'] = str(uuid.uuid4())
+        auth_manager = get_auth_manager()
 
     if request.args.get("code"):
         # Step 3. Being redirected from Spotify auth page
@@ -82,8 +86,10 @@ def test2(UserSettings):
 @app.route('/test')
 @auth
 def test(UserSettings):
-    print(UserSettings)
-    return "kek"
+    try:
+        kek = UserSettingss
+    except Exception as e:
+        log_with_traceback(e)
 
 
 @app.route('/debug')
@@ -190,7 +196,7 @@ def make_liked(UserSettings):
 def make_smart(UserSettings):
     response = tasks.update_smart_playlist(UserSettings.user_id, UserSettings)
     if UserSettings.smart_query.job_id or UserSettings.smart_query in scheduler_s:
-        tasks.restart_smart_with_new_settings(UserSettings.smart_query, scheduler_s, UserSettings)
+        restart_job_with_new_settings(UserSettings, UserSettings.smart_query, tasks.update_smart_playlist, scheduler_s)
     return jsonify({'response': response})
 
 
@@ -208,7 +214,7 @@ def auto_update(UserSettings):
         if request.form['update'] == 'true':
             history_query.update = True
             if not history_query.job_id or history_query.job_id not in scheduler_h:
-                tasks.create_job(UserSettings, history_query, tasks.update_history, scheduler_h)
+                create_job(UserSettings, history_query, tasks.update_history, scheduler_h)
         elif request.form['update'] == 'false':
             history_query.update = False
             if history_query.job_id in scheduler_h:
@@ -228,7 +234,7 @@ def auto_update_favorite(UserSettings):
         if request.form['update'] == 'true':
             favorite_query.update = True
             if not favorite_query.job_id or favorite_query.job_id not in scheduler_f:
-                tasks.create_job(UserSettings, favorite_query, tasks.update_favorite_playlist, scheduler_f)
+                create_job(UserSettings, favorite_query, tasks.update_favorite_playlist, scheduler_f)
         elif request.form['update'] == 'false':
             favorite_query.update = False
             if favorite_query.job_id in scheduler_f:
@@ -248,7 +254,7 @@ def auto_update_smart(UserSettings):
         if request.form['update'] == 'true':
             smart_query.update = True
             if not smart_query.job_id or smart_query.job_id not in scheduler_s:
-                tasks.create_job(UserSettings, smart_query, tasks.update_smart_playlist, scheduler_s)
+                create_job(UserSettings, smart_query, tasks.update_smart_playlist, scheduler_s)
         elif request.form['update'] == 'false':
             smart_query.update = False
             if smart_query.job_id in scheduler_s:

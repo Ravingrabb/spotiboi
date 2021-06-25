@@ -1,3 +1,4 @@
+import traceback
 import logging.handlers
 from .database import app
 
@@ -16,3 +17,9 @@ logging.getLogger('rq.worker').addHandler(handler)
 
 app.logger.setLevel(logging.ERROR)
 app.logger.addHandler(handler)
+
+def log_with_traceback(message):
+    app.logger.error(message)
+    app.logger.error('And traceback for error above:')
+    app.logger.error(traceback.format_exc())
+    app.logger.error("l1f1n1sh")

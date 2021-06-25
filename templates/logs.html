@@ -4,8 +4,42 @@
 Логи
 {% endblock %}
 
-{% block body %}
+{# {% block body %}
+<div class="accordion" id="accordionExample">
+    {% for row in bodytext %}
+        <b><p style="margin-bottom: 2px; font-size: 14px;">
+            {% if 'ERROR' in row %}
+                {% if 'Traceback' in row %}
+                    {% if loop.index-1 >= 0 and 'Traceback' in bodytext[loop.index-1] %}
+                    сейчас {{loop.index}} и тут {{bodytext[loop.index]}}  а до этого {{loop.index-1}} и там {{bodytext[loop.index-1]}}
+                        </div></div></div>
+                    {% endif %} 
+                <div class="card">
+                    <div class="card-header" id="heading{{ loop.index }}">
+                        <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
+                            <div style="background-color: rgba(255, 127, 80, 0.329);">{{row}}</div>  
+                        </button>
+                    </h2>
+                    </div>
+                
+                    <div id="collapse1" class="collapse" aria-labelledby="heading1" data-parent="#accordionExample">
+                    <div class="card-body">
+                {% else %}
+                    {% if loop.index-1 > 0 and 'Traceback' in bodytext[loop.index-1] %}
+                        </div></div></div>
+                    {% endif %} 
+                    <h4>{{row}}</h4>
+                {% endif %} 
+            {% else %}
+                {{row}}
+            {% endif %} 
+       </p></b>
+    {% endfor %}
+</div>
+{% endblock %} #}
 
+{% block body %}
     {% for row in bodytext %}
         <b><p style="margin-bottom: 2px; font-size: 14px;">
             {% if 'ERROR' in row or 'Traceback' in row %}
@@ -15,6 +49,4 @@
             {% endif %} 
        </p></b>
     {% endfor %}
-
-
 {% endblock %}
