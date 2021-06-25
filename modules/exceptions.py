@@ -1,2 +1,6 @@
 class TokenError(Exception):
-	pass
+    pass
+
+
+class PlaylistImageException(Exception):
+    pass

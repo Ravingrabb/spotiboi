@@ -1,0 +1,7 @@
+1. gunicorn --bind 0.0.0.0:5000 wsgi:app -w 1
+2. rqscheduler
+3. rq-scheduler-dashboard
+4. python3.9 procmon.py
+5. rq worker history_update favorite_update
+6. rq worker smart_update auto_clean
+export PATH="$HOME/.local/bin:$PATH"
