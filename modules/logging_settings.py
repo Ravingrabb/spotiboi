@@ -22,4 +22,3 @@ def log_with_traceback(message):
     app.logger.error(message)
     app.logger.error('And traceback for error above:')
     app.logger.error(traceback.format_exc())
-    app.logger.error("l1f1n1sh")

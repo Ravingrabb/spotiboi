@@ -16,6 +16,12 @@ auth_scopes = 'playlist-modify-private playlist-read-private playlist-modify-pub
 
 
 def get_session_cache_path():
+    if not session.get('uuid'):
+        if request.cookies.get('uuid'):
+            session['uuid'] = request.cookies.get('uuid')
+        else:
+            session['uuid'] = str(uuid.uuid4())
+
     caches_folder = './.spotify_caches/'
     if not os.path.exists(caches_folder):
         os.makedirs(caches_folder)
@@ -50,11 +56,6 @@ def auth(func):
 @app.route('/', methods=['POST', 'GET'])
 def index():
     # Step 1. Visitor is unknown, give random ID
-    if not session.get('uuid'):
-        if request.cookies.get('uuid'):
-            session['uuid'] = request.cookies.get('uuid')
-        else:
-            session['uuid'] = str(uuid.uuid4())
 
     auth_manager = get_auth_manager()
     if not auth_manager.get_cached_token():

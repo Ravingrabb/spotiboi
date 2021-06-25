@@ -3,6 +3,7 @@ import os
 import random
 
 from modules.database import db, HistoryPlaylist, SmartPlaylist, UsedPlaylist
+from modules.logging_settings import log_with_traceback
 
 
 def url_to_plid(url: str) -> str:
@@ -96,15 +97,15 @@ def create_new_smart_playlist(data, UserSettings):
         )
         # работа с картинкой
         try:
-            cur_path = os.path.dirname(__file__)
-            new_path = os.path.relpath('../static/img/covers/smart-playlist/', cur_path)
-            file = 'static/img/covers/smart-playlist/' + random.choice(os.listdir(new_path))
-            with open(file, "rb") as image_file:
+            current_path = os.path.dirname(__file__)
+            parent_path = os.path.abspath(os.path.join(current_path, os.pardir))
+            images_path = os.path.join(parent_path, "static/img/covers/smart-playlist/")
+            random_image = images_path + random.choice(os.listdir(images_path))
+            with open(random_image, "rb") as image_file:
                 encoded_string = base64.b64encode(image_file.read())
             UserSettings.spotify.playlist_upload_cover_image(data['id'], encoded_string.decode('utf-8'))
         except Exception as e:
-            print(e)
-            print('Cant load image to new playlist. Skipped')
+            log_with_traceback(e)
 
         # добавляем данные в БД
         smart_query = SmartPlaylist.query.filter_by(user_id=user_id).first()
