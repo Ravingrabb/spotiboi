@@ -10,35 +10,10 @@ import pylast
 from transliterate import detect_language
 
 from modules import *
-from modules.app_init import app
-from modules.database import db, HistoryPlaylist, SmartPlaylist, UsedPlaylist
-
-
-def decode_to_bool(text: str) -> bool:
-    """ Переводит текстовые значения on или true в bool """
-    words = {'on', 'true'}
-    if text.lower() in words:
-        return True
-    else:
-        return False
-
-
-# TODO: узнать нахрена нужна
-def cancel_job(new_query, job_id, scheduler):
-    """ Отмена задачи. Требуется создания нового запроса, чтобы выполнялось без ошибок """
-    query = new_query
-    if job_id in scheduler:
-        scheduler.cancel(job_id)
-    job_id = 0
-    db.session.commit()
-
-
-def get_items_by_key(array, search_key: str) -> str:
-    """ Возможность вытащить из dict элементы по определённому ключу, только для итераций """
-    for item in array:
-        for key, value in item.items():
-            if key == search_key:
-                yield value
+from modules.logging_settings import log_with_traceback
+from modules.database import HistoryPlaylist, SmartPlaylist, UsedPlaylist
+from workers.history_functions import *
+from workers.playlist_functions import *
 
 
 def update_history(user_id, UserSettings) -> str:
@@ -66,15 +41,15 @@ def update_history(user_id, UserSettings) -> str:
         history_playlist = get_current_history_list(UserSettings, history_query.fixed_dedup)
 
         # если вернутся None из-за ошибки, то выдаём ошибку
-        if history_playlist == None:
+        if history_playlist is None:
             return (gettext('Can\'t connect to Spotify server'))
 
         # вытаскиваются последние прослушанные песни
         results = spotify.current_user_recently_played(limit=search_limit)
 
         # песни из recently сравниваются с историей
-        history_tracks_uris = list(get_items_by_key(history_playlist, 'uri'))
-        history_tracks_names = list(get_items_by_key(history_playlist, 'name'))
+        history_tracks_uris = list(get_dict_items_by_key(history_playlist, 'uri'))
+        history_tracks_names = list(get_dict_items_by_key(history_playlist, 'name'))
         recently_played_uris = [item['track']['uri']
                                 for item in results['items']
                                 if item['track']['uri'] not in history_tracks_uris
@@ -134,9 +109,7 @@ def update_history(user_id, UserSettings) -> str:
                 # logging.error('Last.fm. Connection to the API failed with HTTP code 500')
 
             except Exception as e:
-                app.logger.error(e)
-                app.logger.error('And traceback for error above:')
-                app.logger.error(traceback.format_exc())
+                log_with_traceback(e)
 
         # если есть новые треки для добавления - они добавляются в History   
         try:
@@ -167,114 +140,9 @@ def update_history(user_id, UserSettings) -> str:
             # TODO: выкидывать ошибку в интерфейсе в виде ретёрна как выше
             pass
         else:
-            app.logger.error(e)
+            log_with_traceback(e)
     except Exception as e:
-        app.logger.error(e)
-
-
-def get_playlist_raw_tracks(sp, playlist_id):
-    ''' Шаблонное получение плейлиста по ID. Содержит лишние поля items, track, поэтому для работы из лучше убрать с помощью convert_playlist '''
-    return sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
-
-
-def convert_playlist(playlist_array) -> list:
-    """ Перевод сырого dict плейлиста в формат, более удобный для программы """
-    output = [
-        {'name': item['track']['name'].lower(),
-         'uri': item['track']['uri'],
-         'artist': item['track']['artists'][0]['name'].lower(),
-         'album': item['track']['album']['name'].lower()}
-        for item in playlist_array['items']
-        if item['track']
-    ]
-    return output
-
-
-def get_playlist(sp, playlist_id, limit=100):
-    ''' Возвращает хорший и уже конвертнутый плейлист'''
-    result = get_playlist_raw_tracks(sp, playlist_id)
-    return convert_playlist(result) if limit else get_every_playlist_track(sp, result)
-
-
-def get_every_playlist_track(spotify, raw_results: list) -> list:
-    """ Достать абсолютно все треки из плейлиста в обход limit c конвертацией в удобную форму для доступа.
-    Лимит есть абсолютно у всех плейлистов """
-    tracks = convert_playlist(raw_results)
-    while raw_results['next']:
-        raw_results = spotify.next(raw_results)
-        tracks.extend(convert_playlist(raw_results))
-    return tracks
-
-
-def get_limited_playlist_track(spotify, raw_results, limit) -> list:
-    def is_reached_limit(array, limit) -> bool:
-        return True if len(array) >= limit else False
-
-    tracks = convert_playlist(raw_results)
-
-    while raw_results['next'] and not is_reached_limit(tracks, limit):
-        raw_results = spotify.next(raw_results)
-        tracks.extend(convert_playlist(raw_results))
-
-    if is_reached_limit(tracks, limit):
-        tracks = tracks[:limit]
-
-    return tracks
-
-
-def get_current_history_list(UserSettings, limit=None) -> tuple:
-    """ Функция получения истории прослушиваний """
-
-    history_query = UserSettings.new_history_query()
-    sp = UserSettings.spotify
-    playlist_id = history_query.playlist_id
-
-    if playlist_id:
-        try:
-            results = sp.playlist_tracks(playlist_id, fields="items(track(name, uri, artists, album)), next")
-            tracks = get_limited_playlist_track(sp, results, limit) if limit else get_every_playlist_track(sp, results)
-            return tuple(item for item in tracks)
-        except Exception as e:
-            if 'Couldn\'t refresh token' in str(e):
-                cancel_job(history_query, history_query.job_id, scheduler_h)
-                raise TokenError
-            else:
-                app.logger.error(e)
-                app.logger.error('And traceback for error above:')
-                app.logger.error(traceback.format_exc())
-            return None
-    else:
-        cancel_job(history_query, history_query.job_id, scheduler_h)
-        return None
-
-
-def fill_playlist(sp, playlist_id: str, uris_list: list, from_top=False) -> None:
-    """ Заполнение плейлиста песнями из массива. Так как ограничение
-    на одну итерацию добавления - 100 треков, приходится делать это в несколько
-    итераций """
-
-    offset = 0
-
-    while offset < len(uris_list):
-        if not from_top:
-            sp.playlist_add_items(playlist_id, uris_list[offset:offset + 100])
-        else:
-            sp.playlist_add_items(playlist_id, uris_list[offset:offset + 100], position=0)
-        offset += 100
-
-
-def fill_playlist_with_replace(sp, user_id: str, playlist_id: str, uris_list: list) -> None:
-    """ Почти то же самое, что и fill playlist, только он заменяет песни, а не добавляет. Нужно для smart плейлиста"""
-    offset = 0
-    once = True
-    while offset < len(uris_list):
-        # TODO: очищать плейлист и добавлять новые песни
-        if once:
-            sp.user_playlist_replace_tracks(user_id, playlist_id, uris_list[offset:offset + 100])
-            once = False
-        else:
-            sp.playlist_add_items(playlist_id, uris_list[offset:offset + 100])
-        offset += 100
+        log_with_traceback(e)
 
 
 def update_favorite_playlist(user_id, UserSettings) -> None:
@@ -287,11 +155,11 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
         # если плейлист добавлен, то просто обновляем
         if favorite_query.playlist_id and sp.playlist_is_following(favorite_query.playlist_id, [user_id])[0]:
             # получаем актуальный список треков из saved
-            new_track_uris = tuple(item['uri'] for item in get_every_playlist_track(sp, results))
+            new_track_uris = tuple(item['uri'] for item in get_and_convert_every_playlist_tracks(sp, results))
 
             # получаем список песен из плейлиста favorites
             fav_playlist_results = sp.playlist_tracks(favorite_query.playlist_id)
-            fav_playlist_uris = tuple(item['uri'] for item in get_every_playlist_track(sp, fav_playlist_results))
+            fav_playlist_uris = tuple(item['uri'] for item in get_and_convert_every_playlist_tracks(sp, fav_playlist_results))
 
             # добавляем новые треки
             to_add = [uri for uri in new_track_uris if uri not in fav_playlist_uris]
@@ -311,7 +179,7 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
             )
 
             playlists = sp.current_user_playlists()
-            track_uris = tuple(item['uri'] for item in get_every_playlist_track(sp, results))
+            track_uris = tuple(item['uri'] for item in get_and_convert_every_playlist_tracks(sp, results))
             for item in playlists['items']:
                 if item['name'] == 'My Favorite Songs':
                     favorite_query.playlist_id = item['id']
@@ -323,7 +191,7 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
         if 'Couldn\'t refresh token' in str(e):
             pass
         else:
-            app.logger.error(e)
+            log_with_traceback(e)
     finally:
         gc.collect()
 
@@ -351,7 +219,7 @@ def update_smart_playlist(user_id, UserSettings):
             smart_query.exclude_history = add_tracks_to_list(excluded_list, key, history_playlist)
 
         if smart_query.exclude_favorite:
-            favorite_playlist = get_every_playlist_track(sp, sp.current_user_saved_tracks(limit=20))
+            favorite_playlist = get_and_convert_every_playlist_tracks(sp, sp.current_user_saved_tracks(limit=20))
             smart_query.exclude_favorite = add_tracks_to_list(excluded_list, key, favorite_playlist)
 
     def appender(results, excluded_list, key):
@@ -382,7 +250,7 @@ def update_smart_playlist(user_id, UserSettings):
                 excluded_artists = set()
                 for playlist in excluded_artists_playlists:
                     raw_results = get_playlist_raw_tracks(sp, playlist.playlist_id)
-                    results = get_every_playlist_track(sp, raw_results)
+                    results = get_and_convert_every_playlist_tracks(sp, raw_results)
                     output = frozenset(item['artist'] for item in results)
                     excluded_artists.update(output)
 
@@ -391,7 +259,7 @@ def update_smart_playlist(user_id, UserSettings):
             for playlist in used_playlists_ids:
                 raw_results = sp.playlist_tracks(playlist.playlist_id,
                                                  fields="items(track(name, uri, artists, album)), next")
-                results = get_every_playlist_track(sp, raw_results)
+                results = get_and_convert_every_playlist_tracks(sp, raw_results)
                 appender(results, excluded_list, check_key)
 
             # перемешиваем
@@ -438,7 +306,7 @@ def auto_clean(user_id, UserSettings):
         if history_query.playlist_id and UserSettings.smart_query.playlist_id:
             history_playlist = get_playlist(sp, history_query.playlist_id)
             smart_raw = get_playlist(sp, smart_query.playlist_id)
-            history_tracks_names = get_items_by_key(history_playlist, 'name')
+            history_tracks_names = get_dict_items_by_key(history_playlist, 'name')
             to_delete = frozenset(item['uri'] for item in smart_raw if item['name'] in history_tracks_names)
             sp.playlist_remove_all_occurrences_of_items(UserSettings.smart_query.playlist_id, to_delete)
             gc.collect()

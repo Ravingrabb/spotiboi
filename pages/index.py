@@ -12,7 +12,7 @@ def index_page(UserSettings):
     # ------------------ НАЧАЛО НАСТРОЕК СТРАНИЦЫ ------------------
 
     menu = [
-        {'url': url_for('currently_playing'), 'title': gettext('Recently played tracks')},
+        {'url': url_for('currently_playing'), 'title': 'История'},
         {'url': url_for('faq'), 'title': 'FAQ'},
     ]
     spotify = UserSettings.spotify

@@ -125,3 +125,12 @@ def restart_job_with_new_settings(UserSettings, query, func, scheduler):
     if query.job_id in scheduler:
         scheduler.cancel(query.job_id)
         create_job(UserSettings, query, func, scheduler)
+
+
+def decode_to_bool(text: str) -> bool:
+    """ Переводит текстовые значения on или true в bool """
+    words = {'on', 'true'}
+    if text.lower() in words:
+        return True
+    else:
+        return False
