@@ -44,6 +44,8 @@
         <b><p style="margin-bottom: 2px; font-size: 14px;">
             {% if 'ERROR' in row or 'Traceback' in row %}
                 <div style="background-color: rgba(255, 127, 80, 0.329);">{{row}}</div>  
+            {% elif 'root/spotiboi-app' in row %}
+            <div style="background-color: rgba(147, 167, 255, 0.431);">{{row}}</div> 
             {% else %}
                 {{row}}
             {% endif %} 

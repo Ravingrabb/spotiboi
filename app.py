@@ -306,7 +306,7 @@ def playlist_worker(UserSettings):
                 return jsonify({'response': None})
     # если плейлист существует
     elif UserSettings.smart_query.playlist_id:
-        exclude_artists = modules.common_functions.decode_to_bool(request.form['excludeArtists'])
+        exclude_artists = decode_to_bool(request.form['excludeArtists'])
         # exclude_tracks = tasks.decode_to_bool(request.form['excludeTracks'])
         if 'addUrlToSmart' in request.form:
             try:
