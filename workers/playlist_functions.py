@@ -87,3 +87,11 @@ def fill_playlist_with_replace(sp, user_id: str, playlist_id: str, uris_list: li
         else:
             sp.playlist_add_items(playlist_id, uris_list[offset:offset + 100])
         offset += 100
+
+
+def check_is_token_expired(UserSettings):
+    auth_manager = UserSettings.spotify.auth_manager
+    token = auth_manager.get_cached_token()
+    if auth_manager.is_token_expired(token):
+        print('update token')
+        auth_manager.refresh_access_token(token['refresh_token'])

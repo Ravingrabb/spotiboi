@@ -43,8 +43,12 @@ def auth(func):
     def wrapper(*args, **kwargs):
         if get_session_cache_path():
             auth_manager = get_auth_manager()
-            if not auth_manager.get_cached_token():
+            token = auth_manager.get_cached_token()
+            if not token:
                 return redirect('/')
+            if auth_manager.is_token_expired(token):
+                auth_manager.refresh_access_token(token['refresh_token'])
+                
             get_user = userdata.UserSettings(auth_manager)
             return func(UserSettings=get_user)
         else:
@@ -88,10 +92,14 @@ def test2(UserSettings):
 @app.route('/test')
 @auth
 def test(UserSettings):
-    try:
-        kek = UserSettingss
-    except Exception as e:
-        log_with_traceback(e)
+    auth_manager = UserSettings.spotify.auth_manager
+    token = auth_manager.get_cached_token()
+    print(token)
+    if auth_manager.is_token_expired(token):
+        print('update token')
+        auth_manager.refresh_access_token(token['refresh_token'])
+
+        
 
 
 @app.route('/debug')

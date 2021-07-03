@@ -34,8 +34,13 @@ def update_history(user_id, UserSettings) -> str:
     history_query = UserSettings.history_query
     history_id = history_query.playlist_id
     user_query = UserSettings.new_user_query()
-
     search_limit = 45
+
+    try:
+        check_is_token_expired(UserSettings)
+    except Exception as e:
+        log_with_traceback(e)
+
     try:
         # получаем историю прослушиваний (учитывая настройки )
         history_playlist = get_current_history_list(UserSettings, history_query.fixed_dedup)
@@ -150,6 +155,12 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
 
     sp = UserSettings.spotify
     favorite_query = UserSettings.favorite_query
+
+    try:
+        check_is_token_expired(UserSettings)
+    except Exception as e:
+        log_with_traceback(e)
+
     try:
         results = sp.current_user_saved_tracks(limit=20)
         # если плейлист добавлен, то просто обновляем
@@ -197,6 +208,7 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
 
 
 def update_smart_playlist(user_id, UserSettings):
+    
     sp = UserSettings.spotify
     used_playlists_ids = UsedPlaylist.query.filter_by(user_id=user_id, exclude=False, exclude_artists=False).all()
     excluded_artists_playlists = UsedPlaylist.query.filter_by(user_id=user_id, exclude_artists=True).all()
@@ -223,15 +235,19 @@ def update_smart_playlist(user_id, UserSettings):
             smart_query.exclude_favorite = add_tracks_to_list(excluded_list, key, favorite_playlist)
 
     def appender(results, excluded_list, key):
-        ban_list = list(f'spotify:track:{i}' for i in range(1, 445))
         for item in results:
             if not excluded_artists_playlists:
-                if item[key] not in excluded_list and item['uri'] not in ban_list:
+                if item[key] not in excluded_list and 'spotify:local' not in item['uri'] :
                     all_uris.append(item['uri'])
             else:
-                if item[key] not in excluded_list and item['artist'] not in excluded_artists and item[
-                    'uri'] not in ban_list:
+                if item[key] not in excluded_list and item['artist'] not in excluded_artists and \
+                    'spotify:local' not in item['uri']:
                     all_uris.append(item['uri'])
+
+    try:
+        check_is_token_expired(UserSettings)
+    except Exception as e:
+        log_with_traceback(e)
 
     try:
         # существует ли smart в базе данных
@@ -276,6 +292,9 @@ def update_smart_playlist(user_id, UserSettings):
             return 'You unfollowed this playlist. Please, refresh your page'
 
     except TokenError:
+        app.logger.error('TOKEN ERROR')
+        app.logger.error(
+            f'User:{UserSettings.user_id}, Playlist: https://open.spotify.com/playlist/{UserSettings.smart_query.playlist_id}')
         cancel_job(smart_query, smart_query.job_id, scheduler_s)
     except TypeError as e:
         app.logger.error('Error in update_smart_playlist below:')
@@ -288,9 +307,7 @@ def update_smart_playlist(user_id, UserSettings):
         if 'Couldn\'t refresh token' in str(e):
             pass
         else:
-            app.logger.error(e)
-            app.logger.error('And traceback for error above:')
-            app.logger.error(traceback.format_exc())
+            log_with_traceback(e)
     finally:
         smart_query = SmartPlaylist.query.filter_by(user_id=user_id).first()
         smart_query.last_update = datetime.strftime(datetime.now(), "%H:%M:%S")
@@ -299,6 +316,11 @@ def update_smart_playlist(user_id, UserSettings):
 
 
 def auto_clean(user_id, UserSettings):
+    try:
+        check_is_token_expired(UserSettings)
+    except Exception as e:
+        log_with_traceback(e)
+
     try:
         history_query = UserSettings.new_history_query()
         smart_query = UserSettings.new_smart_query()

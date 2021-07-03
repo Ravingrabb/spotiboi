@@ -1,6 +1,6 @@
 import traceback
 
-from modules import scheduler_h, TokenError, app, db
+from modules import *
 from workers.playlist_functions import get_limited_playlist_tracks, get_and_convert_every_playlist_tracks
 
 
@@ -21,9 +21,7 @@ def get_current_history_list(UserSettings, limit=None) -> tuple:
                 cancel_job(history_query, history_query.job_id, scheduler_h)
                 raise TokenError
             else:
-                app.logger.error(e)
-                app.logger.error('And traceback for error above:')
-                app.logger.error(traceback.format_exc())
+                log_with_traceback(e)
             return None
     else:
         cancel_job(history_query, history_query.job_id, scheduler_h)
