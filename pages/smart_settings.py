@@ -45,8 +45,8 @@ def smart_settings_page(UserSettings):
                 if UserSettings.smart_query.update_time != modules.common_functions.convert_days_in_minutes(request.form['updateTime']):
                     UserSettings.smart_query.update_time = modules.common_functions.convert_days_in_minutes(request.form['updateTime'])
 
-                    if UserSettings.smart_query.job_id in scheduler_s:
-                        scheduler_s.cancel(UserSettings.smart_query.job_id)
+                if UserSettings.smart_query.job_id in scheduler_s:
+                    scheduler_s.cancel(UserSettings.smart_query.job_id)
 
                 db.session.commit()
                 return redirect('/')

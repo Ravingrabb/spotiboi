@@ -11,6 +11,7 @@ from transliterate import detect_language
 
 from modules import *
 from modules.logging_settings import log_with_traceback
+from modules.exceptions import TokenError
 from modules.database import HistoryPlaylist, SmartPlaylist, UsedPlaylist
 from workers.history_functions import *
 from workers.playlist_functions import *
@@ -38,10 +39,6 @@ def update_history(user_id, UserSettings) -> str:
 
     try:
         check_is_token_expired(UserSettings)
-    except Exception as e:
-        log_with_traceback(e)
-
-    try:
         # получаем историю прослушиваний (учитывая настройки )
         history_playlist = get_current_history_list(UserSettings, history_query.fixed_dedup)
 
@@ -139,11 +136,14 @@ def update_history(user_id, UserSettings) -> str:
             db.session.commit()
             gc.collect()
     except TokenError:
-        pass
+        app.logger.error(
+            f'TokenError. User:{UserSettings.user_id}, Playlist: {history_query.playlist_id}')
+        app.logger.error(traceback.format_exc())
+        history_query = HistoryPlaylist.query.filter_by(user_id=UserSettings.user_id).first()
+        cancel_job(history_query, history_query.job_id, scheduler_h)
     except requests.exceptions.ReadTimeout as e:
         if 'Read timed out' in str(e):
-            # TODO: выкидывать ошибку в интерфейсе в виде ретёрна как выше
-            pass
+            return ("Connection to Spotify error")
         else:
             log_with_traceback(e)
     except Exception as e:
@@ -158,10 +158,6 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
 
     try:
         check_is_token_expired(UserSettings)
-    except Exception as e:
-        log_with_traceback(e)
-
-    try:
         results = sp.current_user_saved_tracks(limit=20)
         # если плейлист добавлен, то просто обновляем
         if favorite_query.playlist_id and sp.playlist_is_following(favorite_query.playlist_id, [user_id])[0]:
@@ -203,6 +199,11 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
             pass
         else:
             log_with_traceback(e)
+    except TokenError:
+        app.logger.error(
+            f'TokenError. User:{UserSettings.user_id}, Playlist: {favorite_query.playlist_id}')
+        cancel_job(favorite_query, favorite_query.job_id, scheduler_f)
+        
     finally:
         gc.collect()
 
@@ -246,10 +247,6 @@ def update_smart_playlist(user_id, UserSettings):
 
     try:
         check_is_token_expired(UserSettings)
-    except Exception as e:
-        log_with_traceback(e)
-
-    try:
         # существует ли smart в базе данных
         if smart_query.playlist_id:
             excluded_list = set()
@@ -292,9 +289,8 @@ def update_smart_playlist(user_id, UserSettings):
             return 'You unfollowed this playlist. Please, refresh your page'
 
     except TokenError:
-        app.logger.error('TOKEN ERROR')
         app.logger.error(
-            f'User:{UserSettings.user_id}, Playlist: https://open.spotify.com/playlist/{UserSettings.smart_query.playlist_id}')
+            f'TokenError. User:{UserSettings.user_id}, Playlist: https://open.spotify.com/playlist/{UserSettings.smart_query.playlist_id}')
         cancel_job(smart_query, smart_query.job_id, scheduler_s)
     except TypeError as e:
         app.logger.error('Error in update_smart_playlist below:')

@@ -30,6 +30,7 @@ def get_current_history_list(UserSettings, limit=None) -> tuple:
 
 def cancel_job(new_query, job_id, scheduler):
     """ Отмена задачи. Требуется создания нового запроса, чтобы выполнялось без ошибок """
+    app.logger.error(f"job {str(job_id)} will be killed")
     query = new_query
     if job_id in scheduler:
         scheduler.cancel(job_id)

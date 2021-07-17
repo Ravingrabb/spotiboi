@@ -1,7 +1,6 @@
 import spotipy
 import uuid
 
-
 from modules import *
 import userdata
 import pages
@@ -31,9 +30,11 @@ def get_session_cache_path():
 
 
 def get_auth_manager():
+    cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path=get_session_cache_path())
     auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
-                                               cache_path=get_session_cache_path(),
-                                               show_dialog=True)
+                                               cache_handler=cache_handler,
+                                               show_dialog=True,
+                                               )
     return auth_manager
 
 
@@ -86,21 +87,20 @@ def index():
 @app.route('/test2')
 @auth
 def test2(UserSettings):
-    return pages.test_mood_page(UserSettings)
+    try:
+        kek = UserSettingss
+    except Exception as e:
+        log_with_traceback(e)
+    #return pages.test_mood_page(UserSettings)
 
 
 @app.route('/test')
 @auth
 def test(UserSettings):
     auth_manager = UserSettings.spotify.auth_manager
-    token = auth_manager.get_cached_token()
-    print(token)
-    if auth_manager.is_token_expired(token):
-        print('update token')
-        auth_manager.refresh_access_token(token['refresh_token'])
-
-        
-
+    token = auth_manager.cache_handler.get_cached_token()
+    auth_manager.validate_token(token['refresh_token'])
+    return token
 
 @app.route('/debug')
 @auth

@@ -1,3 +1,9 @@
+import spotipy
+
+from modules.logging_settings import log_with_traceback
+from modules.exceptions import TokenError
+
+
 def get_dict_items_by_key(array, search_key: str) -> str:
     """ Возможность вытащить из dict элементы по определённому ключу, только для итераций """
     for item in array:
@@ -91,7 +97,8 @@ def fill_playlist_with_replace(sp, user_id: str, playlist_id: str, uris_list: li
 
 def check_is_token_expired(UserSettings):
     auth_manager = UserSettings.spotify.auth_manager
-    token = auth_manager.get_cached_token()
-    if auth_manager.is_token_expired(token):
-        print('update token')
-        auth_manager.refresh_access_token(token['refresh_token'])
+    if "cache_handler" in auth_manager.__dict__:
+        if not auth_manager.validate_token(auth_manager.cache_handler.get_cached_token()):
+            raise TokenError
+    else:
+        raise TokenError
