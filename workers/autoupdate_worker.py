@@ -20,11 +20,11 @@ def check_autoupdate_status(UserSettings, playlist_query, func, scheduler):
                 return None
 
         # если работа не задана или она не в расписании
-        elif not playlist_query.job_id or playlist_query.job_id not in scheduler:
+        if not playlist_query.job_id or playlist_query.job_id not in scheduler:
             create_job(UserSettings, playlist_query, func, scheduler)
 
         # если работа работается, но uuid не совпадает
-        elif playlist_query.job_id in scheduler and user_query.last_uuid != session.get('uuid'):
+        if playlist_query.job_id in scheduler and user_query.last_uuid != session.get('uuid'):
             recreate_job(UserSettings, func, playlist_query, scheduler)
 
         return "checked"

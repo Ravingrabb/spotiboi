@@ -16,6 +16,12 @@ auth_scopes = 'playlist-modify-private playlist-read-private playlist-modify-pub
 
 
 def get_session_cache_path():
+    if not session.get('uuid'):
+        if request.cookies.get('uuid'):
+            session['uuid'] = request.cookies.get('uuid')
+        else:
+            session['uuid'] = str(uuid.uuid4())
+
     caches_folder = './.spotify_caches/'
     if not os.path.exists(caches_folder):
         os.makedirs(caches_folder)
@@ -24,9 +30,11 @@ def get_session_cache_path():
 
 
 def get_auth_manager():
+    cache_handler = spotipy.cache_handler.CacheFileHandler(cache_path=get_session_cache_path())
     auth_manager = spotipy.oauth2.SpotifyOAuth(scope=auth_scopes,
-                                               cache_path=get_session_cache_path(),
-                                               show_dialog=True)
+                                               cache_handler=cache_handler,
+                                               show_dialog=True,
+                                               )
     return auth_manager
 
 
@@ -36,8 +44,12 @@ def auth(func):
     def wrapper(*args, **kwargs):
         if get_session_cache_path():
             auth_manager = get_auth_manager()
-            if not auth_manager.get_cached_token():
+            token = auth_manager.get_cached_token()
+            if not token:
                 return redirect('/')
+            if auth_manager.is_token_expired(token):
+                auth_manager.refresh_access_token(token['refresh_token'])
+                
             get_user = userdata.UserSettings(auth_manager)
             return func(UserSettings=get_user)
         else:
@@ -50,11 +62,6 @@ def auth(func):
 @app.route('/', methods=['POST', 'GET'])
 def index():
     # Step 1. Visitor is unknown, give random ID
-    if not session.get('uuid'):
-        if request.cookies.get('uuid'):
-            session['uuid'] = request.cookies.get('uuid')
-        else:
-            session['uuid'] = str(uuid.uuid4())
 
     auth_manager = get_auth_manager()
     if not auth_manager.get_cached_token():
@@ -80,17 +87,18 @@ def index():
 @app.route('/test2')
 @auth
 def test2(UserSettings):
-    return pages.test_mood_page(UserSettings)
+    from rq import Queue
+    q = Queue('update_history', connection=Redis())
+    return str(q.count)
 
 
 @app.route('/test')
 @auth
 def test(UserSettings):
-    try:
-        kek = UserSettingss
-    except Exception as e:
-        log_with_traceback(e)
-
+    auth_manager = UserSettings.spotify.auth_manager
+    token = auth_manager.cache_handler.get_cached_token()
+    auth_manager.validate_token(token['refresh_token'])
+    return token
 
 @app.route('/debug')
 @auth
@@ -304,7 +312,7 @@ def playlist_worker(UserSettings):
                 return jsonify({'response': None})
     # если плейлист существует
     elif UserSettings.smart_query.playlist_id:
-        exclude_artists = tasks.decode_to_bool(request.form['excludeArtists'])
+        exclude_artists = decode_to_bool(request.form['excludeArtists'])
         # exclude_tracks = tasks.decode_to_bool(request.form['excludeTracks'])
         if 'addUrlToSmart' in request.form:
             try:

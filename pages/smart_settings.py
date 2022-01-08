@@ -1,11 +1,13 @@
 import pylast
 
 import modules.common_functions
+import workers.playlist_functions
 from modules import *
 from flask import request, redirect, render_template, jsonify
 from flask_babel import gettext
 
 from workers import tasks, smart_playlist
+from workers.autoupdate_worker import create_job
 
 
 def smart_settings_page(UserSettings):
@@ -43,8 +45,8 @@ def smart_settings_page(UserSettings):
                 if UserSettings.smart_query.update_time != modules.common_functions.convert_days_in_minutes(request.form['updateTime']):
                     UserSettings.smart_query.update_time = modules.common_functions.convert_days_in_minutes(request.form['updateTime'])
 
-                    if UserSettings.smart_query.job_id in scheduler_s:
-                        scheduler_s.cancel(UserSettings.smart_query.job_id)
+                if UserSettings.smart_query.job_id in scheduler_s:
+                    scheduler_s.cancel(UserSettings.smart_query.job_id)
 
                 db.session.commit()
                 return redirect('/')
@@ -64,8 +66,8 @@ def smart_settings_page(UserSettings):
         user_pl = smart_playlist.sort_playlist(get_user_playlists(UserSettings))
         main_attached_playlists = smart_playlist.get_main_attached_ids(UserSettings)
         user_playlists = [item for item in user_pl if
-                          item['id'] not in tasks.get_items_by_key(used_playlists, 'id') and item[
-                              'id'] not in main_attached_playlists and item['id'] not in tasks.get_items_by_key(
+                          item['id'] not in workers.playlist_functions.get_dict_items_by_key(used_playlists, 'id') and item[
+                              'id'] not in main_attached_playlists and item['id'] not in workers.playlist_functions.get_dict_items_by_key(
                               excluded_playlists, 'id')]
 
         # settings
