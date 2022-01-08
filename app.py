@@ -87,11 +87,9 @@ def index():
 @app.route('/test2')
 @auth
 def test2(UserSettings):
-    try:
-        kek = UserSettingss
-    except Exception as e:
-        log_with_traceback(e)
-    #return pages.test_mood_page(UserSettings)
+    from rq import Queue
+    q = Queue('update_history', connection=Redis())
+    return str(q.count)
 
 
 @app.route('/test')

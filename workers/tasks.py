@@ -13,6 +13,7 @@ from modules import *
 from modules.logging_settings import log_with_traceback
 from modules.exceptions import TokenError
 from modules.database import HistoryPlaylist, SmartPlaylist, UsedPlaylist
+
 from workers.history_functions import *
 from workers.playlist_functions import *
 
@@ -38,7 +39,7 @@ def update_history(user_id, UserSettings) -> str:
     search_limit = 45
 
     try:
-        check_is_token_expired(UserSettings)
+        #check_is_token_expired(UserSettings)
         # получаем историю прослушиваний (учитывая настройки )
         history_playlist = get_current_history_list(UserSettings, history_query.fixed_dedup)
 
@@ -157,7 +158,7 @@ def update_favorite_playlist(user_id, UserSettings) -> None:
     favorite_query = UserSettings.favorite_query
 
     try:
-        check_is_token_expired(UserSettings)
+        #check_is_token_expired(UserSettings)
         results = sp.current_user_saved_tracks(limit=20)
         # если плейлист добавлен, то просто обновляем
         if favorite_query.playlist_id and sp.playlist_is_following(favorite_query.playlist_id, [user_id])[0]:
@@ -246,7 +247,7 @@ def update_smart_playlist(user_id, UserSettings):
                     all_uris.append(item['uri'])
 
     try:
-        check_is_token_expired(UserSettings)
+        #check_is_token_expired(UserSettings)
         # существует ли smart в базе данных
         if smart_query.playlist_id:
             excluded_list = set()
@@ -313,32 +314,28 @@ def update_smart_playlist(user_id, UserSettings):
 
 def auto_clean(user_id, UserSettings):
     try:
-        check_is_token_expired(UserSettings)
-    except Exception as e:
-        log_with_traceback(e)
-
-    try:
+        #check_is_token_expired(UserSettings)
         history_query = UserSettings.new_history_query()
         smart_query = UserSettings.new_smart_query()
         sp = UserSettings.spotify
-        if history_query.playlist_id and UserSettings.smart_query.playlist_id:
+        if history_query.playlist_id and smart_query.playlist_id:
             history_playlist = get_playlist(sp, history_query.playlist_id)
             smart_raw = get_playlist(sp, smart_query.playlist_id)
-            history_tracks_names = get_dict_items_by_key(history_playlist, 'name')
-            to_delete = frozenset(item['uri'] for item in smart_raw if item['name'] in history_tracks_names)
+            to_delete = frozenset(item['uri'] for item in smart_raw if item['name'] in get_dict_items_by_key(history_playlist, 'name'))
             sp.playlist_remove_all_occurrences_of_items(UserSettings.smart_query.playlist_id, to_delete)
             gc.collect()
-    except Exception as e:
-        if 'Couldn\'t refresh token' in str(e) or 'Task exceeded maximum timeout value' in str(
-                e) or 'playlist you don\'t own' in str(e):
-            smart_query = UserSettings.new_smart_query()
-            if smart_query.ac_job_id in scheduler_a:
-                scheduler_a.cancel(smart_query.ac_job_id)
-            smart_query.ac_job_id = 0
-            db.session.commit()
         else:
-            app.logger.error(e)
+            app.logger.error("Auto update error: history or smart not in DB")
 
+    except TokenError:
+        app.logger.error(
+            f'TokenError. User:{UserSettings.user_id}, Playlist: {smart_query.playlist_id}')
+        app.logger.error(traceback.format_exc())
+        smart_query = UserSettings.new_smart_query()
+        cancel_job(smart_query, smart_query.ac_job_id, scheduler_a)
+        
+    except Exception as e:
+        app.logger.error(e)
 
 def auto_clean_checker(UserSettings, scheduler):
     """ Работник с задачей, но только специально для auto cleaner """
